@@ -15,6 +15,7 @@ class OnboardingLayout extends StatelessWidget {
   final VoidCallback onNext;
   final bool isLoading;
   final bool showBackButton;
+  final String? nextButtonText;
 
   const OnboardingLayout({
     super.key,
@@ -25,6 +26,7 @@ class OnboardingLayout extends StatelessWidget {
     required this.onNext,
     this.isLoading = false,
     this.showBackButton = true,
+    this.nextButtonText,
   });
 
   @override
@@ -35,6 +37,13 @@ class OnboardingLayout extends StatelessWidget {
           String route = '/personal-info';
           if (state.step == 2) route = '/venue-type';
           if (state.step == 3) route = '/venue-details';
+          if (state.step == 4) route = '/ground-court-info';
+          if (state.step == 5) route = '/amenities';
+          if (state.step == 6) route = '/slot-config';
+          if (state.step == 7) route = '/pricing-setup';
+          if (state.step == 8) route = '/kyc-documentation';
+          if (state.step == 9) route = '/photos-media';
+          if (state.step == 10) route = '/review-submit';
 
           // Only navigate if it's a different step than the current one
           if (state.step != currentStep) {
@@ -148,7 +157,7 @@ class OnboardingLayout extends StatelessWidget {
         Expanded(
           flex: 3,
           child: AppButton(
-            title: "Save & Next",
+            title: nextButtonText ?? "Save & Next",
             isLoading: isLoading,
             onTap: onNext,
           ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -19,6 +20,39 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
   // Map of sport ID to its ground count
   final Map<String, int> _selectedSports = {};
   String _selectedCategory = 'Indoor';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExistingDetails();
+  }
+
+  Future<void> _fetchExistingDetails() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      final data = await Supabase.instance.client
+          .from('owner_details')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (data != null) {
+        setState(() {
+          if (data['sports_config'] != null && data['sports_config'] is Map) {
+            final Map<String, dynamic> config = data['sports_config'];
+            config.forEach((key, value) {
+              _selectedSports[key] = value as int;
+            });
+          }
+          _selectedCategory = data['venue_category'] ?? 'Indoor';
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching details: $e");
+    }
+  }
 
   final List<Map<String, dynamic>> _sports = [
     {

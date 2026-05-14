@@ -5,14 +5,22 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/blocs/ground/ground_cubit.dart';
 import 'package:turfpro_owner/blocs/slot/slot_cubit.dart';
-import 'package:turfpro_owner/screens/login_screen.dart';
-import 'package:turfpro_owner/screens/otp_screen.dart';
-import 'package:turfpro_owner/screens/document_upload_screen.dart';
-import 'package:turfpro_owner/screens/main_navbar.dart';
-import 'package:turfpro_owner/screens/add_sport_screen.dart';
-import 'package:turfpro_owner/screens/personal_info_screen.dart';
-import 'package:turfpro_owner/screens/venue_type_screen.dart';
-import 'package:turfpro_owner/screens/venue_details_screen.dart';
+import 'package:turfpro_owner/screens/auth/login_screen.dart';
+import 'package:turfpro_owner/screens/auth/otp_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/document_upload_screen.dart';
+import 'package:turfpro_owner/screens/dashboard/main_navbar.dart';
+import 'package:turfpro_owner/screens/sports/add_sport_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/personal_info_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/venue_type_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/amenities_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/slot_config_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/pricing_setup_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/kyc_documentation_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/photos_media_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/review_submit_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/venue_details_screen.dart';
+import 'package:turfpro_owner/screens/onboarding/ground_court_info_screen.dart';
+import 'package:turfpro_owner/screens/auth/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +30,7 @@ void main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjeWJuem9wZmZ5em1waWF4d2JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDYyNzMsImV4cCI6MjA4OTY4MjI3M30.cRnvZzQhbwI26PhRkdjnptVa5yiWo6oBIGZlZU7JEgg',
   );
+
 
   runApp(const MyApp());
 
@@ -48,8 +57,9 @@ class MyApp extends StatelessWidget {
             ),
             useMaterial3: true,
           ),
-          initialRoute: '/',
+          initialRoute: '/splash',
           routes: {
+            '/splash': (context) => const SplashScreen(),
             '/': (context) => const LoginScreen(),
             '/otp': (context) => const OtpScreen(),
             '/upload-documents': (context) => const DocumentUploadScreen(),
@@ -58,6 +68,13 @@ class MyApp extends StatelessWidget {
             '/personal-info': (context) => const PersonalInfoScreen(),
             '/venue-type': (context) => const VenueTypeScreen(),
             '/venue-details': (context) => const VenueDetailsScreen(),
+            '/ground-court-info': (context) => const GroundCourtInfoScreen(),
+            '/amenities': (context) => const AmenitiesScreen(),
+            '/slot-config': (context) => const SlotConfigScreen(),
+            '/pricing-setup': (context) => const PricingSetupScreen(),
+            '/kyc-documentation': (context) => const KycDocumentationScreen(),
+            '/photos-media': (context) => const PhotosMediaScreen(),
+            '/review-submit': (context) => const ReviewSubmitScreen(),
           },
         ),
       ),

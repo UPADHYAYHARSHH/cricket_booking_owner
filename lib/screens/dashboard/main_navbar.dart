@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
-import 'package:turfpro_owner/screens/my_sports_screen.dart';
+import 'package:turfpro_owner/screens/sports/my_sports_screen.dart';
 
 class MainNavbar extends StatefulWidget {
   const MainNavbar({super.key});

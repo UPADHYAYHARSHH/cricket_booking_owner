@@ -4,7 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/blocs/ground/ground_cubit.dart';
-import 'package:turfpro_owner/screens/manage_slots_screen.dart';
+import 'package:turfpro_owner/screens/slots/manage_slots_screen.dart';
 
 class MySportsScreen extends StatefulWidget {
   const MySportsScreen({super.key});
