@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
-import 'package:turfpro_owner/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -60,14 +60,14 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
   }
 
   Future<void> _fetchInitialData() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final userId = currentUserId;
+    if (userId == null) return;
 
     try {
       final data = await Supabase.instance.client
           .from('owner_details')
           .select()
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle();
 
       if (data != null) {
@@ -140,10 +140,10 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
   }
 
   Future<String?> _uploadFile(File file, String folder) async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return null;
+    final userId = currentUserId;
+    if (userId == null) return null;
 
-    final fileName = "${user.id}/$folder/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}";
+    final fileName = "${userId}/$folder/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}";
     
     try {
       await Supabase.instance.client.storage

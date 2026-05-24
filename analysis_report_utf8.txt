@@ -1,0 +1,146 @@
+﻿Analyzing cricket_booking_owner...                              
+
+   info - Don't invoke 'print' in production code - lib\blocs\auth\auth_cubit.dart:71:13 - avoid_print
+warning - The receiver can't be null, so the null-aware operator '?[' is unnecessary - lib\blocs\auth\auth_cubit.dart:145:72 - invalid_null_aware_operator
+warning - The receiver can't be null, so the null-aware operator '?[' is unnecessary - lib\blocs\auth\auth_cubit.dart:145:103 - invalid_null_aware_operator
+   info - Don't invoke 'print' in production code - lib\blocs\auth\auth_cubit.dart:169:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\blocs\auth\auth_cubit.dart:195:7 - avoid_print
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\blocs\auth\auth_cubit.dart:411:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\blocs\auth\auth_cubit.dart:444:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\blocs\auth\auth_cubit.dart:445:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\blocs\auth\auth_cubit.dart:446:9 - use_null_aware_elements
+   info - Use the null-aware marker '?' rather than a null check via an 'if' - lib\blocs\auth\auth_cubit.dart:447:9 - use_null_aware_elements
+   info - Don't invoke 'print' in production code - lib\blocs\auth\auth_cubit.dart:451:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\blocs\ground\ground_cubit.dart:112:7 - avoid_print
+   info - 'window' is deprecated and shouldn't be used. Look up the current FlutterView from the context via View.of(context) or consult the PlatformDispatcher directly instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.7.0-32.0.pre - lib\common\screenutil\screenutil.dart:33:19 - deprecated_member_use
+   info - 'window' is deprecated and shouldn't be used. Look up the current FlutterView from the context via View.of(context) or consult the PlatformDispatcher directly instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.7.0-32.0.pre - lib\common\screenutil\screenutil.dart:34:20 - deprecated_member_use
+   info - 'window' is deprecated and shouldn't be used. Look up the current FlutterView from the context via View.of(context) or consult the PlatformDispatcher directly instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.7.0-32.0.pre - lib\common\screenutil\screenutil.dart:35:21 - deprecated_member_use
+   info - 'window' is deprecated and shouldn't be used. Look up the current FlutterView from the context via View.of(context) or consult the PlatformDispatcher directly instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.7.0-32.0.pre - lib\common\screenutil\screenutil.dart:36:24 - deprecated_member_use
+   info - 'window' is deprecated and shouldn't be used. Look up the current FlutterView from the context via View.of(context) or consult the PlatformDispatcher directly instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.7.0-32.0.pre - lib\common\screenutil\screenutil.dart:37:24 - deprecated_member_use
+   info - 'window' is deprecated and shouldn't be used. Look up the current FlutterView from the context via View.of(context) or consult the PlatformDispatcher directly instead. Deprecated to prepare for the upcoming multi-window support. This feature was deprecated after v3.7.0-32.0.pre - lib\common\screenutil\screenutil.dart:38:24 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\common\widgets\app_button.dart:24:39 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\common\widgets\onboarding_layout.dart:101:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\common\widgets\onboarding_layout.dart:144:55 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\email_verification_screen.dart:155:53 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\screens\auth\email_verification_screen.dart:184:43 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\forgot_password_screen.dart:143:53 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\login_screen.dart:165:53 - deprecated_member_use
+warning - The value of the local variable 'theme' isn't used - lib\screens\auth\otp_screen.dart:62:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\otp_screen.dart:86:29 - deprecated_member_use
+  error - The method 'verifyOtp' isn't defined for the type 'AuthCubit' - lib\screens\auth\otp_screen.dart:173:57 - undefined_method
+  error - The method 'verifyOtp' isn't defined for the type 'AuthCubit' - lib\screens\auth\otp_screen.dart:196:55 - undefined_method
+  error - The method 'signInWithPhone' isn't defined for the type 'AuthCubit' - lib\screens\auth\otp_screen.dart:213:61 - undefined_method
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\signup_screen.dart:180:53 - deprecated_member_use
+warning - Unused import: 'dart:developer' - lib\screens\auth\splash_screen.dart:8:8 - unused_import
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\auth\splash_screen.dart:79:37 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\dashboard\main_navbar.dart:40:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\dashboard\main_navbar.dart:126:63 - deprecated_member_use
+  error - Undefined name 'user' - lib\screens\onboarding\amenities_screen.dart:54:9 - undefined_identifier
+  error - The argument type 'String?' can't be assigned to the parameter type 'Object'.  - lib\screens\onboarding\amenities_screen.dart:60:21 - argument_type_not_assignable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\amenities_screen.dart:191:45 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\onboarding\amenities_screen.dart:209:9 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\amenities_screen.dart:235:44 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\screens\onboarding\document_upload_screen.dart:147:9 - curly_braces_in_flow_control_structures
+   info - Don't use 'BuildContext's across async gaps - lib\screens\onboarding\document_upload_screen.dart:196:9 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\onboarding\document_upload_screen.dart:290:7 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\onboarding\document_upload_screen.dart:302:7 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\document_upload_screen.dart:534:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\document_upload_screen.dart:627:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\document_upload_screen.dart:723:26 - deprecated_member_use
+   info - Constructors in '@immutable' classes should be declared as 'const' - lib\screens\onboarding\document_upload_screen.dart:812:3 - prefer_const_constructors_in_immutables
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\document_upload_screen.dart:838:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\document_upload_screen.dart:858:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\document_upload_screen.dart:950:40 - deprecated_member_use
+  error - Undefined name 'user' - lib\screens\onboarding\ground_court_info_screen.dart:52:9 - undefined_identifier
+  error - The argument type 'String?' can't be assigned to the parameter type 'Object'.  - lib\screens\onboarding\ground_court_info_screen.dart:58:21 - argument_type_not_assignable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\ground_court_info_screen.dart:162:70 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\ground_court_info_screen.dart:375:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\ground_court_info_screen.dart:377:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\ground_court_info_screen.dart:381:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\ground_court_info_screen.dart:385:68 - deprecated_member_use
+   info - The imported package 'path' isn't a dependency of the importing package - lib\screens\onboarding\kyc_documentation_screen.dart:15:8 - depend_on_referenced_packages
+  error - Undefined name 'user' - lib\screens\onboarding\kyc_documentation_screen.dart:68:9 - undefined_identifier
+  error - The argument type 'String?' can't be assigned to the parameter type 'Object'.  - lib\screens\onboarding\kyc_documentation_screen.dart:74:21 - argument_type_not_assignable
+  error - Undefined name 'user' - lib\screens\onboarding\kyc_documentation_screen.dart:122:9 - undefined_identifier
+   info - Unnecessary braces in a string interpolation - lib\screens\onboarding\kyc_documentation_screen.dart:124:23 - unnecessary_brace_in_string_interps
+   info - Don't use 'BuildContext's across async gaps - lib\screens\onboarding\kyc_documentation_screen.dart:185:7 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\onboarding\kyc_documentation_screen.dart:188:9 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\kyc_documentation_screen.dart:312:47 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\kyc_documentation_screen.dart:339:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\kyc_documentation_screen.dart:367:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\kyc_documentation_screen.dart:396:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\kyc_documentation_screen.dart:399:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\kyc_documentation_screen.dart:399:110 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\personal_info_screen.dart:199:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\personal_info_screen.dart:205:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\personal_info_screen.dart:209:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\personal_info_screen.dart:226:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\personal_info_screen.dart:232:43 - deprecated_member_use
+   info - The imported package 'path' isn't a dependency of the importing package - lib\screens\onboarding\photos_media_screen.dart:15:8 - depend_on_referenced_packages
+  error - Undefined name 'user' - lib\screens\onboarding\photos_media_screen.dart:65:9 - undefined_identifier
+  error - The argument type 'String?' can't be assigned to the parameter type 'Object'.  - lib\screens\onboarding\photos_media_screen.dart:71:21 - argument_type_not_assignable
+  error - Undefined name 'user' - lib\screens\onboarding\photos_media_screen.dart:145:9 - undefined_identifier
+   info - Unnecessary braces in a string interpolation - lib\screens\onboarding\photos_media_screen.dart:147:23 - unnecessary_brace_in_string_interps
+   info - Don't use 'BuildContext's across async gaps - lib\screens\onboarding\photos_media_screen.dart:210:7 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\screens\onboarding\photos_media_screen.dart:212:27 - use_build_context_synchronously
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\photos_media_screen.dart:257:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\photos_media_screen.dart:272:59 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\photos_media_screen.dart:300:106 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\photos_media_screen.dart:389:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\photos_media_screen.dart:406:64 - deprecated_member_use
+  error - Undefined name 'user' - lib\screens\onboarding\pricing_setup_screen.dart:58:9 - undefined_identifier
+  error - The argument type 'String?' can't be assigned to the parameter type 'Object'.  - lib\screens\onboarding\pricing_setup_screen.dart:64:21 - argument_type_not_assignable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:190:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:192:74 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:207:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:285:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:306:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:308:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:317:113 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:318:113 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:333:74 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:366:181 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:367:159 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\pricing_setup_screen.dart:367:205 - deprecated_member_use
+  error - Undefined name 'user' - lib\screens\onboarding\review_submit_screen.dart:32:9 - undefined_identifier
+  error - The argument type 'String?' can't be assigned to the parameter type 'Object'.  - lib\screens\onboarding\review_submit_screen.dart:38:21 - argument_type_not_assignable
+warning - The value of the local variable 'groundConfig' isn't used - lib\screens\onboarding\review_submit_screen.dart:64:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\review_submit_screen.dart:135:114 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\review_submit_screen.dart:147:103 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\review_submit_screen.dart:155:51 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\review_submit_screen.dart:213:62 - deprecated_member_use
+  error - Undefined name 'user' - lib\screens\onboarding\slot_config_screen.dart:58:9 - undefined_identifier
+  error - The argument type 'String?' can't be assigned to the parameter type 'Object'.  - lib\screens\onboarding\slot_config_screen.dart:64:21 - argument_type_not_assignable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\slot_config_screen.dart:212:52 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\slot_config_screen.dart:214:74 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\slot_config_screen.dart:293:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\slot_config_screen.dart:356:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\slot_config_screen.dart:358:68 - deprecated_member_use
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\screens\onboarding\slot_config_screen.dart:456:9 - deprecated_member_use
+  error - Undefined name 'user' - lib\screens\onboarding\venue_details_screen.dart:41:9 - undefined_identifier
+  error - The argument type 'String?' can't be assigned to the parameter type 'Object'.  - lib\screens\onboarding\venue_details_screen.dart:47:21 - argument_type_not_assignable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\venue_details_screen.dart:241:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\venue_details_screen.dart:247:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\venue_details_screen.dart:251:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\venue_details_screen.dart:268:64 - deprecated_member_use
+  error - Undefined name 'user' - lib\screens\onboarding\venue_type_screen.dart:33:9 - undefined_identifier
+  error - The argument type 'String?' can't be assigned to the parameter type 'Object'.  - lib\screens\onboarding\venue_type_screen.dart:39:21 - argument_type_not_assignable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\venue_type_screen.dart:208:50 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\venue_type_screen.dart:273:64 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\onboarding\venue_type_screen.dart:297:52 - deprecated_member_use
+warning - Unused import: 'package:hugeicons/hugeicons.dart' - lib\screens\sports\add_sport_screen.dart:3:8 - unused_import
+warning - The value of the local variable 'primaryColor' isn't used - lib\screens\sports\add_sport_screen.dart:143:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\sports\add_sport_screen.dart:191:33 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre - lib\screens\sports\add_sport_screen.dart:275:13 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\sports\my_sports_screen.dart:93:32 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\sports\my_sports_screen.dart:129:33 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\sports\my_sports_screen.dart:166:44 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\screens\sports\my_sports_screen.dart:167:45 - deprecated_member_use
+   info - The constant name 'AUTHORIZATION_TOKEN' isn't a lowerCamelCase identifier - lib\utils\const_key.dart:1:7 - constant_identifier_names
+   info - Missing type annotation - lib\utils\utility.dart:19:12 - strict_top_level_inference
+   info - Missing type annotation - lib\utils\utility.dart:19:35 - strict_top_level_inference
+   info - Missing type annotation - lib\utils\utility.dart:19:53 - strict_top_level_inference
+   info - Use interpolation to compose strings and values - lib\utils\utility.dart:26:21 - prefer_interpolation_to_compose_strings
+   info - Missing type annotation - lib\utils\utility.dart:33:1 - strict_top_level_inference
+   info - Missing type annotation - lib\utils\utility.dart:33:17 - strict_top_level_inference
+

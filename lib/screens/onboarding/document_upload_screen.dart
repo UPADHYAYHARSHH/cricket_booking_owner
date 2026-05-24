@@ -13,6 +13,7 @@ import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:toastification/toastification.dart';
+import 'package:turfpro_owner/utils/auth_helper.dart';
 
 class DocumentUploadScreen extends StatefulWidget {
   const DocumentUploadScreen({super.key});
@@ -52,14 +53,14 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   }
 
   Future<void> _fetchExistingDetails() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final userId = currentUserId;
+    if (userId == null) return;
 
     try {
       final data = await Supabase.instance.client
           .from('owner_details')
           .select()
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle();
       if (data != null) {
         setState(() {
@@ -204,12 +205,12 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
 
   Future<String?> _uploadFile(XFile? file, String folder) async {
     if (file == null) return null;
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return null;
+    final userId = currentUserId;
+    if (userId == null) return null;
 
     final fileExt = file.name.split('.').last;
     final fileName =
-        '${user.id}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+        '${userId}_${DateTime.now().millisecondsSinceEpoch}.$fileExt';
     final path = '$folder/$fileName';
 
     try {

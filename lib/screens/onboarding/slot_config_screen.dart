@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -35,14 +36,8 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
   String _advanceBookingLimit = '7 days';
   final List<String> _advanceOptions = ['Same day', '7 days', '15 days', '30 days'];
 
-  String _cancellationWindow = '2 hours';
-  final List<String> _cancelOptions = ['1 hour', '2 hours', '4 hours', '24 hours'];
-
   String _minBookingDuration = '1 Slot (1 hr)';
   final List<String> _minDurationOptions = ['1 Slot (1 hr)', '2 Slots (2 hrs)'];
-
-  bool _allowPartialBlocking = true;
-  bool _maintenanceSlot = false;
 
   bool _isLoadingData = true;
 
@@ -53,14 +48,14 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
   }
 
   Future<void> _fetchExistingDetails() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final userId = currentUserId;
+    if (userId == null) return;
 
     try {
       final data = await Supabase.instance.client
           .from('owner_details')
           .select()
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle();
 
       if (data != null && data['slot_config'] != null) {
@@ -80,10 +75,7 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
           _eveningPeakEnd = _parseTime(config['evening_peak_end']) ?? _eveningPeakEnd;
 
           _advanceBookingLimit = config['advance_booking_limit'] ?? _advanceBookingLimit;
-          _cancellationWindow = config['cancellation_window'] ?? _cancellationWindow;
           _minBookingDuration = config['min_booking_duration'] ?? _minBookingDuration;
-          _allowPartialBlocking = config['allow_partial_blocking'] ?? _allowPartialBlocking;
-          _maintenanceSlot = config['maintenance_slot'] ?? _maintenanceSlot;
         });
       }
     } catch (e) {
@@ -131,10 +123,10 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
       'evening_peak_start': _formatTime(_eveningPeakStart),
       'evening_peak_end': _formatTime(_eveningPeakEnd),
       'advance_booking_limit': _advanceBookingLimit,
-      'cancellation_window': _cancellationWindow,
+      'cancellation_window': "",
       'min_booking_duration': _minBookingDuration,
-      'allow_partial_blocking': _allowPartialBlocking,
-      'maintenance_slot': _maintenanceSlot,
+      'allow_partial_blocking': false,
+      'maintenance_slot': false,
     };
 
     context.read<AuthCubit>().saveSlotConfig(slotConfig: config);
@@ -243,36 +235,11 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
                 ),
 
                 const AppSizedBox(height: 32),
-                _buildLabel("CANCELLATION WINDOW"),
-                _buildChoiceChips(
-                  options: _cancelOptions,
-                  selected: _cancellationWindow,
-                  onSelected: (v) => setState(() => _cancellationWindow = v),
-                ),
-                const AppSizedBox(height: 8),
-                const AppText(text: "Free cancellation if done before this window", size: 12, color: AppColors.textSecondaryLight),
-
-                const AppSizedBox(height: 32),
                 _buildLabel("MINIMUM BOOKING DURATION"),
                 _buildChoiceChips(
                   options: _minDurationOptions,
                   selected: _minBookingDuration,
                   onSelected: (v) => setState(() => _minBookingDuration = v),
-                ),
-
-                const AppSizedBox(height: 32),
-                _buildLabel("SLOT BLOCKING"),
-                _buildSwitchTile(
-                  "Allow partial slot blocking",
-                  "Block specific courts at certain times",
-                  _allowPartialBlocking,
-                  (v) => setState(() => _allowPartialBlocking = v),
-                ),
-                _buildSwitchTile(
-                  "Maintenance slot (weekly)",
-                  "Auto-block for ground maintenance",
-                  _maintenanceSlot,
-                  (v) => setState(() => _maintenanceSlot = v),
                 ),
               ],
             ),
@@ -440,22 +407,6 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
           ),
         );
       }).toList(),
-    );
-  }
-
-  Widget _buildSwitchTile(String title, String subtitle, bool value, Function(bool) onChanged) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: SwitchListTile(
-        contentPadding: EdgeInsets.zero,
-        title: AppText(text: title, size: 15, weight: FontWeight.w600, color: AppColors.textPrimaryLight),
-        subtitle: AppText(text: subtitle, size: 12, color: AppColors.textSecondaryLight),
-        value: value,
-        onChanged: onChanged,
-        activeColor: AppColors.primaryLightGreen,
-        inactiveThumbColor: Colors.white,
-        inactiveTrackColor: Colors.grey.shade200,
-      ),
     );
   }
 }

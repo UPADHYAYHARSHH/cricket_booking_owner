@@ -8,29 +8,23 @@ import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/core/text_theme.dart';
 import 'package:toastification/toastification.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  
   String? emailError;
-  String? passwordError;
-  bool _obscurePassword = true;
 
   bool _validateFields() {
     setState(() {
       emailError = null;
-      passwordError = null;
     });
 
     final email = emailController.text.trim();
-    final password = passwordController.text.trim();
     bool isValid = true;
 
     if (email.isEmpty) {
@@ -41,21 +35,12 @@ class _LoginScreenState extends State<LoginScreen> {
       isValid = false;
     }
 
-    if (password.isEmpty) {
-      setState(() => passwordError = "Password is required");
-      isValid = false;
-    } else if (password.length < 6) {
-      setState(() => passwordError = "Password must be at least 6 characters");
-      isValid = false;
-    }
-
     return isValid;
   }
 
   @override
   void dispose() {
     emailController.dispose();
-    passwordController.dispose();
     super.dispose();
   }
 
@@ -64,32 +49,16 @@ class _LoginScreenState extends State<LoginScreen> {
     return BlocListener<AuthCubit, AuthState>(
       listenWhen: (previous, current) => ModalRoute.of(context)?.isCurrent == true,
       listener: (context, state) {
-        if (state is AuthSuccess) {
+        if (state is AuthPasswordResetSent) {
           toastification.show(
             context: context,
             type: ToastificationType.success,
             style: ToastificationStyle.flatColored,
-            title: const Text("Success"),
-            description: const Text("Login Successful!"),
-            autoCloseDuration: const Duration(seconds: 4),
+            title: const Text("Reset Link Sent"),
+            description: const Text("Check your email inbox to reset your password."),
+            autoCloseDuration: const Duration(seconds: 5),
           );
-        }
-
-        if (state is AuthEmailUnverified) {
-          Navigator.pushNamed(
-            context,
-            '/email-verification',
-          );
-        }
-
-        if (state is AuthProfileIncomplete) {
-          // If the profile is incomplete, it will navigate to Splash which routes to the current onboarding step automatically.
-          // Or we can let main.dart/Splash route appropriately.
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/splash',
-            (route) => false,
-          );
+          Navigator.pop(context); // Go back to login screen
         }
 
         if (state is AuthError) {
@@ -109,6 +78,14 @@ class _LoginScreenState extends State<LoginScreen> {
 
           return Scaffold(
             backgroundColor: const Color(0xffECECEC),
+            appBar: AppBar(
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
             body: SafeArea(
               child: Center(
                 child: SingleChildScrollView(
@@ -118,16 +95,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       children: [
                         /// Logo/Image placeholder
                         Container(
-                          height: 160,
-                          width: double.infinity,
+                          height: 120,
+                          width: 120,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
+                            shape: BoxShape.circle,
                             color: Colors.green.shade700,
                           ),
                           child: const Center(
                             child: Icon(
-                              Icons.stadium_outlined,
-                              size: 80,
+                              Icons.lock_reset,
+                              size: 60,
                               color: Colors.white,
                             ),
                           ),
@@ -137,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         /// Title
                         const AppText(
-                          text: "Owner Portal",
+                          text: "Reset Password",
                           size: 26,
                           weight: FontWeight.w700,
                           textStyle: AppTextTheme.black17,
@@ -146,14 +123,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         const AppSizedBox(height: 6),
 
                         const AppText(
-                          text: "Manage your turfs and bookings",
+                          text: "Enter your registered email to receive a recovery link",
                           size: 14,
                           color: Colors.grey,
+                          align: TextAlign.center,
                         ),
 
                         const AppSizedBox(height: 24),
 
-                        /// Login Card
+                        /// Form Card
                         Container(
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
@@ -198,75 +176,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
 
-                              const AppSizedBox(height: 20),
-
-                              const AppText(
-                                text: "Password",
-                                size: 12,
-                                weight: FontWeight.w600,
-                                color: Colors.black54,
-                              ),
-
-                              const AppSizedBox(height: 6),
-
-                              TextField(
-                                controller: passwordController,
-                                obscureText: _obscurePassword,
-                                style: const TextStyle(color: Colors.black87),
-                                decoration: InputDecoration(
-                                  hintText: "Enter password",
-                                  hintStyle: const TextStyle(color: Colors.black38),
-                                  errorText: passwordError,
-                                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.black45),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                      color: Colors.black45,
-                                    ),
-                                    onPressed: () {
-                                      setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      });
-                                    },
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                ),
-                              ),
-
-                              const AppSizedBox(height: 10),
-
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: InkWell(
-                                  onTap: () {
-                                    Navigator.pushNamed(context, '/forgot-password');
-                                  },
-                                  child: AppText(
-                                    text: "Forgot Password?",
-                                    size: 13,
-                                    weight: FontWeight.w600,
-                                    color: Colors.green.shade700,
-                                  ),
-                                ),
-                              ),
-
                               const AppSizedBox(height: 24),
 
                               AppButton(
-                                title: "Login",
+                                title: "Send Link",
                                 isLoading: isLoading,
                                 onTap: () {
                                   if (_validateFields()) {
-                                    context.read<AuthCubit>().signInWithEmailAndPassword(
+                                    context.read<AuthCubit>().sendPasswordResetEmail(
                                           emailController.text.trim(),
-                                          passwordController.text.trim(),
                                         );
                                   }
                                 },
@@ -275,38 +193,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
 
-                        const AppSizedBox(height: 30),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const AppText(
-                              text: "Don't have an account? ",
-                              size: 14,
-                              color: Colors.black54,
-                            ),
-                            InkWell(
-                              onTap: () {
-                                Navigator.pushNamed(context, '/signup');
-                              },
-                              child: AppText(
-                                text: "Sign Up",
-                                size: 14,
-                                weight: FontWeight.bold,
-                                color: Colors.green.shade700,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const AppSizedBox(height: 24),
-
-                        const AppText(
-                          text: "By continuing, you agree to our Terms of Service",
-                          size: 12,
-                          color: Colors.grey,
-                          align: TextAlign.center,
-                        ),
+                        const AppSizedBox(height: 40),
                       ],
                     ),
                   ),

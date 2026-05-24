@@ -41,48 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBjXRU8C73qzWfkGYFl6uyHIRi_-x6wzV0',
-    appId: '1:1066185787341:web:1994241817e6977cc6e684',
-    messagingSenderId: '1066185787341',
-    projectId: 'box-cricket-72b9b',
-    authDomain: 'box-cricket-72b9b.firebaseapp.com',
-    storageBucket: 'box-cricket-72b9b.firebasestorage.app',
-    measurementId: 'G-NPQYD0QBC8',
+    apiKey: 'AIzaSyCdjKWwKmWf92JthQ9fDpRhuB8GkkCtC10',
+    appId: '1:6843481967:web:7f4f138d8d348cc2cc729a',
+    messagingSenderId: '6843481967',
+    projectId: 'box-cricket-df427',
+    authDomain: 'box-cricket-df427.firebaseapp.com',
+    storageBucket: 'box-cricket-df427.firebasestorage.app',
+    measurementId: 'G-8VJ4QHKD63',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyC-vq6_EoD8EzY6_PujjtZEG_3VCSbC78Q',
-    appId: '1:1066185787341:android:3cf1bfba87aa6c3fc6e684',
-    messagingSenderId: '1066185787341',
-    projectId: 'box-cricket-72b9b',
-    storageBucket: 'box-cricket-72b9b.firebasestorage.app',
+    apiKey: 'AIzaSyDD1eiwwO6WNgjTYA59Es99r6ncQgIpvXQ',
+    appId: '1:6843481967:android:41ae8c8722c3e868cc729a',
+    messagingSenderId: '6843481967',
+    projectId: 'box-cricket-df427',
+    storageBucket: 'box-cricket-df427.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAPcP9A64rJnenha0LRq7vEOIzS9PISFwU',
-    appId: '1:1066185787341:ios:18fe9dd46625b6c4c6e684',
-    messagingSenderId: '1066185787341',
-    projectId: 'box-cricket-72b9b',
-    storageBucket: 'box-cricket-72b9b.firebasestorage.app',
-    iosBundleId: 'com.example.boxCricketNew',
+    apiKey: 'AIzaSyBtPd4ZimKi0RtzJmlHULjkMdNP1VuyqEk',
+    appId: '1:6843481967:ios:70940802eee7ed00cc729a',
+    messagingSenderId: '6843481967',
+    projectId: 'box-cricket-df427',
+    storageBucket: 'box-cricket-df427.firebasestorage.app',
+    iosBundleId: 'com.boxcricket.turfproOwner',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyAPcP9A64rJnenha0LRq7vEOIzS9PISFwU',
-    appId: '1:1066185787341:ios:18fe9dd46625b6c4c6e684',
-    messagingSenderId: '1066185787341',
-    projectId: 'box-cricket-72b9b',
-    storageBucket: 'box-cricket-72b9b.firebasestorage.app',
-    iosBundleId: 'com.example.boxCricketNew',
+    apiKey: 'AIzaSyBtPd4ZimKi0RtzJmlHULjkMdNP1VuyqEk',
+    appId: '1:6843481967:ios:70940802eee7ed00cc729a',
+    messagingSenderId: '6843481967',
+    projectId: 'box-cricket-df427',
+    storageBucket: 'box-cricket-df427.firebasestorage.app',
+    iosBundleId: 'com.boxcricket.turfproOwner',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyBjXRU8C73qzWfkGYFl6uyHIRi_-x6wzV0',
-    appId: '1:1066185787341:web:60092640ee0cce71c6e684',
-    messagingSenderId: '1066185787341',
-    projectId: 'box-cricket-72b9b',
-    authDomain: 'box-cricket-72b9b.firebaseapp.com',
-    storageBucket: 'box-cricket-72b9b.firebasestorage.app',
-    measurementId: 'G-GZ38S7Y43V',
+    apiKey: 'AIzaSyCgKW_q7BeK8ph0hsJ90-gz9URU4TXfcIE',
+    appId: '1:6843481967:web:6014b5102d1244f6cc729a',
+    messagingSenderId: '6843481967',
+    projectId: 'box-cricket-df427',
+    authDomain: 'box-cricket-df427.firebaseapp.com',
+    storageBucket: 'box-cricket-df427.firebasestorage.app',
+    measurementId: 'G-L5DWMRGE6M',
   );
+
 }

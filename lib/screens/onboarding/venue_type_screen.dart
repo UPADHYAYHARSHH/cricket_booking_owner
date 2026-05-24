@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -19,7 +21,8 @@ class VenueTypeScreen extends StatefulWidget {
 class _VenueTypeScreenState extends State<VenueTypeScreen> {
   // Map of sport ID to its ground count
   final Map<String, int> _selectedSports = {};
-  String _selectedCategory = 'Indoor';
+  // Map of sport ID to its category (Indoor, Outdoor, Both)
+  final Map<String, String> _sportCategories = {};
 
   @override
   void initState() {
@@ -28,14 +31,14 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
   }
 
   Future<void> _fetchExistingDetails() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final userId = currentUserId;
+    if (userId == null) return;
 
     try {
       final data = await Supabase.instance.client
           .from('owner_details')
           .select()
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle();
 
       if (data != null) {
@@ -46,7 +49,23 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
               _selectedSports[key] = value as int;
             });
           }
-          _selectedCategory = data['venue_category'] ?? 'Indoor';
+          
+          final String? categoryRaw = data['venue_category'];
+          if (categoryRaw != null && categoryRaw.isNotEmpty) {
+            if (categoryRaw.startsWith('{')) {
+              try {
+                final Map<String, dynamic> decoded = jsonDecode(categoryRaw);
+                decoded.forEach((key, value) {
+                  _sportCategories[key] = value.toString();
+                });
+              } catch (_) {}
+            } else {
+              // Legacy/fallback: populate all loaded selected sports to the same category
+              for (var key in _selectedSports.keys) {
+                _sportCategories[key] = categoryRaw;
+              }
+            }
+          }
         });
       }
     } catch (e) {
@@ -97,8 +116,10 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
     setState(() {
       if (_selectedSports.containsKey(id)) {
         _selectedSports.remove(id);
+        _sportCategories.remove(id);
       } else {
         _selectedSports[id] = 1;
+        _sportCategories[id] = 'Indoor';
       }
     });
   }
@@ -124,10 +145,30 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
       return;
     }
     
+    final Map<String, String> cleanedCategories = {};
+    for (var key in _selectedSports.keys) {
+      cleanedCategories[key] = _sportCategories[key] ?? 'Indoor';
+    }
+
     context.read<AuthCubit>().saveVenueType(
       sportsConfig: _selectedSports,
-      category: _selectedCategory,
+      category: jsonEncode(cleanedCategories),
     );
+  }
+
+  List<Map<String, dynamic>> get _allSports {
+    final List<Map<String, dynamic>> list = List.from(_sports);
+    for (var sportId in _selectedSports.keys) {
+      if (!list.any((s) => s['id'] == sportId)) {
+        list.add({
+          'id': sportId,
+          'name': sportId.replaceAll('_', ' ').split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1)}' : '').join(' '),
+          'subtitle': 'Sport Configuration',
+          'icon': Icons.sports,
+        });
+      }
+    }
+    return list;
   }
 
   @override
@@ -148,19 +189,15 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
           return OnboardingLayout(
             currentStep: 2,
             title: "Venue Type",
-            subtitle: "Set ground quantities for each sport",
+            subtitle: "Select and configure your sports",
             isLoading: state is AuthLoading,
             onNext: _onSave,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildLabel("SELECT SPORTS & QUANTITY *"),
+                _buildLabel("SELECT & CONFIGURE SPORTS *"),
                 const AppSizedBox(height: 16),
-                _buildSportsGrid(),
-                const AppSizedBox(height: 32),
-                _buildLabel("VENUE CATEGORY"),
-                const AppSizedBox(height: 12),
-                _buildCategorySelector(),
+                _buildSportsList(),
               ],
             ),
           );
@@ -179,64 +216,139 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
     );
   }
 
-  Widget _buildSportsGrid() {
-    return GridView.builder(
+  Widget _buildSportsList() {
+    final sportsList = _allSports;
+    return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        childAspectRatio: 0.85,
-      ),
-      itemCount: _sports.length,
+      itemCount: sportsList.length,
       itemBuilder: (context, index) {
-        final sport = _sports[index];
-        final isSelected = _selectedSports.containsKey(sport['id']);
-        final count = _selectedSports[sport['id']] ?? 0;
-        
-        return GestureDetector(
-          onTap: () => _onSportTap(sport['id']),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: isSelected
-                    ? AppColors.primaryDarkGreen
-                    : AppColors.primaryDarkGreen.withOpacity(0.1),
-                width: isSelected ? 2 : 1,
-              ),
+        final sport = sportsList[index];
+        final sportId = sport['id'] as String;
+        final isSelected = _selectedSports.containsKey(sportId);
+        final count = _selectedSports[sportId] ?? 1;
+        final category = _sportCategories[sportId] ?? 'Indoor';
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected
+                  ? AppColors.primaryDarkGreen
+                  : AppColors.primaryDarkGreen.withOpacity(0.1),
+              width: isSelected ? 2 : 1,
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  sport['icon'],
-                  color: isSelected
-                      ? AppColors.primaryDarkGreen
-                      : AppColors.textPrimaryLight,
-                  size: 32,
-                ),
-                const AppSizedBox(height: 8),
-                AppText(
-                  text: sport['name'],
-                  size: 14,
-                  weight: FontWeight.w700,
-                  color: AppColors.textPrimaryLight,
-                ),
-                const AppSizedBox(height: 4),
-                AppText(
-                  text: sport['subtitle'],
-                  size: 11,
-                  color: AppColors.textSecondaryLight,
-                ),
-                if (isSelected) ...[
-                  const AppSizedBox(height: 12),
-                  _buildInlineCounter(sport['id'], count),
+            boxShadow: isSelected
+                ? [BoxShadow(color: AppColors.primaryDarkGreen.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))]
+                : null,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row (Icon, Name, Switch)
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.white : const Color(0xFFF0F9F4).withOpacity(0.5),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? AppColors.primaryDarkGreen.withOpacity(0.2) : Colors.transparent,
+                      ),
+                    ),
+                    child: Icon(
+                      sport['icon'],
+                      color: AppColors.primaryDarkGreen,
+                      size: 24,
+                    ),
+                  ),
+                  const AppSizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppText(
+                          text: sport['name'],
+                          size: 15,
+                          weight: FontWeight.w700,
+                          color: AppColors.textPrimaryLight,
+                        ),
+                        const AppSizedBox(height: 2),
+                        AppText(
+                          text: sport['subtitle'],
+                          size: 11,
+                          color: AppColors.textSecondaryLight,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: isSelected,
+                    activeColor: AppColors.primaryDarkGreen,
+                    activeTrackColor: const Color(0xFFF0F9F4),
+                    inactiveThumbColor: Colors.grey.shade400,
+                    inactiveTrackColor: Colors.grey.shade200,
+                    onChanged: (val) => _onSportTap(sportId),
+                  ),
                 ],
+              ),
+              
+              if (isSelected) ...[
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 14),
+                  child: Divider(height: 1, thickness: 1, color: Color(0xFFE0ECE5)),
+                ),
+                
+                // Config Row
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Category Options
+                    Row(
+                      children: ['Indoor', 'Outdoor', 'Both'].map((cat) {
+                        final isSelectedCat = category == cat;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _sportCategories[sportId] = cat;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isSelectedCat ? AppColors.primaryDarkGreen : Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelectedCat
+                                      ? AppColors.primaryDarkGreen
+                                      : AppColors.primaryDarkGreen.withOpacity(0.15),
+                                ),
+                              ),
+                              child: AppText(
+                                text: cat,
+                                size: 12,
+                                weight: isSelectedCat ? FontWeight.w700 : FontWeight.w500,
+                                color: isSelectedCat ? Colors.white : AppColors.textSecondaryLight,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    
+                    // Counter
+                    _buildInlineCounter(sportId, count),
+                  ],
+                ),
               ],
-            ),
+            ],
           ),
         );
       },
@@ -265,7 +377,7 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
@@ -273,41 +385,6 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
         ),
         child: Icon(icon, size: 14, color: AppColors.primaryDarkGreen),
       ),
-    );
-  }
-
-  Widget _buildCategorySelector() {
-    final categories = ['Indoor', 'Outdoor', 'Both'];
-    return Row(
-      children: categories.map((cat) {
-        final isSelected = _selectedCategory == cat;
-        return Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: GestureDetector(
-            onTap: () => setState(() => _selectedCategory = cat),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.primaryDarkGreen
-                      : AppColors.primaryDarkGreen.withOpacity(0.1),
-                ),
-              ),
-              child: AppText(
-                text: cat,
-                size: 14,
-                weight: FontWeight.w600,
-                color: isSelected
-                    ? AppColors.primaryDarkGreen
-                    : AppColors.textSecondaryLight,
-              ),
-            ),
-          ),
-        );
-      }).toList(),
     );
   }
 }

@@ -24,3 +24,11 @@ class AuthProfileIncomplete extends AuthState {
   final int step;
   AuthProfileIncomplete(this.step);
 }
+
+class AuthEmailUnverified extends AuthState {
+  final String email;
+  AuthEmailUnverified(this.email);
+}
+
+class AuthPasswordResetSent extends AuthState {}
+

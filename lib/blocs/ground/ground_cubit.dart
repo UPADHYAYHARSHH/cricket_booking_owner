@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:turfpro_owner/utils/auth_helper.dart';
 
 abstract class GroundState {}
 
@@ -20,8 +21,8 @@ class GroundCubit extends Cubit<GroundState> {
 
   Future<void> fetchOwnerGrounds() async {
     emit(GroundLoading());
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final userId = currentUserId;
+    if (userId == null) return;
 
     try {
       final response = await Supabase.instance.client
@@ -30,7 +31,7 @@ class GroundCubit extends Cubit<GroundState> {
             *,
             ground_images(image_url)
           ''')
-          .eq('owner_id', user.id);
+          .eq('owner_id', userId);
       
       // Map the response to include imageUrl for the UI to display easily
       final formattedData = (response as List).map((e) {
@@ -59,15 +60,15 @@ class GroundCubit extends Cubit<GroundState> {
     Map<String, int>? pricingOverrides,
   }) async {
     emit(GroundLoading());
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final userId = currentUserId;
+    if (userId == null) return;
 
     try {
       // 1. Fetch Owner's address and location (as per user request)
       final ownerDetails = await Supabase.instance.client
           .from('owner_details')
           .select('address, latitude, longitude')
-          .eq('id', user.id)
+          .eq('id', userId)
           .single();
 
       final String address = ownerDetails['address'];
@@ -76,7 +77,7 @@ class GroundCubit extends Cubit<GroundState> {
 
       // 2. Insert Ground (removed non-existent imageUrl column)
       final groundResponse = await Supabase.instance.client.from('grounds').insert({
-        'owner_id': user.id,
+        'owner_id': userId,
         'name': name,
         'categories': [category],
         'description': description,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -25,9 +26,6 @@ class _VenueDetailsScreenState extends State<VenueDetailsScreen> {
   final _pincodeController = TextEditingController();
   final _mapsLinkController = TextEditingController();
   final _contactController = TextEditingController();
-  final _yearController = TextEditingController();
-  final _areaController = TextEditingController();
-  final _landmarkController = TextEditingController();
 
   @override
   void initState() {
@@ -36,14 +34,14 @@ class _VenueDetailsScreenState extends State<VenueDetailsScreen> {
   }
 
   Future<void> _fetchExistingDetails() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final userId = currentUserId;
+    if (userId == null) return;
 
     try {
       final data = await Supabase.instance.client
           .from('owner_details')
           .select()
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle();
 
       if (data != null) {
@@ -55,9 +53,6 @@ class _VenueDetailsScreenState extends State<VenueDetailsScreen> {
           _pincodeController.text = data['pincode'] ?? '';
           _mapsLinkController.text = data['google_maps_link'] ?? '';
           _contactController.text = data['venue_contact'] ?? '';
-          _yearController.text = data['year_established'] ?? '';
-          _areaController.text = data['total_area'] ?? '';
-          _landmarkController.text = data['nearby_landmark'] ?? '';
         });
       }
     } catch (e) {
@@ -74,9 +69,6 @@ class _VenueDetailsScreenState extends State<VenueDetailsScreen> {
     _pincodeController.dispose();
     _mapsLinkController.dispose();
     _contactController.dispose();
-    _yearController.dispose();
-    _areaController.dispose();
-    _landmarkController.dispose();
     super.dispose();
   }
 
@@ -90,9 +82,6 @@ class _VenueDetailsScreenState extends State<VenueDetailsScreen> {
         pincode: _pincodeController.text.trim(),
         mapsLink: _mapsLinkController.text.trim(),
         contact: _contactController.text.trim(),
-        yearEstablished: _yearController.text.trim(),
-        totalArea: _areaController.text.trim(),
-        landmark: _landmarkController.text.trim(),
       );
     }
   }
@@ -164,43 +153,12 @@ class _VenueDetailsScreenState extends State<VenueDetailsScreen> {
 
                   _buildLabel("GOOGLE MAPS LINK / COORDINATES"),
                   _buildTextField(_mapsLinkController, "Paste Google Maps URL or lat,long"),
-                  const AppSizedBox(height: 12),
-                  _buildOutlineButton("📍 Pin on Map", () {}),
                   const AppSizedBox(height: 20),
 
                   _buildLabel("VENUE CONTACT NUMBER *"),
                   _buildTextField(_contactController, "+91 98765 43210", keyboardType: TextInputType.phone),
                   const AppSizedBox(height: 4),
                   const AppText(text: "Displayed to players for ground-level queries", size: 11, color: AppColors.textSecondaryLight),
-                  const AppSizedBox(height: 20),
-
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("YEAR ESTABLISHED"),
-                            _buildTextField(_yearController, "e.g. 2019", keyboardType: TextInputType.number),
-                          ],
-                        ),
-                      ),
-                      const AppSizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _buildLabel("TOTAL AREA (SQ FT)"),
-                            _buildTextField(_areaController, "e.g. 12000", keyboardType: TextInputType.number),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const AppSizedBox(height: 20),
-
-                  _buildLabel("NEARBY LANDMARK"),
-                  _buildTextField(_landmarkController, "e.g. Opposite Reliance Fresh"),
                 ],
               ),
             ),
@@ -253,20 +211,6 @@ class _VenueDetailsScreenState extends State<VenueDetailsScreen> {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.primaryDarkGreen, width: 2),
         ),
-      ),
-    );
-  }
-
-  Widget _buildOutlineButton(String title, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.3)),
-        ),
-        child: AppText(text: title, size: 14, weight: FontWeight.w600, color: AppColors.primaryDarkGreen),
       ),
     );
   }

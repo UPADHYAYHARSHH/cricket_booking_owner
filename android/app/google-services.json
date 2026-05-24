@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "1066185787341",
-    "project_id": "box-cricket-72b9b",
-    "storage_bucket": "box-cricket-72b9b.firebasestorage.app"
+    "project_number": "6843481967",
+    "project_id": "box-cricket-df427",
+    "storage_bucket": "box-cricket-df427.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1066185787341:android:3cf1bfba87aa6c3fc6e684",
+        "mobilesdk_app_id": "1:6843481967:android:57ad42711093fdf3cc729a",
         "android_client_info": {
           "package_name": "com.boxcricket.booking"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyC-vq6_EoD8EzY6_PujjtZEG_3VCSbC78Q"
+          "current_key": "AIzaSyDD1eiwwO6WNgjTYA59Es99r6ncQgIpvXQ"
         }
       ],
       "services": {
@@ -26,15 +26,53 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1066185787341:android:ad561db3b64037dfc6e684",
+        "mobilesdk_app_id": "1:6843481967:android:41ae8c8722c3e868cc729a",
         "android_client_info": {
-          "package_name": "com.turfpro_owner"
+          "package_name": "com.boxcricket.turfpro_owner"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyC-vq6_EoD8EzY6_PujjtZEG_3VCSbC78Q"
+          "current_key": "AIzaSyDD1eiwwO6WNgjTYA59Es99r6ncQgIpvXQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:6843481967:android:6f2e21e9ab480101cc729a",
+        "android_client_info": {
+          "package_name": "com.example.box_cricket_booking"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDD1eiwwO6WNgjTYA59Es99r6ncQgIpvXQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:6843481967:android:89324b617311c080cc729a",
+        "android_client_info": {
+          "package_name": "com.example.box_cricket_booking_owner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDD1eiwwO6WNgjTYA59Es99r6ncQgIpvXQ"
         }
       ],
       "services": {

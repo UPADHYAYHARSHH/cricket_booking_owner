@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -47,14 +48,14 @@ class _GroundCourtInfoScreenState extends State<GroundCourtInfoScreen> {
   }
 
   Future<void> _fetchInitialData() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final userId = currentUserId;
+    if (userId == null) return;
 
     try {
       final data = await Supabase.instance.client
           .from('owner_details')
           .select()
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle();
 
       if (data != null) {
@@ -206,34 +207,10 @@ class _GroundCourtInfoScreenState extends State<GroundCourtInfoScreen> {
         ),
         const AppSizedBox(height: 20),
 
-        Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildLabel("NO. OF NETS / COURTS"),
-                  _buildSmallTextField(
-                    initialValue: config['num_courts'].toString(),
-                    onChanged: (v) => config['num_courts'] = v,
-                  ),
-                ],
-              ),
-            ),
-            const AppSizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildLabel("PLAYERS PER SIDE"),
-                  _buildSmallTextField(
-                    initialValue: config['players_per_side'].toString(),
-                    onChanged: (v) => config['players_per_side'] = v,
-                  ),
-                ],
-              ),
-            ),
-          ],
+        _buildLabel("NO. OF NETS / COURTS"),
+        _buildSmallTextField(
+          initialValue: config['num_courts'].toString(),
+          onChanged: (v) => config['num_courts'] = v,
         ),
         const AppSizedBox(height: 20),
 
@@ -313,13 +290,7 @@ class _GroundCourtInfoScreenState extends State<GroundCourtInfoScreen> {
         ),
         const AppSizedBox(height: 20),
 
-        _buildLabel("MAX SPECTATOR CAPACITY"),
-        _buildSmallTextField(
-          initialValue: config['max_spectators'],
-          hint: "e.g. 50",
-          onChanged: (v) => config['max_spectators'] = v,
-        ),
-        const AppSizedBox(height: 20),
+
 
         _buildLabel("COURT NAME / LABEL (OPTIONAL)"),
         Row(

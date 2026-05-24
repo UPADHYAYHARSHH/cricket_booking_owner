@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
+import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -37,8 +38,6 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
     'score_display': false,
   };
 
-  final TextEditingController _twoWheelerController = TextEditingController();
-  final TextEditingController _fourWheelerController = TextEditingController();
   String _parkingCharge = 'Free';
   bool _isLoadingData = true;
 
@@ -49,14 +48,14 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
   }
 
   Future<void> _fetchExistingDetails() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final userId = currentUserId;
+    if (userId == null) return;
 
     try {
       final data = await Supabase.instance.client
           .from('owner_details')
           .select()
-          .eq('id', user.id)
+          .eq('id', userId)
           .maybeSingle();
 
       if (data != null && data['amenities_config'] != null) {
@@ -67,8 +66,6 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
               _amenities[key] = config[key] ?? false;
             }
           });
-          _twoWheelerController.text = config['two_wheeler_spots']?.toString() ?? '';
-          _fourWheelerController.text = config['four_wheeler_spots']?.toString() ?? '';
           _parkingCharge = config['parking_charge'] ?? 'Free';
         });
       }
@@ -81,8 +78,8 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
 
   void _onSave() {
     final Map<String, dynamic> config = Map.from(_amenities);
-    config['two_wheeler_spots'] = _twoWheelerController.text.trim();
-    config['four_wheeler_spots'] = _fourWheelerController.text.trim();
+    config['two_wheeler_spots'] = "";
+    config['four_wheeler_spots'] = "";
     config['parking_charge'] = _parkingCharge;
 
     context.read<AuthCubit>().saveAmenities(amenitiesConfig: config);
@@ -146,30 +143,6 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
 
                 const AppSizedBox(height: 32),
                 _buildSectionHeader("🅿️ PARKING DETAILS"),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildLabel("2-WHEELER SPOTS"),
-                          _buildTextField(_twoWheelerController, "e.g. 20"),
-                        ],
-                      ),
-                    ),
-                    const AppSizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildLabel("4-WHEELER SPOTS"),
-                          _buildTextField(_fourWheelerController, "e.g. 10"),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const AppSizedBox(height: 20),
                 _buildLabel("PARKING CHARGE"),
                 _buildChargeSelector(),
               ],
@@ -224,19 +197,6 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      decoration: InputDecoration(
-        hintText: hint,
-        filled: true,
-        fillColor: const Color(0xFFF0F9F4).withOpacity(0.5),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-      ),
-    );
-  }
 
   Widget _buildChargeSelector() {
     return Row(
