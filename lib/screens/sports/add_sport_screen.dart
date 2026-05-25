@@ -7,6 +7,7 @@ import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/blocs/ground/ground_cubit.dart';
 import 'package:toastification/toastification.dart';
+import 'package:turfpro_owner/utils/form_util.dart';
 
 class AddSportScreen extends StatefulWidget {
   const AddSportScreen({super.key});
@@ -86,7 +87,10 @@ class _AddSportScreenState extends State<AddSportScreen> {
 
   void _onNext() {
     if (_currentStep < 2) {
-      if (_currentStep == 0 && !_formKey.currentState!.validate()) return;
+      if (_currentStep == 0 && !_formKey.currentState!.validate()) {
+        FormUtil.scrollToError(context);
+        return;
+      }
       setState(() => _currentStep++);
     } else {
       _submit();

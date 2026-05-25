@@ -155,24 +155,6 @@ class _PricingSetupScreenState extends State<PricingSetupScreen> {
                 ),
 
                 const AppSizedBox(height: 32),
-                _buildLabel("MINIMUM ADVANCE PAYMENT *"),
-                _buildChoiceChips(
-                  options: ['25% advance', '50% advance', '100% (full)'],
-                  selected: _advancePayment,
-                  onSelected: (v) => setState(() => _advancePayment = v),
-                ),
-                const AppSizedBox(height: 8),
-                const AppText(text: "Remaining amount collected at ground", size: 12, color: AppColors.textSecondaryLight),
-
-                const AppSizedBox(height: 32),
-                _buildLabel("CANCELLATION REFUND POLICY"),
-                _buildChoiceChips(
-                  options: ['Full refund (before window)', '50% refund', 'No refund'],
-                  selected: _refundPolicy,
-                  onSelected: (v) => setState(() => _refundPolicy = v),
-                ),
-
-                const AppSizedBox(height: 32),
                 _buildLabel("GST APPLICABLE"),
                 _buildChoiceChips(
                   options: ['Yes — 18% GST', 'No GST'],
@@ -181,34 +163,6 @@ class _PricingSetupScreenState extends State<PricingSetupScreen> {
                 ),
                 const AppSizedBox(height: 8),
                 const AppText(text: "Required if your annual turnover exceeds ₹20L", size: 12, color: AppColors.textSecondaryLight),
-
-                const AppSizedBox(height: 32),
-                _buildSectionHeader("CRICBOOK PLATFORM FEE (INFO)"),
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF0F9F4).withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const AppText(
-                        text: "CricBook charges 5–8% per booking as platform fee.",
-                        size: 14,
-                        weight: FontWeight.w600,
-                        color: AppColors.textPrimaryLight,
-                      ),
-                      const AppSizedBox(height: 4),
-                      AppText(
-                        text: "This is deducted before settlement to your account. No monthly subscription fee.",
-                        size: 13,
-                        color: AppColors.textSecondaryLight.withOpacity(0.8),
-                      ),
-                    ],
-                  ),
-                ),
               ],
             ),
           );

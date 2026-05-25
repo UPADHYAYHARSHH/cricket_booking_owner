@@ -12,6 +12,7 @@ import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/common/widgets/onboarding_layout.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/utils/auth_helper.dart';
+import 'package:turfpro_owner/utils/form_util.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -184,6 +185,8 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
         state: _stateController.text.trim(),
         phone: _phoneController.text.trim(),
       );
+    } else {
+      FormUtil.scrollToError(context);
     }
   }
 

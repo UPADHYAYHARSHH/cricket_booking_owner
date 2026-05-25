@@ -30,8 +30,8 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
   final Map<String, List<File>> _courtPhotos = {};
   final Map<String, List<String>> _courtPhotoUrls = {};
   
-  final Map<String, List<File>> _amenityPhotos = {};
-  final Map<String, List<String>> _amenityPhotoUrls = {};
+  List<File> _amenityPhotosList = [];
+  List<String> _amenityPhotoUrlsList = [];
 
   File? _videoFile;
   String? _videoUrl;
@@ -104,9 +104,14 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
           });
 
           final existingAmenities = mediaConfig['amenity_media'] as Map? ?? {};
-          existingAmenities.forEach((key, urls) {
-            _amenityPhotoUrls[key] = List<String>.from(urls);
-          });
+          if (existingAmenities.containsKey('all')) {
+            _amenityPhotoUrlsList = List<String>.from(existingAmenities['all']);
+          } else {
+            _amenityPhotoUrlsList = [];
+            existingAmenities.forEach((key, urls) {
+              _amenityPhotoUrlsList.addAll(List<String>.from(urls));
+            });
+          }
 
           _isLoadingData = false;
         });
@@ -126,8 +131,6 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
         _coverPhoto = File(image.path);
       } else if (type == 'court' && key != null) {
         _courtPhotos.putIfAbsent(key, () => []).add(File(image.path));
-      } else if (type == 'amenity' && key != null) {
-        _amenityPhotos.putIfAbsent(key, () => []).add(File(image.path));
       }
     });
   }
@@ -183,15 +186,14 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
         finalCourtMedia[entry.key] = urls;
       }
 
-      final Map<String, List<String>> finalAmenityMedia = Map.from(_amenityPhotoUrls);
-      for (var entry in _amenityPhotos.entries) {
-        final List<String> urls = finalAmenityMedia[entry.key] ?? [];
-        for (var file in entry.value) {
-          final url = await _uploadFile(file, 'amenities');
-          if (url != null) urls.add(url);
-        }
-        finalAmenityMedia[entry.key] = urls;
+      final List<String> finalAmenityUrls = List.from(_amenityPhotoUrlsList);
+      for (var file in _amenityPhotosList) {
+        final url = await _uploadFile(file, 'amenities');
+        if (url != null) finalAmenityUrls.add(url);
       }
+      final Map<String, List<String>> finalAmenityMedia = {
+        'all': finalAmenityUrls,
+      };
 
       String? finalVideoUrl = _videoUrl;
       if (_videoFile != null) {
@@ -237,26 +239,11 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
           
           const AppSizedBox(height: 32),
           _buildSectionHeader("COURT / GROUND PHOTOS *"),
-          ..._courtNames.map((name) => _buildMediaCategory(name, 'court', name)),
+          ..._courtNames.map((name) => _buildMediaCategory(name, name)),
 
           const AppSizedBox(height: 32),
           _buildSectionHeader("AMENITY PHOTOS"),
-          ..._selectedAmenities.map((key) => _buildMediaCategory(_amenityLabels[key]!, 'amenity', key)),
-
-          const AppSizedBox(height: 32),
-          _buildSectionHeader("VIDEO TOUR (OPTIONAL)"),
-          _buildVideoPicker(),
-          const AppSizedBox(height: 16),
-          _buildLabel("OR PASTE YOUTUBE LINK"),
-          TextFormField(
-            controller: _youtubeController,
-            decoration: InputDecoration(
-              hintText: "https://youtube.com/watch?v=...",
-              filled: true,
-              fillColor: const Color(0xFFF0F9F4).withOpacity(0.3),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-            ),
-          ),
+          _buildUnifiedAmenityPhotos(),
         ],
       ),
     );
@@ -339,10 +326,10 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
     );
   }
 
-  Widget _buildMediaCategory(String title, String type, String key) {
-    final files = _courtPhotos[key] ?? [];
-    final urls = (type == 'court' ? _courtPhotoUrls[key] : _amenityPhotoUrls[key]) ?? [];
-    final total = files.length + urls.length;
+  Widget _buildMediaCategory(String title, String key) {
+    final List<File> files = _courtPhotos[key] ?? [];
+    final List<String> urls = _courtPhotoUrls[key] ?? [];
+    final int total = files.length + urls.length;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,7 +342,7 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
             itemCount: total + 1,
             itemBuilder: (context, index) {
               if (index == total) {
-                return _buildAddMore(() => _pickImage(type, key: key));
+                return _buildAddMore(() => _pickImage('court', key: key));
               }
               final isExisting = index < urls.length;
               return Container(
@@ -392,28 +379,95 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
     );
   }
 
-  Widget _buildVideoPicker() {
-    final hasVideo = _videoFile != null || _videoUrl != null;
-    return GestureDetector(
-      onTap: _pickVideo,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: hasVideo ? const Color(0xFFF0F9F4) : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.2), style: BorderStyle.none),
+  Future<void> _pickAmenityImages() async {
+    final List<XFile> images = await _picker.pickMultiImage();
+    if (images.isEmpty) return;
+
+    setState(() {
+      for (var image in images) {
+        _amenityPhotosList.add(File(image.path));
+      }
+    });
+  }
+
+  Widget _buildUnifiedAmenityPhotos() {
+    final total = _amenityPhotosList.length + _amenityPhotoUrlsList.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          height: 120,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: total + 1,
+            itemBuilder: (context, index) {
+              if (index == total) {
+                return GestureDetector(
+                  onTap: _pickAmenityImages,
+                  child: Container(
+                    width: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+                    ),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_a_photo_outlined, color: AppColors.primaryDarkGreen, size: 28),
+                        AppSizedBox(height: 8),
+                        AppText(text: "Add Photos", size: 12, weight: FontWeight.w700, color: AppColors.primaryDarkGreen),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              final isExisting = index < _amenityPhotoUrlsList.length;
+              return Stack(
+                children: [
+                  Container(
+                    width: 120,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      image: DecorationImage(
+                        image: isExisting 
+                          ? NetworkImage(_amenityPhotoUrlsList[index]) 
+                          : FileImage(_amenityPhotosList[index - _amenityPhotoUrlsList.length]) as ImageProvider,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 6,
+                    right: 18,
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          if (isExisting) {
+                            _amenityPhotoUrlsList.removeAt(index);
+                          } else {
+                            _amenityPhotosList.removeAt(index - _amenityPhotoUrlsList.length);
+                          }
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.black54,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.close, color: Colors.white, size: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ),
-        child: Column(
-          children: [
-            Icon(hasVideo ? Icons.check_circle : Icons.movie_outlined, size: 40, color: AppColors.primaryDarkGreen),
-            const AppSizedBox(height: 8),
-            AppText(text: hasVideo ? "Video Selected" : "Upload a walkthrough video", size: 15, weight: FontWeight.w700, color: AppColors.primaryDarkGreen),
-            const AppSizedBox(height: 4),
-            const AppText(text: "MP4, max 100MB", size: 12, color: Colors.grey),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

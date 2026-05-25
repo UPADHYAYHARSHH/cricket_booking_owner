@@ -282,18 +282,7 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
                   ],
                 ),
                 const AppSizedBox(height: 16),
-                _buildLabel("UPI ID (OPTIONAL)"),
-                _buildTextField(_upiController, "e.g. rajesh@okaxis", helper: "Instant payouts via UPI for smaller settlements"),
-                const AppSizedBox(height: 16),
                 _buildUploadField("cheque", "CANCELLED CHEQUE (UPLOAD)", "Cancelled cheque or bank passbook front page • JPG or PDF • Max 3MB"),
-
-                const AppSizedBox(height: 32),
-                _buildLabel("PAYOUT PREFERENCE"),
-                _buildChoiceChips(
-                  options: ['Weekly (every Monday)', 'Bi-weekly', 'Monthly'],
-                  selected: _payoutPreference,
-                  onSelected: (v) => setState(() => _payoutPreference = v),
-                ),
               ],
             ),
           );

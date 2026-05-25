@@ -97,7 +97,6 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
               _buildSectionHeader("SLOTS & PRICING", 6),
               _buildReviewRow("Hours", "${slotConfig['opening_time'] ?? 'N/A'} – ${slotConfig['closing_time'] ?? 'N/A'}"),
               _buildReviewRow("Slot duration", slotConfig['slot_duration'] ?? "N/A"),
-              _buildReviewRow("Advance Payment", pricingConfig['advance_payment'] ?? "N/A"),
 
               const AppSizedBox(height: 32),
               _buildSectionHeader("DOCUMENTS", 8),

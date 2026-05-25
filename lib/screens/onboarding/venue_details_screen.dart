@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:turfpro_owner/utils/auth_helper.dart';
+import 'package:turfpro_owner/utils/form_util.dart';
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -83,6 +84,8 @@ class _VenueDetailsScreenState extends State<VenueDetailsScreen> {
         mapsLink: _mapsLinkController.text.trim(),
         contact: _contactController.text.trim(),
       );
+    } else {
+      FormUtil.scrollToError(context);
     }
   }
 

@@ -14,6 +14,7 @@ import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/utils/auth_helper.dart';
+import 'package:turfpro_owner/utils/form_util.dart';
 
 class DocumentUploadScreen extends StatefulWidget {
   const DocumentUploadScreen({super.key});
@@ -253,6 +254,8 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
       );
 
       setState(() => _currentStep = 1);
+    } else {
+      FormUtil.scrollToError(context);
     }
   }
 
