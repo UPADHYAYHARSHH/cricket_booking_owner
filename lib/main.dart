@@ -7,6 +7,7 @@ import 'package:turfpro_owner/firebase_options.dart';
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/blocs/ground/ground_cubit.dart';
 import 'package:turfpro_owner/blocs/slot/slot_cubit.dart';
+import 'package:turfpro_owner/blocs/bookings/bookings_cubit.dart';
 import 'package:turfpro_owner/screens/auth/login_screen.dart';
 import 'package:turfpro_owner/screens/auth/otp_screen.dart';
 import 'package:turfpro_owner/screens/auth/signup_screen.dart';
@@ -53,6 +54,7 @@ class MyApp extends StatelessWidget {
         BlocProvider<AuthCubit>(create: (context) => AuthCubit()),
         BlocProvider<GroundCubit>(create: (context) => GroundCubit()),
         BlocProvider<SlotCubit>(create: (context) => SlotCubit()),
+        BlocProvider<BookingsCubit>(create: (context) => BookingsCubit()),
       ],
       child: ToastificationWrapper(
         child: MaterialApp(

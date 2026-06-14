@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
-import 'package:turfpro_owner/screens/sports/my_sports_screen.dart';
+import 'package:turfpro_owner/screens/dashboard/dashboard_screen.dart';
+import 'package:turfpro_owner/screens/bookings/bookings_screen.dart';
 
 class MainNavbar extends StatefulWidget {
   const MainNavbar({super.key});
@@ -14,21 +16,25 @@ class _MainNavbarState extends State<MainNavbar> {
   int _selectedIndex = 0;
 
   static final List<Widget> _screens = [
-    _PlaceholderScreen(
-      title: "Dashboard",
-      icon: HugeIcons.strokeRoundedDashboardSquare01,
-    ),
-    _PlaceholderScreen(
-      title: "Bookings",
+    const DashboardScreen(),
+    const _PlaceholderScreen(
+      title: "Slots",
       icon: HugeIcons.strokeRoundedCalendar01,
     ),
-    const MySportsScreen(),
-    _PlaceholderScreen(title: "Profile", icon: HugeIcons.strokeRoundedUser),
+    const BookingsScreen(),
+    const _PlaceholderScreen(
+      title: "Revenue",
+      icon: HugeIcons.strokeRoundedMoneyBag01,
+    ),
+    const _PlaceholderScreen(
+      title: "Profile",
+      icon: HugeIcons.strokeRoundedUser,
+    ),
   ];
 
   @override
   Widget build(BuildContext context) {
-    const primaryColor = Color(0xFFFF6B00);
+    const primaryColor = AppColors.primaryDarkGreen;
 
     return Scaffold(
       body: _screens[_selectedIndex],
@@ -63,7 +69,7 @@ class _MainNavbarState extends State<MainNavbar> {
           items: [
             BottomNavigationBarItem(
               icon: HugeIcon(
-                icon: HugeIcons.strokeRoundedDashboardSquare01,
+                icon: HugeIcons.strokeRoundedHome01,
                 color: _selectedIndex == 0
                     ? primaryColor
                     : Colors.grey.shade400,
@@ -77,21 +83,30 @@ class _MainNavbarState extends State<MainNavbar> {
                     ? primaryColor
                     : Colors.grey.shade400,
               ),
-              label: "Bookings",
+              label: "Slots",
             ),
             BottomNavigationBarItem(
               icon: HugeIcon(
-                icon: HugeIcons.strokeRoundedFootball,
+                icon: HugeIcons.strokeRoundedTaskDone01,
                 color: _selectedIndex == 2
                     ? primaryColor
                     : Colors.grey.shade400,
               ),
-              label: "Sports",
+              label: "Bookings",
+            ),
+            BottomNavigationBarItem(
+              icon: HugeIcon(
+                icon: HugeIcons.strokeRoundedMoneyBag01,
+                color: _selectedIndex == 3
+                    ? primaryColor
+                    : Colors.grey.shade400,
+              ),
+              label: "Revenue",
             ),
             BottomNavigationBarItem(
               icon: HugeIcon(
                 icon: HugeIcons.strokeRoundedUser,
-                color: _selectedIndex == 3
+                color: _selectedIndex == 4
                     ? primaryColor
                     : Colors.grey.shade400,
               ),

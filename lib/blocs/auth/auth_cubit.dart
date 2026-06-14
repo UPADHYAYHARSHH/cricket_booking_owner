@@ -452,6 +452,120 @@ class AuthCubit extends Cubit<AuthState> {
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', user.uid);
       
+      // Sync grounds to the grounds table
+      try {
+        final ownerData = await Supabase.instance.client
+            .from('owner_details')
+            .select()
+            .eq('id', user.uid)
+            .maybeSingle();
+
+        if (ownerData != null) {
+          final groundConfig = ownerData['ground_config'] as Map<String, dynamic>?;
+          final amenitiesConfig = ownerData['amenities_config'] as Map<String, dynamic>? ?? {};
+          final slotConfig = ownerData['slot_config'] as Map<String, dynamic>? ?? {};
+          
+          if (groundConfig != null) {
+            // Delete existing grounds for this owner first to avoid duplicates
+            await Supabase.instance.client.from('grounds').delete().eq('owner_id', user.uid);
+            
+            List<Map<String, dynamic>> groundsToInsert = [];
+            
+            groundConfig.forEach((sportKey, sportDetails) {
+              if (sportDetails is Map<String, dynamic>) {
+                final numCourtsRaw = sportDetails['num_courts'];
+                int numCourts = 1;
+                if (numCourtsRaw is int) numCourts = numCourtsRaw;
+                if (numCourtsRaw is String) numCourts = int.tryParse(numCourtsRaw) ?? 1;
+
+                final courtNames = sportDetails['court_names'] as List<dynamic>? ?? [];
+
+                for (int i = 0; i < numCourts; i++) {
+                  String courtName = (courtNames.length > i) ? courtNames[i] : "$sportKey Court ${i + 1}";
+                  
+                  // Format opening/closing times if available
+                  String? openingTime = slotConfig['opening_time'];
+                  String? closingTime = slotConfig['closing_time'];
+                  
+                  // Convert "6:00 AM" to "06:00:00" for postgres time format if needed, 
+                  // but we'll just store strings if the DB accepts it, else fallback to standard
+                  // Let's assume the DB accepts standard time strings or we format them simply
+                  String formatTime(String? t) {
+                    if (t == null) return '06:00:00';
+                    // Very basic parsing for 6:00 AM format
+                    try {
+                      final tClean = t.replaceAll(RegExp(r'[^0-9:AMPMapm]'), '');
+                      bool isPM = tClean.toLowerCase().contains('pm');
+                      String timeStr = tClean.replaceAll(RegExp(r'[AMPMapm]'), '').trim();
+                      List<String> parts = timeStr.split(':');
+                      int hour = int.parse(parts[0]);
+                      int min = parts.length > 1 ? int.parse(parts[1]) : 0;
+                      if (isPM && hour != 12) hour += 12;
+                      if (!isPM && hour == 12) hour = 0;
+                      return '${hour.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')}:00';
+                    } catch (_) {
+                      return '06:00:00';
+                    }
+                  }
+
+                  // Try to get price
+                  int price = 800;
+                  try {
+                    final pricing = ownerData['pricing_config']?[sportKey]?['weekday']?['off_peak'];
+                    if (pricing != null) price = int.tryParse(pricing.toString()) ?? 800;
+                  } catch (_) {}
+
+                  List<String> mapCategories(String key) {
+                    if (key == 'box_cricket') return ['Cricket', 'Box Cricket'];
+                    if (key == 'football') return ['Football'];
+                    if (key == 'pickleball') return ['Pickleball'];
+                    if (key == 'volleyball') return ['Volleyball'];
+                    if (key == 'basketball') return ['Basketball'];
+                    if (key == 'badminton') return ['Badminton'];
+                    return [key];
+                  }
+
+                  groundsToInsert.add({
+                    'owner_id': user.uid,
+                    'name': courtName,
+                    'description': ownerData['venue_tagline'] ?? '',
+                    'address': ownerData['address'] ?? '',
+                    'city': ownerData['city'] ?? '',
+                    'state': ownerData['state'] ?? '',
+                    'opening_time': formatTime(slotConfig['opening_time']),
+                    'closing_time': formatTime(slotConfig['closing_time']),
+                    'ground_type': sportKey,
+                    'categories': mapCategories(sportKey),
+                    'turf_type': sportDetails['surface_type'] ?? sportDetails['pitch_type'] ?? '',
+                    'players_allowed': int.tryParse(sportDetails['players_per_side']?.toString() ?? '12') ?? 12,
+                    'is_indoor': ownerData['venue_category'] == 'Indoor',
+                    'has_parking': amenitiesConfig['parking'] == true,
+                    'has_washroom': amenitiesConfig['washrooms'] == true,
+                    'has_floodlights': sportDetails['floodlights'] != null && sportDetails['floodlights'].toString().toLowerCase().contains('yes'),
+                    'has_drinking_water': amenitiesConfig['drinking_water'] == true,
+                    'is_available': true,
+                    'price_per_hour': price,
+                    'rating': 4.5,
+                    'total_reviews': 0,
+                    'slot_duration': 60,
+                    'latitude': ownerData['latitude'] ?? 23.05,
+                    'longitude': ownerData['longitude'] ?? 72.55,
+                  });
+                }
+              }
+            });
+
+            if (groundsToInsert.isNotEmpty) {
+              await Supabase.instance.client.from('grounds').insert(groundsToInsert);
+              print("Successfully synced ${groundsToInsert.length} grounds to the grounds table.");
+            }
+          }
+        }
+      } catch (syncError) {
+        print("Error syncing grounds: $syncError");
+        // We don't want to throw and fail the submit if sync fails, but we log it.
+      }
+
       await checkDocumentStatus();
     } catch (e) {
       emit(AuthError("Failed to submit application: ${e.toString()}"));

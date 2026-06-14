@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -33,6 +34,15 @@ class OnboardingLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
       listener: (context, state) {
+        if (state is AuthError) {
+          toastification.show(
+            context: context,
+            title: const Text("Error"),
+            description: Text(state.message),
+            type: ToastificationType.error,
+            autoCloseDuration: const Duration(seconds: 4),
+          );
+        }
         if (state is AuthProfileIncomplete) {
           String route = '/personal-info';
           if (state.step == 2) route = '/venue-type';
