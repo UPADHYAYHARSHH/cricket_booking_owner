@@ -11,9 +11,12 @@ class BookingsCubit extends Cubit<BookingsState> {
     try {
       final user = f_auth.FirebaseAuth.instance.currentUser;
       if (user == null) {
+        print("BookingsCubit: User is null");
         emit(BookingsError("User not logged in"));
         return;
       }
+      
+      print("BookingsCubit: Fetching grounds for owner UID: ${user.uid}");
 
       // Fetch grounds owned by this owner
       final groundsData = await Supabase.instance.client
@@ -21,13 +24,18 @@ class BookingsCubit extends Cubit<BookingsState> {
           .select('id, name')
           .eq('owner_id', user.uid);
 
+      print("BookingsCubit: Grounds returned from DB: ${groundsData.length}");
+
       if (groundsData.isEmpty) {
+        print("BookingsCubit: No grounds found for this owner.");
         emit(BookingsLoaded(allBookings: [], filteredBookings: []));
         return;
       }
 
       final groundIds = groundsData.map((g) => g['id']).toList();
       final groundMap = {for (var g in groundsData) g['id']: g['name']};
+      
+      print("BookingsCubit: Ground IDs list: $groundIds");
 
       // Fetch all bookings for those grounds
       final bookings = await Supabase.instance.client
@@ -35,6 +43,8 @@ class BookingsCubit extends Cubit<BookingsState> {
           .select()
           .filter('ground_id', 'in', groundIds)
           .order('created_at', ascending: false);
+          
+      print("BookingsCubit: Bookings returned from DB: ${bookings.length}");
 
       List<dynamic> allBookings = [];
       for (var b in bookings) {
@@ -48,6 +58,7 @@ class BookingsCubit extends Cubit<BookingsState> {
 
       emit(BookingsLoaded(allBookings: allBookings, filteredBookings: allBookings));
     } catch (e) {
+      print("BookingsCubit: Error caught: $e");
       emit(BookingsError(e.toString()));
     }
   }

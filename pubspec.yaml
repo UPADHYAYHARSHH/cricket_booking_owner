@@ -53,6 +53,7 @@ dependencies:
   file_picker: ^11.0.2
   firebase_auth: ^6.5.1
   http: ^1.6.0
+  shimmer: ^3.0.0
 
 dev_dependencies:
   flutter_test:

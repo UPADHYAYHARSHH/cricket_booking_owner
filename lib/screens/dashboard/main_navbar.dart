@@ -4,6 +4,7 @@ import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/screens/dashboard/dashboard_screen.dart';
 import 'package:turfpro_owner/screens/bookings/bookings_screen.dart';
+import 'package:turfpro_owner/screens/slots/slots_screen.dart';
 
 class MainNavbar extends StatefulWidget {
   const MainNavbar({super.key});
@@ -17,10 +18,7 @@ class _MainNavbarState extends State<MainNavbar> {
 
   static final List<Widget> _screens = [
     const DashboardScreen(),
-    const _PlaceholderScreen(
-      title: "Slots",
-      icon: HugeIcons.strokeRoundedCalendar01,
-    ),
+    const SlotsScreen(),
     const BookingsScreen(),
     const _PlaceholderScreen(
       title: "Revenue",
