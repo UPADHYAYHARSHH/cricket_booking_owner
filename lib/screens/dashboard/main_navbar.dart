@@ -5,6 +5,7 @@ import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/screens/dashboard/dashboard_screen.dart';
 import 'package:turfpro_owner/screens/bookings/bookings_screen.dart';
 import 'package:turfpro_owner/screens/slots/slots_screen.dart';
+import 'package:turfpro_owner/screens/dashboard/profile_screen.dart';
 
 class MainNavbar extends StatefulWidget {
   const MainNavbar({super.key});
@@ -24,10 +25,7 @@ class _MainNavbarState extends State<MainNavbar> {
       title: "Revenue",
       icon: HugeIcons.strokeRoundedMoneyBag01,
     ),
-    const _PlaceholderScreen(
-      title: "Profile",
-      icon: HugeIcons.strokeRoundedUser,
-    ),
+    const ProfileScreen(),
   ];
 
   @override

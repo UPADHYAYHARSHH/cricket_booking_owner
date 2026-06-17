@@ -82,6 +82,7 @@ class MyApp extends StatelessWidget {
             '/venue-details': (context) => const VenueDetailsScreen(),
             '/ground-court-info': (context) => const GroundCourtInfoScreen(),
             '/amenities': (context) => const AmenitiesScreen(),
+            '/amenities-settings': (context) => const AmenitiesScreen(isSettingsMode: true),
             '/slot-config': (context) => const SlotConfigScreen(),
             '/pricing-setup': (context) => const PricingSetupScreen(),
             '/kyc-documentation': (context) => const KycDocumentationScreen(),

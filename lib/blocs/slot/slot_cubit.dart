@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -6,7 +7,15 @@ import 'package:firebase_auth/firebase_auth.dart' as f_auth;
 import 'package:turfpro_owner/blocs/slot/slot_state.dart';
 
 class SlotCubit extends Cubit<SlotState> {
+  StreamSubscription<List<Map<String, dynamic>>>? _bookingsSubscription;
+
   SlotCubit() : super(SlotInitial());
+
+  @override
+  Future<void> close() {
+    _bookingsSubscription?.cancel();
+    return super.close();
+  }
 
   Future<void> fetchInitialData() async {
     emit(SlotLoading());
@@ -112,102 +121,109 @@ class SlotCubit extends Cubit<SlotState> {
         endTime = endTime.add(const Duration(days: 1));
       }
 
-      // Generate virtual slots
-      List<VirtualSlot> virtualSlots = [];
-      DateTime currentSlotTime = startTime;
-      
-      while (currentSlotTime.isBefore(endTime)) {
-        final nextSlotTime = currentSlotTime.add(Duration(minutes: slotDurationMins));
-        if (nextSlotTime.isAfter(endTime)) break;
-        
-        // Mock peak pricing logic
-        final isPeak = currentSlotTime.hour >= 18 && currentSlotTime.hour <= 21;
-        final slotPrice = isPeak ? defaultPrice + 100 : defaultPrice;
+      // Cancel any existing subscription
+      await _bookingsSubscription?.cancel();
 
-        virtualSlots.add(VirtualSlot(
-          startTime: currentSlotTime,
-          endTime: nextSlotTime,
-          status: SlotStatus.open,
-          price: slotPrice,
-        ));
-        
-        currentSlotTime = nextSlotTime;
-      }
+      final dateStartStr = DateTime(date.year, date.month, date.day).toIso8601String();
+      final dateEndStr = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
 
-      // Fetch actual bookings
-      final dateStart = DateTime(date.year, date.month, date.day).toIso8601String();
-      final dateEnd = DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
-
-      final bookingsData = await Supabase.instance.client
+      // Subscribe to real-time bookings for this ground and date
+      _bookingsSubscription = Supabase.instance.client
           .from('bookings')
-          .select()
+          .stream(primaryKey: ['id'])
           .eq('ground_id', groundId)
-          .gte('slot_time', dateStart)
-          .lte('slot_time', dateEnd)
-          .eq('status', 'confirmed');
+          .listen((allBookingsData) {
 
-      int todayRevenue = 0;
-      for (var b in bookingsData) {
-        todayRevenue += (b['amount'] as num?)?.toInt() ?? (defaultPrice as num).toInt();
-      }
-      int bookedCount = bookingsData.length;
+            // Filter for the selected date on the client side
+            final bookingsData = allBookingsData.where((b) {
+              if (b['status'] != 'confirmed') return false;
+              final slotTime = b['slot_time'];
+              if (slotTime == null) return false;
+              return slotTime.compareTo(dateStartStr) >= 0 && slotTime.compareTo(dateEndStr) <= 0;
+            }).toList();
 
-      // Merge bookings onto slots
-      for (int i = 0; i < virtualSlots.length; i++) {
-        final vSlot = virtualSlots[i];
-        
-        // Find if any booking matches this start time
-        final matchingBooking = bookingsData.cast<Map<String, dynamic>?>().firstWhere(
-          (b) {
-            if (b == null) return false;
-            final bookingTime = DateTime.parse(b['slot_time']).toLocal();
-            // Fallback: If User App saves 00:00:00, we can't reliably match the exact hour.
-            // But we will try to match hour and minute if it exists.
-            return bookingTime.hour == vSlot.startTime.hour && bookingTime.minute == vSlot.startTime.minute;
-          }, 
-          orElse: () => null,
-        );
+            // Generate base virtual slots
+            List<VirtualSlot> virtualSlots = [];
+            DateTime currentSlotTime = startTime;
+            
+            while (currentSlotTime.isBefore(endTime)) {
+              final nextSlotTime = currentSlotTime.add(Duration(minutes: slotDurationMins));
+              if (nextSlotTime.isAfter(endTime)) break;
+              
+              final isPeak = currentSlotTime.hour >= 18 && currentSlotTime.hour <= 21;
+              final slotPrice = isPeak ? defaultPrice + 100 : defaultPrice;
 
-        if (matchingBooking != null) {
-          virtualSlots[i] = VirtualSlot(
-            startTime: vSlot.startTime,
-            endTime: vSlot.endTime,
-            status: SlotStatus.booked,
-            price: (matchingBooking['amount'] as num?)?.toInt() ?? vSlot.price,
-            bookedPlayerName: 'Customer (ID: ${matchingBooking['user_id'].toString().substring(0, 4)})',
-            bookedPlayersCount: 8, // mock players count
-            bookingId: matchingBooking['id'],
-          );
-        } else {
-          // Mock maintenance at 12 PM for demo purposes if nothing is booked
-          if (vSlot.startTime.hour == 12) {
-             virtualSlots[i] = VirtualSlot(
-              startTime: vSlot.startTime,
-              endTime: vSlot.endTime,
-              status: SlotStatus.maintenance,
-              price: vSlot.price,
-            );
-          } else if (vSlot.startTime.hour >= 18 && vSlot.startTime.hour <= 21) {
-             virtualSlots[i] = VirtualSlot(
-              startTime: vSlot.startTime,
-              endTime: vSlot.endTime,
-              status: SlotStatus.peak,
-              price: vSlot.price,
-            );
-          }
-        }
-      }
+              virtualSlots.add(VirtualSlot(
+                startTime: currentSlotTime,
+                endTime: nextSlotTime,
+                status: SlotStatus.open,
+                price: slotPrice,
+              ));
+              
+              currentSlotTime = nextSlotTime;
+            }
 
-      emit(SlotLoaded(
-        venueName: venueName,
-        grounds: grounds,
-        selectedGroundId: groundId,
-        selectedDate: date,
-        slots: virtualSlots,
-        bookedCount: bookedCount,
-        totalSlots: virtualSlots.length,
-        todayRevenue: todayRevenue,
-      ));
+            int todayRevenue = 0;
+            for (var b in bookingsData) {
+              todayRevenue += (b['amount'] as num?)?.toInt() ?? (defaultPrice as num).toInt();
+            }
+            int bookedCount = bookingsData.length;
+
+            // Merge bookings onto slots
+            for (int i = 0; i < virtualSlots.length; i++) {
+              final vSlot = virtualSlots[i];
+              
+              // Find if any booking matches this start time
+              final matchingBooking = bookingsData.cast<Map<String, dynamic>?>().firstWhere(
+                (b) {
+                  if (b == null) return false;
+                  final bookingTime = DateTime.parse(b['slot_time']).toLocal();
+                  return bookingTime.hour == vSlot.startTime.hour && bookingTime.minute == vSlot.startTime.minute;
+                }, 
+                orElse: () => null,
+              );
+
+              if (matchingBooking != null) {
+                virtualSlots[i] = VirtualSlot(
+                  startTime: vSlot.startTime,
+                  endTime: vSlot.endTime,
+                  status: SlotStatus.booked,
+                  price: (matchingBooking['amount'] as num?)?.toInt() ?? vSlot.price,
+                  bookedPlayerName: 'Customer (ID: ${matchingBooking['user_id'].toString().substring(0, 4)})',
+                  bookedPlayersCount: 8, // mock players count
+                  bookingId: matchingBooking['id'],
+                );
+              } else {
+                // Mock maintenance at 12 PM for demo purposes if nothing is booked
+                if (vSlot.startTime.hour == 12) {
+                   virtualSlots[i] = VirtualSlot(
+                    startTime: vSlot.startTime,
+                    endTime: vSlot.endTime,
+                    status: SlotStatus.maintenance,
+                    price: vSlot.price,
+                  );
+                } else if (vSlot.startTime.hour >= 18 && vSlot.startTime.hour <= 21) {
+                   virtualSlots[i] = VirtualSlot(
+                    startTime: vSlot.startTime,
+                    endTime: vSlot.endTime,
+                    status: SlotStatus.peak,
+                    price: vSlot.price,
+                  );
+                }
+              }
+            }
+
+            emit(SlotLoaded(
+              venueName: venueName,
+              grounds: grounds,
+              selectedGroundId: groundId,
+              selectedDate: date,
+              slots: virtualSlots,
+              bookedCount: bookedCount,
+              totalSlots: virtualSlots.length,
+              todayRevenue: todayRevenue,
+            ));
+      });
 
     } catch (e) {
       emit(SlotError(e.toString()));

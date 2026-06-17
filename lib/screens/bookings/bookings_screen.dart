@@ -6,6 +6,7 @@ import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/blocs/bookings/bookings_cubit.dart';
 import 'package:turfpro_owner/blocs/bookings/bookings_state.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:turfpro_owner/screens/bookings/booking_details_screen.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -246,7 +247,12 @@ class _BookingCard extends StatelessWidget {
             children: [
               OutlinedButton(
                 onPressed: () {
-                  // Navigate to details
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BookingDetailsScreen(booking: booking),
+                    ),
+                  );
                 },
                 style: OutlinedButton.styleFrom(
                   foregroundColor: AppColors.primaryDarkGreen,

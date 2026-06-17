@@ -1,10 +1,19 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart' as f_auth;
 import 'dashboard_state.dart';
 
 class DashboardCubit extends Cubit<DashboardState> {
+  StreamSubscription<List<Map<String, dynamic>>>? _bookingsSubscription;
+
   DashboardCubit() : super(DashboardInitial());
+
+  @override
+  Future<void> close() {
+    _bookingsSubscription?.cancel();
+    return super.close();
+  }
 
   Future<void> fetchDashboardData() async {
     emit(DashboardLoading());
@@ -62,72 +71,78 @@ class DashboardCubit extends Cubit<DashboardState> {
             .eq('owner_id', user.uid);
 
         if (groundsData.isNotEmpty) {
-          final groundIds = groundsData.map((g) => g['id']).toList();
+          final List<Object> groundIds = groundsData.map((g) => g['id'] as Object).toList();
           final groundMap = {for (var g in groundsData) g['id']: g['name']};
 
-          // 2. Fetch bookings for those grounds
-          final bookings = await Supabase.instance.client
+          // 2. Cancel existing subscription if any
+          await _bookingsSubscription?.cancel();
+
+          // 3. Subscribe to bookings for those grounds
+          _bookingsSubscription = Supabase.instance.client
               .from('bookings')
-              .select()
-              .filter('ground_id', 'in', groundIds)
-              .order('created_at', ascending: false);
+              .stream(primaryKey: ['id'])
+              .inFilter('ground_id', groundIds)
+              .order('created_at', ascending: false)
+              .listen((bookings) {
+                
+                double todayRevenue = 0;
+                int todayBookingsCount = 0;
+                int pendingAcceptCount = 0;
+                String occupancy = "0%";
+                List<dynamic> todaySlots = [];
+                List<dynamic> pendingApprovals = [];
 
-          for (var b in bookings) {
-            final status = b['status']?.toString().toLowerCase() ?? '';
-            final bookingDateStr = b['booking_date'] ?? b['created_at'];
-            bool isToday = false;
-            
-            if (bookingDateStr != null) {
-              try {
-                final bDate = DateTime.parse(bookingDateStr).toLocal();
-                final now = DateTime.now();
-                if (bDate.year == now.year && bDate.month == now.month && bDate.day == now.day) {
-                  isToday = true;
-                  todayBookingsCount++;
-                  if (status == 'confirmed' || status == 'completed') {
-                    todayRevenue += (b['amount'] ?? b['total_amount'] ?? 0).toDouble();
-                  }
+                for (var b in bookings) {
+                  final status = b['status']?.toString().toLowerCase() ?? '';
+                  final bookingDateStr = b['booking_date'] ?? b['created_at'];
                   
-                  // Add to today's slots
-                  todaySlots.add({
-                    ...b,
-                    'ground_name': groundMap[b['ground_id']] ?? 'Unknown Ground',
-                  });
-                }
-              } catch (_) {}
-            }
+                  if (bookingDateStr != null) {
+                    try {
+                      final bDate = DateTime.parse(bookingDateStr).toLocal();
+                      final now = DateTime.now();
+                      if (bDate.year == now.year && bDate.month == now.month && bDate.day == now.day) {
+                        todayBookingsCount++;
+                        if (status == 'confirmed' || status == 'completed') {
+                          todayRevenue += (b['amount'] ?? b['total_amount'] ?? 0).toDouble();
+                        }
+                        
+                        todaySlots.add({
+                          ...b,
+                          'ground_name': groundMap[b['ground_id']] ?? 'Unknown Ground',
+                        });
+                      }
+                    } catch (_) {}
+                  }
 
-            // Pending Accept
-            if (status == 'pending') {
-              pendingAcceptCount++;
-              pendingApprovals.add({
-                ...b,
-                'ground_name': groundMap[b['ground_id']] ?? 'Unknown Ground',
+                  if (status == 'pending') {
+                    pendingAcceptCount++;
+                    pendingApprovals.add({
+                      ...b,
+                      'ground_name': groundMap[b['ground_id']] ?? 'Unknown Ground',
+                    });
+                  }
+                }
+                
+                if (activeCourts > 0) {
+                   occupancy = "${(todayBookingsCount / (activeCourts * 10) * 100).clamp(0, 100).toInt()}%";
+                }
+
+                emit(DashboardLoaded(
+                  ownerName: ownerName,
+                  venueName: venueName,
+                  activeCourts: activeCourts > 0 ? activeCourts : 3,
+                  todayRevenue: "₹${todayRevenue.toInt()}",
+                  todayBookingsCount: todayBookingsCount,
+                  pendingAcceptCount: pendingAcceptCount,
+                  occupancyPercentage: occupancy,
+                  todaySlots: todaySlots,
+                  pendingApprovals: pendingApprovals,
+                ));
               });
-            }
-          }
-          
-          if (activeCourts > 0) {
-            // Rough mock for occupancy based on total bookings
-             occupancy = "${(todayBookingsCount / (activeCourts * 10) * 100).clamp(0, 100).toInt()}%";
-          }
         }
       } catch (e) {
-        print("Error fetching real bookings: $e");
-        // We no longer fallback to dummy data! We just leave it as 0.
+        print("Error setting up dashboard stream: $e");
       }
-
-      emit(DashboardLoaded(
-        ownerName: ownerName,
-        venueName: venueName,
-        activeCourts: activeCourts > 0 ? activeCourts : 3, // fallback to 3 if none configured
-        todayRevenue: "₹${todayRevenue.toInt()}",
-        todayBookingsCount: todayBookingsCount,
-        pendingAcceptCount: pendingAcceptCount,
-        occupancyPercentage: occupancy,
-        todaySlots: todaySlots,
-        pendingApprovals: pendingApprovals,
-      ));
 
     } catch (e) {
       emit(DashboardError(e.toString()));

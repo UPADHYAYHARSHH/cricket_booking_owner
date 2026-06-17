@@ -73,6 +73,11 @@ class _LoginScreenState extends State<LoginScreen> {
             description: const Text("Login Successful!"),
             autoCloseDuration: const Duration(seconds: 4),
           );
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/dashboard',
+            (route) => false,
+          );
         }
 
         if (state is AuthEmailUnverified) {
