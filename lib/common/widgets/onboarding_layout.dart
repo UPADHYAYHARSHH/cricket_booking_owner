@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
-import 'package:turfpro_owner/blocs/auth/auth_cubit.dart';
-import 'package:turfpro_owner/blocs/auth/auth_state.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
