@@ -1,21 +1,18 @@
 abstract class GroundRepository {
   Future<List<Map<String, dynamic>>> getOwnerGrounds(String ownerId);
 
+  Future<List<Map<String, dynamic>>> getGroundsForLocation(String locationId);
+
   Future<String> registerGround({
     required String ownerId,
+    required String locationId,
     required String name,
     required String category,
     required String description,
     required String openingTime,
     required String closingTime,
     required List<String> imageUrls,
-    required List<String> amenities,
-    required String address,
-    required double latitude,
-    required double longitude,
     Map<String, int>? pricingOverrides,
-    List<String>? allCategories,
-    Map<String, int>? sportsConfig,
   });
 
   Future<void> updateGround({
@@ -24,6 +21,10 @@ abstract class GroundRepository {
   });
 
   Future<void> insertGroundImages(String groundId, List<String> imageUrls);
+
+  /// Replaces all of a ground's images with [imageUrls] (delete-then-insert,
+  /// safe to call repeatedly e.g. from an edit flow).
+  Future<void> replaceGroundImages(String groundId, List<String> imageUrls);
 
   Future<void> generateSlots(
     String groundId,

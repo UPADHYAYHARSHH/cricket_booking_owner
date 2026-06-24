@@ -8,32 +8,47 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cub
 import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_state.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_flow.dart';
 
-class GroundsScreen extends StatefulWidget {
-  const GroundsScreen({super.key});
+/// Lists the single-sport grounds belonging to one Location, and lets the
+/// owner add a new ground (one sport at a time) at that location.
+class GroundsAtLocationScreen extends StatefulWidget {
+  final String locationId;
+  final String locationAddress;
+
+  const GroundsAtLocationScreen({
+    super.key,
+    required this.locationId,
+    required this.locationAddress,
+  });
 
   @override
-  State<GroundsScreen> createState() => _GroundsScreenState();
+  State<GroundsAtLocationScreen> createState() => _GroundsAtLocationScreenState();
 }
 
-class _GroundsScreenState extends State<GroundsScreen> {
+class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<GroundCubit>().fetchOwnerGrounds();
+    context.read<GroundCubit>().fetchGroundsForLocation(widget.locationId);
   }
 
   Future<void> _openAddFlow() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const GroundFormFlow()),
+      MaterialPageRoute(
+        builder: (_) => GroundFormFlow(locationId: widget.locationId),
+      ),
     );
-    // GroundFormFlow refreshes the list itself on save; no extra call needed.
   }
 
   Future<void> _openEditFlow(Map<String, dynamic> ground) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => GroundFormFlow(groundData: ground)),
+      MaterialPageRoute(
+        builder: (_) => GroundFormFlow(
+          locationId: widget.locationId,
+          groundData: ground,
+        ),
+      ),
     );
   }
 
@@ -44,8 +59,16 @@ class _GroundsScreenState extends State<GroundsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const AppText(
-            text: 'My Grounds', size: 18, weight: FontWeight.w700),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.primaryDarkGreen),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: AppText(
+          text: widget.locationAddress,
+          size: 15,
+          weight: FontWeight.w700,
+          maxLines: 1,
+        ),
         centerTitle: true,
         actions: [
           IconButton(
@@ -71,18 +94,13 @@ class _GroundsScreenState extends State<GroundsScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const HugeIcon(
-                      icon: HugeIcons.strokeRoundedAlert02,
-                      size: 48,
-                      color: AppColors.error),
+                      icon: HugeIcons.strokeRoundedAlert02, size: 48, color: AppColors.error),
                   const SizedBox(height: 12),
-                  AppText(
-                      text: state.message,
-                      color: AppColors.error,
-                      size: 14),
+                  AppText(text: state.message, color: AppColors.error, size: 14),
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () =>
-                        context.read<GroundCubit>().fetchOwnerGrounds(),
+                        context.read<GroundCubit>().fetchGroundsForLocation(widget.locationId),
                     child: const AppText(
                       text: 'Retry',
                       color: AppColors.primaryDarkGreen,
@@ -102,17 +120,19 @@ class _GroundsScreenState extends State<GroundsScreen> {
             return RefreshIndicator(
               color: AppColors.primaryDarkGreen,
               onRefresh: () =>
-                  context.read<GroundCubit>().fetchOwnerGrounds(),
+                  context.read<GroundCubit>().fetchGroundsForLocation(widget.locationId),
               child: ListView.separated(
                 padding: const EdgeInsets.all(20),
                 itemCount: state.grounds.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 16),
                 itemBuilder: (context, index) {
-                  final ground =
-                      state.grounds[index] as Map<String, dynamic>;
+                  final ground = state.grounds[index] as Map<String, dynamic>;
                   return _GroundCard(
                     ground: ground,
                     onEdit: () => _openEditFlow(ground),
+                    onAvailabilityChanged: (value) => context
+                        .read<GroundCubit>()
+                        .setGroundAvailability(ground['id'] as String, value, widget.locationId),
                   );
                 },
               ),
@@ -145,24 +165,28 @@ class _GroundsScreenState extends State<GroundsScreen> {
 class _GroundCard extends StatelessWidget {
   final Map<String, dynamic> ground;
   final VoidCallback onEdit;
+  final ValueChanged<bool> onAvailabilityChanged;
 
-  const _GroundCard({required this.ground, required this.onEdit});
+  const _GroundCard({
+    required this.ground,
+    required this.onEdit,
+    required this.onAvailabilityChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final name = ground['name'] as String? ?? 'Unknown Ground';
-    final address = ground['address'] as String? ?? '';
     final imageUrl = ground['imageUrl'] as String?;
     final isVerified = ground['is_verified'] == true;
-    final categories = (ground['categories'] as List?)
-            ?.map((e) => e.toString())
-            .join(', ') ??
-        '';
+    final isAvailable = ground['is_available'] != false;
+    final category = ground['category'] as String? ?? '';
     final price = ground['price_per_hour'];
     final openingTime = ground['opening_time'] as String? ?? '';
     final closingTime = ground['closing_time'] as String? ?? '';
 
-    return Container(
+    return Opacity(
+      opacity: isAvailable ? 1 : 0.55,
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -177,10 +201,8 @@ class _GroundCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image + overlay badges
           ClipRRect(
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: Stack(
               children: [
                 imageUrl != null
@@ -189,21 +211,16 @@ class _GroundCard extends StatelessWidget {
                         height: 150,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            _ImagePlaceholder(name: name),
+                        errorBuilder: (_, __, ___) => _ImagePlaceholder(name: name),
                       )
                     : _ImagePlaceholder(name: name),
-                // Verified / Pending badge on image
                 Positioned(
                   top: 10,
                   right: 10,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: isVerified
-                          ? AppColors.primaryDarkGreen
-                          : AppColors.accentOrange,
+                      color: isVerified ? AppColors.primaryDarkGreen : AppColors.accentOrange,
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: AppText(
@@ -214,31 +231,24 @@ class _GroundCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // Edit button on image
                 Positioned(
                   top: 10,
                   left: 10,
                   child: GestureDetector(
                     onTap: onEdit,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.92),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 6,
-                          ),
+                          BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 6),
                         ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
-                          Icon(Icons.edit_outlined,
-                              size: 14,
-                              color: AppColors.primaryDarkGreen),
+                          Icon(Icons.edit_outlined, size: 14, color: AppColors.primaryDarkGreen),
                           SizedBox(width: 4),
                           AppText(
                             text: 'Edit',
@@ -254,42 +264,19 @@ class _GroundCard extends StatelessWidget {
               ],
             ),
           ),
-
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AppText(
-                    text: name,
-                    size: 16,
-                    weight: FontWeight.w700,
-                    color: const Color(0xFF212121)),
-                if (categories.isNotEmpty) ...[
+                AppText(text: name, size: 16, weight: FontWeight.w700, color: const Color(0xFF212121)),
+                if (category.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   AppText(
-                    text: _formatCategories(categories),
+                    text: _formatSport(category),
                     size: 12,
                     color: AppColors.primaryDarkGreen,
                     weight: FontWeight.w600,
-                  ),
-                ],
-                if (address.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      const HugeIcon(
-                          icon: HugeIcons.strokeRoundedLocation01,
-                          size: 13,
-                          color: Colors.grey),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: AppText(
-                            text: address,
-                            size: 12,
-                            color: Colors.grey),
-                      ),
-                    ],
                   ),
                 ],
                 const SizedBox(height: 10),
@@ -311,9 +298,7 @@ class _GroundCard extends StatelessWidget {
                     if (openingTime.isNotEmpty && closingTime.isNotEmpty) ...[
                       const SizedBox(width: 14),
                       const HugeIcon(
-                          icon: HugeIcons.strokeRoundedClock01,
-                          size: 13,
-                          color: Colors.grey),
+                          icon: HugeIcons.strokeRoundedClock01, size: 13, color: Colors.grey),
                       const SizedBox(width: 4),
                       AppText(
                         text: '$openingTime – $closingTime',
@@ -322,18 +307,14 @@ class _GroundCard extends StatelessWidget {
                       ),
                     ],
                     const Spacer(),
-                    // Quick edit button at bottom right
                     GestureDetector(
                       onTap: onEdit,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 7),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                         decoration: BoxDecoration(
                           color: AppColors.primaryDarkGreen.withOpacity(0.08),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: AppColors.primaryDarkGreen.withOpacity(0.2),
-                          ),
+                          border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
                         ),
                         child: const AppText(
                           text: 'Manage',
@@ -345,28 +326,39 @@ class _GroundCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 10),
+                Divider(height: 1, color: Colors.grey.shade100),
+                const SizedBox(height: 6),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    AppText(
+                      text: isAvailable ? 'Available to players' : 'Hidden from players',
+                      size: 12,
+                      weight: FontWeight.w600,
+                      color: isAvailable ? AppColors.primaryDarkGreen : Colors.grey,
+                    ),
+                    Switch(
+                      value: isAvailable,
+                      activeColor: AppColors.primaryDarkGreen,
+                      onChanged: onAvailabilityChanged,
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
         ],
       ),
+      ),
     );
   }
 
-  String _formatCategories(String raw) => raw
-      .split(',')
-      .map((s) => s
-          .trim()
-          .split('_')
-          .map((w) =>
-              w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
-          .join(' '))
-      .join(' • ');
+  String _formatSport(String id) => id
+      .split('_')
+      .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+      .join(' ');
 }
-
-// ---------------------------------------------------------------------------
-// Image placeholder
-// ---------------------------------------------------------------------------
 
 class _ImagePlaceholder extends StatelessWidget {
   final String name;
@@ -388,22 +380,13 @@ class _ImagePlaceholder extends StatelessWidget {
               color: AppColors.primaryDarkGreen,
             ),
             const SizedBox(height: 8),
-            AppText(
-              text: name,
-              size: 13,
-              color: AppColors.primaryDarkGreen,
-              weight: FontWeight.w600,
-            ),
+            AppText(text: name, size: 13, color: AppColors.primaryDarkGreen, weight: FontWeight.w600),
           ],
         ),
       ),
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Empty state
-// ---------------------------------------------------------------------------
 
 class _EmptyGrounds extends StatelessWidget {
   final VoidCallback onAdd;
@@ -431,8 +414,7 @@ class _EmptyGrounds extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const AppText(
-              text:
-                  'Add your first ground to start accepting bookings from players.',
+              text: 'Add a ground (one sport at a time) at this location to start accepting bookings.',
               size: 14,
               color: Colors.grey,
             ),
@@ -442,10 +424,8 @@ class _EmptyGrounds extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryDarkGreen,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 28, vertical: 14),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               icon: const Icon(Icons.add, size: 20),
               label: const AppText(
@@ -461,10 +441,6 @@ class _EmptyGrounds extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Loading skeleton
-// ---------------------------------------------------------------------------
 
 class _GroundsSkeleton extends StatelessWidget {
   const _GroundsSkeleton();

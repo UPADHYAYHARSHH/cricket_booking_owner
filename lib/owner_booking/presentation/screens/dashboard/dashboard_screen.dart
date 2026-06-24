@@ -11,6 +11,7 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widge
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/revenue_card.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/slot_item.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/stat_card.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/scan_ticket/scan_ticket_screen.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -232,9 +233,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             onTap: () {},
                           ),
                           QuickActionCard(
-                            title: "All Bookings",
-                            icon: Image.asset('assets/icons/clipboard.png', height: 32, errorBuilder: (context, error, stackTrace) => const HugeIcon(icon: HugeIcons.strokeRoundedTaskDone01, size: 32.0, color: Colors.blueGrey)),
-                            onTap: () {},
+                            title: "Scan Ticket",
+                            icon: const Icon(Icons.qr_code_scanner, size: 32.0, color: Colors.blueGrey),
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const ScanTicketScreen()),
+                            ),
                           ),
                           QuickActionCard(
                             title: "Revenue Report",

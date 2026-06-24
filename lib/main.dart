@@ -7,6 +7,7 @@ import 'package:turfpro_owner/firebase_options.dart';
 import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart' as di;
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
@@ -17,7 +18,6 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/auth/forgot_pas
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/email_verification_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/document_upload_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/main_navbar.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/sports/add_sport_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/personal_info_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/venue_type_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/amenities_screen.dart';
@@ -29,7 +29,6 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/revi
 import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/venue_details_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/ground_court_info_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/splash_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_flow.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +62,7 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<AuthCubit>(create: (_) => di.getIt<AuthCubit>()),
         BlocProvider<GroundCubit>(create: (_) => di.getIt<GroundCubit>()),
+        BlocProvider<LocationCubit>(create: (_) => di.getIt<LocationCubit>()),
         BlocProvider<SlotCubit>(create: (_) => di.getIt<SlotCubit>()),
         BlocProvider<BookingsCubit>(create: (_) => di.getIt<BookingsCubit>()),
         BlocProvider<DashboardCubit>(create: (_) => di.getIt<DashboardCubit>()),
@@ -87,7 +87,6 @@ class MyApp extends StatelessWidget {
             '/otp': (context) => const OtpScreen(),
             '/upload-documents': (context) => const DocumentUploadScreen(),
             '/dashboard': (context) => const MainNavbar(),
-            '/add-sport': (context) => const AddSportScreen(),
             '/personal-info': (context) => const PersonalInfoScreen(),
             '/venue-type': (context) => const VenueTypeScreen(),
             '/venue-details': (context) => const VenueDetailsScreen(),
@@ -100,7 +99,6 @@ class MyApp extends StatelessWidget {
             '/kyc-documentation': (context) => const KycDocumentationScreen(),
             '/photos-media': (context) => const PhotosMediaScreen(),
             '/review-submit': (context) => const ReviewSubmitScreen(),
-            '/ground/add': (context) => const GroundFormFlow(),
           },
         ),
       ),

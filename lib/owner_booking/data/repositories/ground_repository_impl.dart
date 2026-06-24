@@ -27,48 +27,49 @@ class GroundRepositoryImpl implements GroundRepository {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> getGroundsForLocation(
+      String locationId) async {
+    final response = await _supabase
+        .from('grounds')
+        .select('*, ground_images(image_url)')
+        .eq('location_id', locationId)
+        .order('created_at', ascending: false);
+
+    return (response as List).map<Map<String, dynamic>>((e) {
+      return {
+        ...e as Map<String, dynamic>,
+        'imageUrl': (e['ground_images'] != null &&
+                (e['ground_images'] as List).isNotEmpty)
+            ? e['ground_images'][0]['image_url']
+            : 'https://placehold.co/600x400/0B8457/FFFFFF/png?text=${Uri.encodeComponent(e['name'] ?? 'Ground')}',
+      };
+    }).toList();
+  }
+
+  @override
   Future<String> registerGround({
     required String ownerId,
+    required String locationId,
     required String name,
     required String category,
     required String description,
     required String openingTime,
     required String closingTime,
     required List<String> imageUrls,
-    required List<String> amenities,
-    required String address,
-    required double latitude,
-    required double longitude,
     Map<String, int>? pricingOverrides,
-    List<String>? allCategories,
-    Map<String, int>? sportsConfig,
   }) async {
-    // Use allCategories if provided, else fall back to single category.
-    final categories =
-        (allCategories != null && allCategories.isNotEmpty) ? allCategories : [category];
-
-    // Embed sports_config in pricing_config so it survives round-trips without a schema change.
-    final pricing = Map<String, dynamic>.from(pricingOverrides ?? {});
-    if (sportsConfig != null && sportsConfig.isNotEmpty) {
-      pricing['sports_config'] = sportsConfig;
-    }
-
     final groundResponse = await _supabase
         .from('grounds')
         .insert({
           'owner_id': ownerId,
+          'location_id': locationId,
           'name': name,
-          'categories': categories,
+          'category': category,
           'description': description,
           'price_per_hour': pricingOverrides?['weekday'] ?? 600,
           'weekend_price': pricingOverrides?['weekend'] ?? 800,
           'opening_time': openingTime,
           'closing_time': closingTime,
-          'address': address,
-          'latitude': latitude,
-          'longitude': longitude,
-          'amenities': amenities,
-          'city': 'Default',
         })
         .select()
         .single();
@@ -99,6 +100,13 @@ class GroundRepositoryImpl implements GroundRepository {
               .map((url) => {'ground_id': groundId, 'image_url': url})
               .toList(),
         );
+  }
+
+  @override
+  Future<void> replaceGroundImages(
+      String groundId, List<String> imageUrls) async {
+    await _supabase.from('ground_images').delete().eq('ground_id', groundId);
+    await insertGroundImages(groundId, imageUrls);
   }
 
   @override

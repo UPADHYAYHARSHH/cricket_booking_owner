@@ -38,6 +38,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _fetchProfileData();
   }
 
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Log Out"),
+        content: const Text("Are you sure you want to log out?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              context.read<AuthCubit>().logout();
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
+            child: const Text(
+              "Log Out",
+              style: TextStyle(color: Color(0xFFE53935)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _fetchProfileData() async {
     final userId = currentUserId;
     if (userId == null) return;
@@ -259,10 +286,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       width: double.infinity,
                       height: 54,
                       child: OutlinedButton(
-                        onPressed: () {
-                          context.read<AuthCubit>().logout();
-                          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
-                        },
+                        onPressed: () => _confirmLogout(context),
                         style: OutlinedButton.styleFrom(
                           side: const BorderSide(color: Color(0xFFFFA3A3), width: 1.5),
                           shape: RoundedRectangleBorder(

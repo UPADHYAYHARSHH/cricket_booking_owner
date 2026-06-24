@@ -107,8 +107,8 @@ class _SlotsScreenState extends State<SlotsScreen> {
         itemBuilder: (context, index) {
           final ground = state.grounds[index];
           final isSelected = ground['id'] == state.selectedGroundId;
-          final categories = List<String>.from(ground['categories'] ?? []);
-          final isFootball = categories.contains('Football');
+          final category = (ground['category'] as String? ?? '').toLowerCase();
+          final isFootball = category == 'football';
           final icon = isFootball ? HugeIcons.strokeRoundedFootball : HugeIcons.strokeRoundedCricketBat;
 
           return GestureDetector(

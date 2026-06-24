@@ -239,6 +239,20 @@ class OwnerRepositoryImpl implements OwnerRepository {
       if (groundConfig == null) return;
 
       await _supabase.from('grounds').delete().eq('owner_id', userId);
+      await _supabase.from('locations').delete().eq('owner_id', userId);
+
+      final locationResponse = await _supabase
+          .from('locations')
+          .insert({
+            'owner_id': userId,
+            'address': ownerData['address'] ?? '',
+            'city': ownerData['city'] ?? '',
+            'latitude': ownerData['latitude'] ?? 23.05,
+            'longitude': ownerData['longitude'] ?? 72.55,
+          })
+          .select()
+          .single();
+      final locationId = locationResponse['id'] as String;
 
       final List<Map<String, dynamic>> groundsToInsert = [];
 
@@ -264,15 +278,14 @@ class OwnerRepositoryImpl implements OwnerRepository {
 
             groundsToInsert.add({
               'owner_id': userId,
+              'location_id': locationId,
               'name': courtName,
               'description': ownerData['venue_tagline'] ?? '',
-              'address': ownerData['address'] ?? '',
-              'city': ownerData['city'] ?? '',
               'state': ownerData['state'] ?? '',
               'opening_time': _formatTime(slotConfig['opening_time']),
               'closing_time': _formatTime(slotConfig['closing_time']),
               'ground_type': sportKey,
-              'categories': _mapCategories(sportKey),
+              'category': sportKey,
               'turf_type': sportDetails['surface_type'] ?? sportDetails['pitch_type'] ?? '',
               'players_allowed': int.tryParse(sportDetails['players_per_side']?.toString() ?? '12') ?? 12,
               'is_indoor': ownerData['venue_category'] == 'Indoor',
@@ -285,8 +298,6 @@ class OwnerRepositoryImpl implements OwnerRepository {
               'rating': 4.5,
               'total_reviews': 0,
               'slot_duration': 60,
-              'latitude': ownerData['latitude'] ?? 23.05,
-              'longitude': ownerData['longitude'] ?? 72.55,
             });
           }
         }
@@ -314,18 +325,6 @@ class OwnerRepositoryImpl implements OwnerRepository {
       return '${hour.toString().padLeft(2, '0')}:${min.toString().padLeft(2, '0')}:00';
     } catch (_) {
       return '06:00:00';
-    }
-  }
-
-  List<String> _mapCategories(String key) {
-    switch (key) {
-      case 'box_cricket': return ['Cricket', 'Box Cricket'];
-      case 'football': return ['Football'];
-      case 'pickleball': return ['Pickleball'];
-      case 'volleyball': return ['Volleyball'];
-      case 'basketball': return ['Basketball'];
-      case 'badminton': return ['Badminton'];
-      default: return [key];
     }
   }
 

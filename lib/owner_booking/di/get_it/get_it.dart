@@ -4,17 +4,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turfpro_owner/owner_booking/data/repositories/auth_repository_impl.dart';
 import 'package:turfpro_owner/owner_booking/data/repositories/booking_repository_impl.dart';
 import 'package:turfpro_owner/owner_booking/data/repositories/ground_repository_impl.dart';
+import 'package:turfpro_owner/owner_booking/data/repositories/location_repository_impl.dart';
 import 'package:turfpro_owner/owner_booking/data/repositories/owner_repository_impl.dart';
 import 'package:turfpro_owner/owner_booking/data/repositories/slot_repository_impl.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/auth_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/ground_repository.dart';
+import 'package:turfpro_owner/owner_booking/domain/repositories/location_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/owner_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/slot_repository.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 
 final getIt = GetIt.instance;
@@ -40,6 +43,9 @@ Future<void> init() async {
   getIt.registerLazySingleton<GroundRepository>(
     () => GroundRepositoryImpl(getIt<SupabaseClient>()),
   );
+  getIt.registerLazySingleton<LocationRepository>(
+    () => LocationRepositoryImpl(getIt<SupabaseClient>()),
+  );
   getIt.registerLazySingleton<SlotRepository>(
     () => SlotRepositoryImpl(getIt<SupabaseClient>()),
   );
@@ -56,6 +62,9 @@ Future<void> init() async {
   );
   getIt.registerLazySingleton<GroundCubit>(
     () => GroundCubit(getIt<GroundRepository>()),
+  );
+  getIt.registerLazySingleton<LocationCubit>(
+    () => LocationCubit(getIt<LocationRepository>()),
   );
   getIt.registerLazySingleton<SlotCubit>(
     () => SlotCubit(getIt<SlotRepository>()),

@@ -83,18 +83,18 @@ class _Step4ScheduleState extends State<Step4Schedule> {
       slotDuration: _slotDuration,
       advanceBookingLimit: _advanceLimit,
     ));
-    cubit.goToStep(5);
+    cubit.goToStep(4);
   }
 
   @override
   Widget build(BuildContext context) {
     return GroundFormLayout(
       isEdit: widget.isEdit,
-      currentStep: 4,
+      currentStep: 3,
       title: 'Schedule',
       subtitle: 'Set operating hours and booking window',
       onNext: _onNext,
-      onBack: () => context.read<GroundFormCubit>().goToStep(3),
+      onBack: () => context.read<GroundFormCubit>().goToStep(2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -21,49 +21,28 @@ class GroundCubit extends Cubit<GroundState> {
     }
   }
 
-  Future<void> registerGround({
-    required String name,
-    required String category,
-    required String description,
-    required String openingTime,
-    required String closingTime,
-    required List<String> imageUrls,
-    required List<String> amenities,
-    Map<String, int>? pricingOverrides,
-    List<String>? allCategories,
-    Map<String, int>? sportsConfig,
-  }) async {
+  Future<void> fetchGroundsForLocation(String locationId) async {
     emit(GroundLoading());
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
 
     try {
-      final groundId = await _groundRepository.registerGround(
-        ownerId: userId,
-        name: name,
-        category: category,
-        description: description,
-        openingTime: openingTime,
-        closingTime: closingTime,
-        imageUrls: imageUrls,
-        amenities: amenities,
-        address: '',
-        latitude: 0.0,
-        longitude: 0.0,
-        pricingOverrides: pricingOverrides,
-        allCategories: allCategories,
-        sportsConfig: sportsConfig,
-      );
+      final grounds = await _groundRepository.getGroundsForLocation(locationId);
+      emit(GroundLoaded(grounds));
+    } catch (e) {
+      emit(GroundError(e.toString()));
+    }
+  }
 
-      await _groundRepository.insertGroundImages(groundId, imageUrls);
-      await _groundRepository.generateSlots(
-        groundId,
-        openingTime,
-        closingTime,
-        pricingOverrides ?? {},
+  Future<void> setGroundAvailability(
+    String groundId,
+    bool isAvailable,
+    String locationId,
+  ) async {
+    try {
+      await _groundRepository.updateGround(
+        groundId: groundId,
+        data: {'is_available': isAvailable},
       );
-
-      await fetchOwnerGrounds();
+      await fetchGroundsForLocation(locationId);
     } catch (e) {
       emit(GroundError(e.toString()));
     }

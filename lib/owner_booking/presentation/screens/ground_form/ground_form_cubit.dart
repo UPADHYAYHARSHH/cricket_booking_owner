@@ -12,8 +12,8 @@ class GroundFormCubit extends Cubit<GroundFormState> {
 
   GroundFormData get data => _data;
 
-  void initAdd() {
-    _data = GroundFormData.empty();
+  void initAdd(String locationId) {
+    _data = GroundFormData.empty().copyWith(locationId: locationId);
     emit(GroundFormReady(_data, currentStep: 1));
   }
 
@@ -47,25 +47,20 @@ class GroundFormCubit extends Cubit<GroundFormState> {
           groundId: _data.groundId!,
           data: _data.toUpdateMap(),
         );
+        await _repo.replaceGroundImages(_data.groundId!, _data.imageUrls);
         emit(GroundFormSaved(isEdit: true));
       } else {
         // Add: insert new ground + generate initial slots.
         final groundId = await _repo.registerGround(
           ownerId: userId,
+          locationId: _data.locationId,
           name: _data.name,
-          category: _data.categories.isNotEmpty ? _data.categories.first : 'box_cricket',
+          category: _data.category,
           description: _data.description,
           openingTime: _data.openingTime,
           closingTime: _data.closingTime,
           imageUrls: _data.imageUrls,
-          amenities: _data.amenities,
-          address: _data.address,
-          latitude: _data.latitude,
-          longitude: _data.longitude,
           pricingOverrides: _data.pricingConfig,
-          // Pass full categories so multi-sport is stored correctly.
-          allCategories: _data.categories,
-          sportsConfig: _data.sportsConfig,
         );
 
         // Generate slots for 14 days from today.

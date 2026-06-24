@@ -34,13 +34,13 @@ class Step7Review extends StatelessWidget {
 
         return GroundFormLayout(
           isEdit: isEdit,
-          currentStep: 7,
+          currentStep: 6,
           title: 'Review & Save',
           subtitle: isEdit
               ? 'Confirm your changes before saving'
               : 'Verify details before adding this ground',
           onNext: () => cubit.save(),
-          onBack: () => cubit.goToStep(6),
+          onBack: () => cubit.goToStep(5),
           isLoading: isSaving,
           nextLabel: isEdit ? 'Save Changes' : 'Add Ground',
           child: Column(
@@ -50,20 +50,12 @@ class Step7Review extends StatelessWidget {
               const AppSizedBox(height: 28),
 
               _section(
-                title: 'SPORTS & COURTS',
+                title: 'SPORT',
                 step: 1,
                 context: context,
-                child: data.sportsConfig.isEmpty
-                    ? _missing('No sports selected')
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: data.sportsConfig.entries.map((e) {
-                          return _row(
-                            _sportName(e.key),
-                            '${e.value} court${e.value > 1 ? 's' : ''}',
-                          );
-                        }).toList(),
-                      ),
+                child: data.category.isEmpty
+                    ? _missing('No sport selected')
+                    : _row('Sport', _sportName(data.category)),
               ),
 
               _section(
@@ -85,22 +77,8 @@ class Step7Review extends StatelessWidget {
               ),
 
               _section(
-                title: 'LOCATION',
-                step: 3,
-                context: context,
-                child: Column(
-                  children: [
-                    _row('Address', data.address.isEmpty ? '—' : data.address),
-                    _row('City', data.city.isEmpty ? '—' : data.city),
-                    if (data.latitude != 0.0 || data.longitude != 0.0)
-                      _row('GPS', '${data.latitude.toStringAsFixed(4)}, ${data.longitude.toStringAsFixed(4)}'),
-                  ],
-                ),
-              ),
-
-              _section(
                 title: 'SCHEDULE',
-                step: 4,
+                step: 3,
                 context: context,
                 child: Column(
                   children: [
@@ -114,29 +92,33 @@ class Step7Review extends StatelessWidget {
 
               _section(
                 title: 'PRICING',
-                step: 5,
+                step: 4,
                 context: context,
                 child: Column(
                   children: [
                     _row('Weekday base', '₹${data.pricingConfig['weekday'] ?? 0}/hr'),
                     _row('Weekend base', '₹${data.pricingConfig['weekend'] ?? 0}/hr'),
-                    _row('Morning peak', '₹${data.pricingConfig['morning'] ?? 0}/hr'),
-                    _row('Evening peak', '₹${data.pricingConfig['evening'] ?? 0}/hr'),
-                    _row('Night', '₹${data.pricingConfig['night'] ?? 0}/hr'),
+                    if ((data.pricingConfig['morning'] ?? 0) > 0)
+                      _row('Morning peak', '₹${data.pricingConfig['morning']}/hr'),
+                    if ((data.pricingConfig['evening'] ?? 0) > 0)
+                      _row('Evening peak', '₹${data.pricingConfig['evening']}/hr'),
+                    if ((data.pricingConfig['night'] ?? 0) > 0)
+                      _row('Night', '₹${data.pricingConfig['night']}/hr'),
                   ],
                 ),
               ),
 
               _section(
-                title: 'AMENITIES',
-                step: 6,
+                title: 'PHOTOS',
+                step: 5,
                 context: context,
-                child: data.amenities.isEmpty
-                    ? _missing('None selected yet')
-                    : Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: data.amenities.map((a) => _chip(a)).toList(),
+                child: data.imageUrls.isEmpty
+                    ? _missing('No photos added yet')
+                    : AppText(
+                        text: '${data.imageUrls.length} photo${data.imageUrls.length > 1 ? 's' : ''} added',
+                        size: 13,
+                        weight: FontWeight.w700,
+                        color: AppColors.primaryDarkGreen,
                       ),
               ),
 
@@ -172,14 +154,13 @@ class Step7Review extends StatelessWidget {
   }
 
   bool _isValid(GroundFormData d) =>
-      d.categories.isNotEmpty && d.name.isNotEmpty && d.address.isNotEmpty && d.city.isNotEmpty;
+      d.category.isNotEmpty && d.name.isNotEmpty && d.locationId.isNotEmpty;
 
   String _validationMessage(GroundFormData d) {
     final issues = <String>[];
-    if (d.categories.isEmpty) issues.add('sports not selected');
+    if (d.category.isEmpty) issues.add('sport not selected');
     if (d.name.isEmpty) issues.add('ground name missing');
-    if (d.address.isEmpty) issues.add('address missing');
-    if (d.city.isEmpty) issues.add('city missing');
+    if (d.locationId.isEmpty) issues.add('location missing');
     return 'Please fix: ${issues.join(', ')}';
   }
 
@@ -284,21 +265,6 @@ class Step7Review extends StatelessWidget {
 
   Widget _missing(String text) =>
       AppText(text: text, size: 13, color: Colors.grey);
-
-  Widget _chip(String id) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(
-          color: AppColors.slotAvailableBg,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
-        ),
-        child: AppText(
-          text: id.replaceAll('_', ' '),
-          size: 11,
-          weight: FontWeight.w600,
-          color: AppColors.primaryDarkGreen,
-        ),
-      );
 
   String _sportName(String id) => id
       .split('_')

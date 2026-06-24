@@ -69,7 +69,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app needs access to your photo library to upload KYC documents.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>This app needs access to your camera to take photos of KYC documents.</string>
+	<string>This app needs access to your camera to take photos of KYC documents and scan player tickets.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app needs access to your location to set your turf address on the map.</string>
 </dict>

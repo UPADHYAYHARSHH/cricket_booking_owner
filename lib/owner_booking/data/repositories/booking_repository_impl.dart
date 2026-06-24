@@ -54,4 +54,21 @@ class BookingRepositoryImpl implements BookingRepository {
       return [];
     }
   }
+
+  @override
+  Future<Map<String, dynamic>?> getBookingForCheckIn(String bookingId) async {
+    return await _supabase
+        .from('bookings')
+        .select('*, grounds(name, owner_id, category)')
+        .eq('id', bookingId)
+        .maybeSingle();
+  }
+
+  @override
+  Future<void> checkInBooking(String bookingId) async {
+    await _supabase.from('bookings').update({
+      'checked_in': true,
+      'checked_in_at': DateTime.now().toIso8601String(),
+    }).eq('id', bookingId);
+  }
 }

@@ -204,7 +204,29 @@ class EmailVerificationScreen extends StatelessWidget {
 
                         InkWell(
                           onTap: () {
-                            context.read<AuthCubit>().logout();
+                            showDialog(
+                              context: context,
+                              builder: (dialogContext) => AlertDialog(
+                                title: const Text("Log Out"),
+                                content: const Text("Are you sure you want to log out?"),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(dialogContext),
+                                    child: const Text("Cancel"),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(dialogContext);
+                                      context.read<AuthCubit>().logout();
+                                    },
+                                    child: const Text(
+                                      "Log Out",
+                                      style: TextStyle(color: Colors.red),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
                           },
                           child: AppText(
                             text: "Use a different email / Log Out",

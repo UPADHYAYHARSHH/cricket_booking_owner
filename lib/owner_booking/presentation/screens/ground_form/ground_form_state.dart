@@ -8,7 +8,7 @@ class GroundFormLoading extends GroundFormState {}
 
 class GroundFormReady extends GroundFormState {
   final GroundFormData data;
-  final int currentStep; // 1–7
+  final int currentStep; // 1–6
   GroundFormReady(this.data, {this.currentStep = 1});
 }
 

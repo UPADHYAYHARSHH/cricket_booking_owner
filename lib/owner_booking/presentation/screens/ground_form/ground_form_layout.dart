@@ -4,7 +4,7 @@ import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 
-const int kGroundFormTotalSteps = 7;
+const int kGroundFormTotalSteps = 6;
 
 class GroundFormLayout extends StatelessWidget {
   final bool isEdit;

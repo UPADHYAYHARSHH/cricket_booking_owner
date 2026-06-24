@@ -8,20 +8,19 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/gro
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_state.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step1_sports.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step2_basic_info.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step3_location.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step4_schedule.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step5_pricing.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step6_amenities.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step7_review.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step_photos.dart';
 
-/// Entry point for the add / edit ground flow.
-///
-/// Pass [groundData] (the full Supabase row including `ground_images`) for
-/// edit mode. Leave it null for add mode.
+/// Entry point for the add / edit ground flow. A ground always belongs to a
+/// [locationId]. Pass [groundData] (the full Supabase row including
+/// `ground_images`) for edit mode. Leave it null for add mode.
 class GroundFormFlow extends StatefulWidget {
+  final String locationId;
   final Map<String, dynamic>? groundData;
 
-  const GroundFormFlow({super.key, this.groundData});
+  const GroundFormFlow({super.key, required this.locationId, this.groundData});
 
   @override
   State<GroundFormFlow> createState() => _GroundFormFlowState();
@@ -41,7 +40,7 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
     if (_isEdit) {
       _cubit.initEdit(widget.groundData!);
     } else {
-      _cubit.initAdd();
+      _cubit.initAdd(widget.locationId);
     }
   }
 
@@ -75,7 +74,7 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
 
           if (state is GroundFormSaved) {
             // Refresh the grounds list in the parent screen.
-            context.read<GroundCubit>().fetchOwnerGrounds();
+            context.read<GroundCubit>().fetchGroundsForLocation(widget.locationId);
             toastification.show(
               context: context,
               type: ToastificationType.success,
@@ -114,10 +113,9 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
                   children: [
                     Step1Sports(isEdit: _isEdit),
                     Step2BasicInfo(isEdit: _isEdit),
-                    Step3Location(isEdit: _isEdit),
                     Step4Schedule(isEdit: _isEdit),
                     Step5Pricing(isEdit: _isEdit),
-                    Step6Amenities(isEdit: _isEdit),
+                    StepPhotos(isEdit: _isEdit),
                     Step7Review(isEdit: _isEdit),
                   ],
                 ),

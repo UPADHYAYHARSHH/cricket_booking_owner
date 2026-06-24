@@ -1,0 +1,18 @@
+abstract class LocationRepository {
+  Future<List<Map<String, dynamic>>> getOwnerLocations(String ownerId);
+
+  Future<String> registerLocation({
+    required String ownerId,
+    required String address,
+    required String city,
+    required String googleMapsLink,
+    required double latitude,
+    required double longitude,
+    required List<String> amenities,
+  });
+
+  Future<void> updateLocation({
+    required String locationId,
+    required Map<String, dynamic> data,
+  });
+}
