@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
+import 'package:turfpro_owner/owner_booking/presentation/widgets/location_dropdown.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 class DashboardHeader extends StatelessWidget {
   final String ownerName;
   final String venueName;
   final int activeCourts;
+  final List<Map<String, dynamic>> locations;
+  final String? selectedLocationId;
+  final ValueChanged<String?> onLocationSelected;
 
   const DashboardHeader({
     super.key,
     required this.ownerName,
     required this.venueName,
     required this.activeCourts,
+    required this.locations,
+    required this.selectedLocationId,
+    required this.onLocationSelected,
   });
 
   String _getInitials(String name) {
@@ -24,6 +31,13 @@ class DashboardHeader extends StatelessWidget {
     return parts[0][0].toUpperCase();
   }
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -31,7 +45,7 @@ class DashboardHeader extends StatelessWidget {
         top: MediaQuery.of(context).padding.top + 24,
         left: 20,
         right: 20,
-        bottom: 48, // Padding so RevenueCard can overlap
+        bottom: 56, // Padding so RevenueCard can overlap
       ),
       decoration: const BoxDecoration(
         color: AppColors.primaryDarkGreen,
@@ -49,15 +63,9 @@ class DashboardHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     AppText(
-                      text: "Good morning, $ownerName 👋",
-                      color: Colors.white.withOpacity(0.9),
-                      size: 14,
-                    ),
-                    const SizedBox(height: 4),
-                    AppText(
-                      text: venueName,
+                      text: "${_getGreeting()}, $ownerName 👋",
                       color: Colors.white,
-                      size: 24,
+                      size: 20,
                       weight: FontWeight.w700,
                     ),
                   ],
@@ -69,13 +77,15 @@ class DashboardHeader extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withOpacity(0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedNotification03,
-                      color: AppColors.goldenYellow,
-                      size: 20.0,
+                    child: const Center(
+                      child: HugeIcon(
+                        icon: HugeIcons.strokeRoundedNotification03,
+                        color: Colors.white,
+                        size: 20.0,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -83,8 +93,9 @@ class DashboardHeader extends StatelessWidget {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withOpacity(0.25),
                       shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
                     ),
                     child: Center(
                       child: AppText(
@@ -98,7 +109,15 @@ class DashboardHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          if (locations.length > 1) ...[
+            const SizedBox(height: 20),
+            LocationDropdown(
+              locations: locations,
+              selectedLocationId: selectedLocationId,
+              onSelected: onLocationSelected,
+            ),
+          ],
+          const SizedBox(height: 20),
           Row(
             children: [
               Container(
@@ -118,27 +137,13 @@ class DashboardHeader extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const AppText(
-                      text: "Live on CricBook",
+                    AppText(
+                      text: "$activeCourts Courts Active",
                       color: AppColors.primaryDarkGreen,
                       size: 12,
                       weight: FontWeight.w600,
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: AppText(
-                  text: "$activeCourts Courts Active",
-                  color: Colors.white,
-                  size: 12,
-                  weight: FontWeight.w600,
                 ),
               ),
             ],

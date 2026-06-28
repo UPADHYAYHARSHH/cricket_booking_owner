@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
+import 'package:hugeicons/hugeicons.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
@@ -12,39 +13,39 @@ import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_state.dart';
 
-/// All amenity IDs paired with display labels, grouped by section.
+/// All amenity IDs paired with display labels and icons, grouped by section.
 const List<Map<String, dynamic>> _kAmenities = [
   // Basic
-  {'id': 'parking', 'label': 'Parking', 'group': 'Basic'},
-  {'id': 'washrooms', 'label': 'Washrooms', 'group': 'Basic'},
-  {'id': 'changing_rooms', 'label': 'Changing Rooms', 'group': 'Basic'},
-  {'id': 'drinking_water', 'label': 'Drinking Water', 'group': 'Basic'},
-  {'id': 'waiting_area', 'label': 'Waiting / Seating Area', 'group': 'Basic'},
+  {'id': 'parking', 'label': 'Parking', 'group': 'Basic', 'icon': HugeIcons.strokeRoundedCarParking01},
+  {'id': 'washrooms', 'label': 'Washrooms', 'group': 'Basic', 'icon': HugeIcons.strokeRoundedToilet01},
+  {'id': 'changing_rooms', 'label': 'Changing Rooms', 'group': 'Basic', 'icon': HugeIcons.strokeRoundedLocker01},
+  {'id': 'drinking_water', 'label': 'Drinking Water', 'group': 'Basic', 'icon': HugeIcons.strokeRoundedDroplet},
+  {'id': 'waiting_area', 'label': 'Waiting / Seating Area', 'group': 'Basic', 'icon': HugeIcons.strokeRoundedSofa01},
   // Food
-  {'id': 'cafeteria', 'label': 'Cafeteria / Canteen', 'group': 'Food & Beverages'},
-  {'id': 'vending_machine', 'label': 'Vending Machine', 'group': 'Food & Beverages'},
-  {'id': 'water_dispenser', 'label': 'Water Dispenser', 'group': 'Food & Beverages'},
+  {'id': 'cafeteria', 'label': 'Cafeteria / Canteen', 'group': 'Food & Beverages', 'icon': HugeIcons.strokeRoundedCafe},
+  {'id': 'vending_machine', 'label': 'Vending Machine', 'group': 'Food & Beverages', 'icon': HugeIcons.strokeRoundedSoftDrink01},
+  {'id': 'water_dispenser', 'label': 'Water Dispenser', 'group': 'Food & Beverages', 'icon': HugeIcons.strokeRoundedWaterPump},
   // Safety
-  {'id': 'cctv', 'label': 'CCTV Surveillance', 'group': 'Safety'},
-  {'id': 'first_aid', 'label': 'First Aid Kit', 'group': 'Safety'},
-  {'id': 'fire_safety', 'label': 'Fire Safety Equipment', 'group': 'Safety'},
-  {'id': 'security_guard', 'label': 'Security Guard', 'group': 'Safety'},
+  {'id': 'cctv', 'label': 'CCTV Surveillance', 'group': 'Safety', 'icon': HugeIcons.strokeRoundedCctvCamera},
+  {'id': 'first_aid', 'label': 'First Aid Kit', 'group': 'Safety', 'icon': HugeIcons.strokeRoundedFirstAidKit},
+  {'id': 'fire_safety', 'label': 'Fire Safety Equipment', 'group': 'Safety', 'icon': HugeIcons.strokeRoundedFireExtinguisher},
+  {'id': 'security_guard', 'label': 'Security Guard', 'group': 'Safety', 'icon': HugeIcons.strokeRoundedUserShield01},
   // Equipment
-  {'id': 'bat_rental', 'label': 'Bat Rental', 'group': 'Equipment'},
-  {'id': 'ball_provided', 'label': 'Ball Provided', 'group': 'Equipment'},
-  {'id': 'batting_pads', 'label': 'Batting Pads', 'group': 'Equipment'},
-  {'id': 'helmet', 'label': 'Helmet Rental', 'group': 'Equipment'},
-  {'id': 'stumps_permanent', 'label': 'Permanent Stumps', 'group': 'Equipment'},
-  {'id': 'football_rental', 'label': 'Football Rental', 'group': 'Equipment'},
-  {'id': 'goal_nets', 'label': 'Goal Nets', 'group': 'Equipment'},
-  {'id': 'bibs', 'label': 'Bibs / Jerseys', 'group': 'Equipment'},
+  {'id': 'bat_rental', 'label': 'Bat Rental', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedCricketBat},
+  {'id': 'ball_provided', 'label': 'Ball Provided', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedBaseball},
+  {'id': 'batting_pads', 'label': 'Batting Pads', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedShield01},
+  {'id': 'helmet', 'label': 'Helmet Rental', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedCricketHelmet},
+  {'id': 'stumps_permanent', 'label': 'Permanent Stumps', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedUtilityPole},
+  {'id': 'football_rental', 'label': 'Football Rental', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedFootball},
+  {'id': 'goal_nets', 'label': 'Goal Nets', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedFootballPitch},
+  {'id': 'bibs', 'label': 'Bibs / Jerseys', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedTShirt},
   // Tech & Services
-  {'id': 'wifi', 'label': 'WiFi', 'group': 'Tech & Services'},
-  {'id': 'live_scoring', 'label': 'Live Scoring Support', 'group': 'Tech & Services'},
-  {'id': 'coaching', 'label': 'Coaching Available', 'group': 'Tech & Services'},
-  {'id': 'video_recording', 'label': 'Video Recording', 'group': 'Tech & Services'},
-  {'id': 'score_display', 'label': 'LED Score Display', 'group': 'Tech & Services'},
-  {'id': 'floodlights', 'label': 'Floodlights (LED)', 'group': 'Tech & Services'},
+  {'id': 'wifi', 'label': 'WiFi', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedWifi01},
+  {'id': 'live_scoring', 'label': 'Live Scoring Support', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedAnalyticsUp},
+  {'id': 'coaching', 'label': 'Coaching Available', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedWhistle},
+  {'id': 'video_recording', 'label': 'Video Recording', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedCameraVideo},
+  {'id': 'score_display', 'label': 'LED Score Display', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedModernTv},
+  {'id': 'floodlights', 'label': 'Floodlights (LED)', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedSpotlight},
 ];
 
 /// Single-screen form to add/edit a venue Location (address/city/GPS,
@@ -437,6 +438,7 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                 children: items.map((amenity) {
                   final id = amenity['id'] as String;
                   final label = amenity['label'] as String;
+                  final icon = amenity['icon'];
                   final isSel = _selectedAmenities.contains(id);
                   return GestureDetector(
                     onTap: () => setState(() {
@@ -456,11 +458,22 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                           width: isSel ? 1.5 : 1,
                         ),
                       ),
-                      child: AppText(
-                        text: label,
-                        size: 13,
-                        weight: isSel ? FontWeight.w700 : FontWeight.w500,
-                        color: isSel ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          HugeIcon(
+                            icon: icon,
+                            size: 16,
+                            color: isSel ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+                          ),
+                          const SizedBox(width: 6),
+                          AppText(
+                            text: label,
+                            size: 13,
+                            weight: isSel ? FontWeight.w700 : FontWeight.w500,
+                            color: isSel ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+                          ),
+                        ],
                       ),
                     ),
                   );

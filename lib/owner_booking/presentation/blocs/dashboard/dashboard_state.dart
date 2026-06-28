@@ -9,22 +9,28 @@ class DashboardLoaded extends DashboardState {
   final String venueName;
   final int activeCourts;
   final String todayRevenue;
+  final String revenueChangeLabel;
   final int todayBookingsCount;
   final int pendingAcceptCount;
   final String occupancyPercentage;
   final List<dynamic> todaySlots;
   final List<dynamic> pendingApprovals;
+  final List<Map<String, dynamic>> locations;
+  final String? selectedLocationId;
 
   DashboardLoaded({
     required this.ownerName,
     required this.venueName,
     required this.activeCourts,
     required this.todayRevenue,
+    this.revenueChangeLabel = '—',
     required this.todayBookingsCount,
     required this.pendingAcceptCount,
     required this.occupancyPercentage,
     this.todaySlots = const [],
     this.pendingApprovals = const [],
+    this.locations = const [],
+    this.selectedLocationId,
   });
 }
 

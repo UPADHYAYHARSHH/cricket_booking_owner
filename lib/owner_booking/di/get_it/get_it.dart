@@ -59,7 +59,11 @@ Future<void> init() async {
     () => BookingsCubit(getIt<BookingRepository>()),
   );
   getIt.registerLazySingleton<DashboardCubit>(
-    () => DashboardCubit(getIt<OwnerRepository>(), getIt<BookingRepository>()),
+    () => DashboardCubit(
+      getIt<OwnerRepository>(),
+      getIt<BookingRepository>(),
+      getIt<LocationRepository>(),
+    ),
   );
   getIt.registerLazySingleton<GroundCubit>(
     () => GroundCubit(getIt<GroundRepository>()),

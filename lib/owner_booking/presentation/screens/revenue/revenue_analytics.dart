@@ -7,13 +7,13 @@ class RevenuePoint {
   const RevenuePoint(this.label, this.amount);
 }
 
-const _countedStatuses = {'confirmed', 'completed'};
+const _countedStatuses = {'confirmed', 'completed', 'paid'};
 
 double _amountOf(Map<String, dynamic> booking) =>
     ((booking['amount'] ?? booking['total_amount'] ?? 0) as num).toDouble();
 
 DateTime? _dateOf(Map<String, dynamic> booking) {
-  final raw = booking['booking_date'] ?? booking['created_at'];
+  final raw = booking['slot_time'] ?? booking['created_at'];
   if (raw == null) return null;
   try {
     return DateTime.parse(raw as String).toLocal();

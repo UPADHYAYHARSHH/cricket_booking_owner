@@ -6,6 +6,7 @@ import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_state.dart';
+import 'package:turfpro_owner/owner_booking/presentation/widgets/location_dropdown.dart';
 import 'revenue_analytics.dart';
 
 enum _Period { weekly, monthly }
@@ -84,7 +85,7 @@ class _RevenueScreenState extends State<RevenueScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               children: [
-                _LocationFilterRow(
+                LocationDropdown(
                   locations: loaded.locations,
                   selectedLocationId: _selectedLocationId,
                   onSelected: (id) => setState(() => _selectedLocationId = id),
@@ -141,82 +142,6 @@ class _SectionHeader extends StatelessWidget {
         ),
         if (trailing != null) trailing!,
       ],
-    );
-  }
-}
-
-class _LocationFilterRow extends StatelessWidget {
-  final List<Map<String, dynamic>> locations;
-  final String? selectedLocationId;
-  final ValueChanged<String?> onSelected;
-
-  const _LocationFilterRow({
-    required this.locations,
-    required this.selectedLocationId,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 36,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        itemCount: locations.length + 1,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, index) {
-          if (index == 0) {
-            return _FilterChip(
-              label: 'All Locations',
-              selected: selectedLocationId == null,
-              onTap: () => onSelected(null),
-            );
-          }
-          final location = locations[index - 1];
-          final id = location['id'] as String;
-          final label = (location['city'] as String?)?.isNotEmpty == true
-              ? location['city'] as String
-              : (location['address'] as String? ?? 'Location');
-          return _FilterChip(
-            label: label,
-            selected: selectedLocationId == id,
-            onTap: () => onSelected(id),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _FilterChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  const _FilterChip({required this.label, required this.selected, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.primaryDarkGreen : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? AppColors.primaryDarkGreen : Colors.grey.shade300,
-          ),
-        ),
-        child: Center(
-          child: AppText(
-            text: label,
-            size: 13,
-            weight: FontWeight.w600,
-            color: selected ? Colors.white : AppColors.textSecondaryLight,
-          ),
-        ),
-      ),
     );
   }
 }
