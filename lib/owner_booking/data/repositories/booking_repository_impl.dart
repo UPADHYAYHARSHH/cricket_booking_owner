@@ -8,10 +8,15 @@ class BookingRepositoryImpl implements BookingRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getOwnerGrounds(String ownerId) async {
+    // Only grounds whose location has been approved by the admin dashboard
+    // and is currently active should count towards dashboard stats.
     final response = await _supabase
         .from('grounds')
-        .select('id, name')
-        .eq('owner_id', ownerId);
+        .select('id, name, locations!inner(documents_verified, is_active, deleted_at)')
+        .eq('owner_id', ownerId)
+        .eq('locations.documents_verified', true)
+        .eq('locations.is_active', true)
+        .filter('locations.deleted_at', 'is', null);
     return List<Map<String, dynamic>>.from(response);
   }
 
@@ -70,5 +75,16 @@ class BookingRepositoryImpl implements BookingRepository {
       'checked_in': true,
       'checked_in_at': DateTime.now().toIso8601String(),
     }).eq('id', bookingId);
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getOwnerBookingsWithDetails(
+      String ownerId) async {
+    final response = await _supabase
+        .from('bookings')
+        .select('*, grounds!inner(name, category, location_id, owner_id)')
+        .eq('grounds.owner_id', ownerId)
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(response);
   }
 }

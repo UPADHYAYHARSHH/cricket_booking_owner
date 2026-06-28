@@ -18,6 +18,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 
 final getIt = GetIt.instance;
@@ -68,5 +69,8 @@ Future<void> init() async {
   );
   getIt.registerLazySingleton<SlotCubit>(
     () => SlotCubit(getIt<SlotRepository>()),
+  );
+  getIt.registerFactory<RevenueCubit>(
+    () => RevenueCubit(getIt<BookingRepository>(), getIt<LocationRepository>()),
   );
 }

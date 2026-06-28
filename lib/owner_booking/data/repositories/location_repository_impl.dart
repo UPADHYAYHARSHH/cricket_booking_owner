@@ -12,6 +12,7 @@ class LocationRepositoryImpl implements LocationRepository {
         .from('locations')
         .select()
         .eq('owner_id', ownerId)
+        .isFilter('deleted_at', null)
         .order('created_at', ascending: false);
 
     return (response as List).cast<Map<String, dynamic>>();
@@ -50,5 +51,13 @@ class LocationRepositoryImpl implements LocationRepository {
     required Map<String, dynamic> data,
   }) async {
     await _supabase.from('locations').update(data).eq('id', locationId);
+  }
+
+  @override
+  Future<void> softDeleteLocation(String locationId) async {
+    await _supabase
+        .from('locations')
+        .update({'deleted_at': DateTime.now().toIso8601String()})
+        .eq('id', locationId);
   }
 }

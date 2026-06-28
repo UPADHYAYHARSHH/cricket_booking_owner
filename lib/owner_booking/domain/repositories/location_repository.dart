@@ -15,4 +15,9 @@ abstract class LocationRepository {
     required String locationId,
     required Map<String, dynamic> data,
   });
+
+  /// Soft-deletes a location: it stops showing in the owner's list and its
+  /// grounds disappear from the client app, but the row (and its booking
+  /// history) is kept for records.
+  Future<void> softDeleteLocation(String locationId);
 }

@@ -34,8 +34,8 @@ class _LocationsScreenState extends State<LocationsScreen> {
     if (newLocationId == null || !mounted) return;
 
     // Collect property/ownership documents for this venue. The location
-    // stays in "Pending verification" until these are reviewed — grounds
-    // can't be added until then (see _openGrounds).
+    // stays "Pending Approval" until the admin reviews it, but the owner
+    // can add grounds right away — approval only gates user-facing visibility.
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -49,6 +49,30 @@ class _LocationsScreenState extends State<LocationsScreen> {
       context,
       MaterialPageRoute(builder: (_) => LocationFormScreen(locationData: location)),
     );
+  }
+
+  Future<void> _confirmDelete(Map<String, dynamic> location) async {
+    final address = location['address'] as String? ?? 'this location';
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Location'),
+        content: Text(
+          'Delete "$address"? Its grounds will stop showing to players immediately. '
+          'This can be reversed by support if needed — booking history is kept.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await context.read<LocationCubit>().deleteLocation(location['id'] as String);
   }
 
   Future<void> _openDocuments(Map<String, dynamic> location) async {
@@ -66,18 +90,6 @@ class _LocationsScreenState extends State<LocationsScreen> {
   }
 
   void _openGrounds(Map<String, dynamic> location) {
-    if (location['documents_verified'] != true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "This location is pending verification. You'll be able to add sports/grounds once it's verified.",
-          ),
-          backgroundColor: AppColors.accentOrange,
-        ),
-      );
-      return;
-    }
-
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -157,6 +169,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
                     location: location,
                     onTap: () => _openGrounds(location),
                     onEdit: () => _openEditLocation(location),
+                    onDelete: () => _confirmDelete(location),
                     onDocuments: () => _openDocuments(location),
                     onActiveChanged: (value) => context.read<LocationCubit>().updateLocation(
                           locationId: location['id'] as String,
@@ -191,6 +204,7 @@ class _LocationCard extends StatelessWidget {
   final Map<String, dynamic> location;
   final VoidCallback onTap;
   final VoidCallback onEdit;
+  final VoidCallback onDelete;
   final VoidCallback onDocuments;
   final ValueChanged<bool> onActiveChanged;
 
@@ -198,6 +212,7 @@ class _LocationCard extends StatelessWidget {
     required this.location,
     required this.onTap,
     required this.onEdit,
+    required this.onDelete,
     required this.onDocuments,
     required this.onActiveChanged,
   });
@@ -269,7 +284,7 @@ class _LocationCard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: const AppText(
-                                  text: 'Pending Verification',
+                                  text: 'Pending Approval',
                                   size: 10,
                                   weight: FontWeight.w700,
                                   color: AppColors.accentOrange,
@@ -300,12 +315,34 @@ class _LocationCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    onTap: onEdit,
-                    child: const Padding(
-                      padding: EdgeInsets.all(6),
-                      child: Icon(Icons.edit_outlined, size: 18, color: AppColors.primaryDarkGreen),
-                    ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, size: 20, color: Colors.grey),
+                    onSelected: (value) {
+                      if (value == 'edit') onEdit();
+                      if (value == 'delete') onDelete();
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit_outlined, size: 18, color: AppColors.primaryDarkGreen),
+                            SizedBox(width: 10),
+                            Text('Edit'),
+                          ],
+                        ),
+                      ),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                            SizedBox(width: 10),
+                            Text('Delete'),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                   const Icon(Icons.chevron_right, color: Colors.grey),
                 ],
@@ -366,8 +403,8 @@ class _LocationCard extends StatelessWidget {
                     Expanded(
                       child: AppText(
                         text: hasDocuments
-                            ? "We're reviewing your documents. You'll be able to add sports/grounds once verified."
-                            : 'Submit venue documents to get this location verified before adding sports/grounds.',
+                            ? "Your location is awaiting admin approval. You can add sports/grounds now — they'll go live once the location is approved."
+                            : 'Submit venue documents for faster approval. You can add sports/grounds now while it’s reviewed.',
                         size: 11,
                         color: const Color(0xFF795548),
                       ),

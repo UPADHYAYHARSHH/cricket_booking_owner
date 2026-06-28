@@ -3,14 +3,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
+import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_state.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/dashboard_header.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/pending_approval_card.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/quick_action_card.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/revenue_card.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/slot_item.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/stat_card.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/revenue/revenue_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/scan_ticket/scan_ticket_screen.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -243,7 +246,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           QuickActionCard(
                             title: "Revenue Report",
                             icon: Image.asset('assets/icons/money_bag.png', height: 32, errorBuilder: (context, error, stackTrace) => const HugeIcon(icon: HugeIcons.strokeRoundedMoneyBag01, size: 32.0, color: Colors.green)),
-                            onTap: () {},
+                            onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => BlocProvider(
+                                  create: (_) => getIt<RevenueCubit>(),
+                                  child: const RevenueScreen(),
+                                ),
+                              ),
+                            ),
                           ),
                           QuickActionCard(
                             title: "Settings",

@@ -61,4 +61,13 @@ class LocationCubit extends Cubit<LocationState> {
       emit(LocationError(e.toString()));
     }
   }
+
+  Future<void> deleteLocation(String locationId) async {
+    try {
+      await _locationRepository.softDeleteLocation(locationId);
+      await fetchOwnerLocations();
+    } catch (e) {
+      emit(LocationError(e.toString()));
+    }
+  }
 }
