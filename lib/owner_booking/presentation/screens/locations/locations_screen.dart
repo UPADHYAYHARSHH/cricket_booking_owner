@@ -10,8 +10,9 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/grounds/grounds
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_documents_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_form_screen.dart';
 
-/// Top-level screen for the "Grounds" tab: an owner picks one of their
-/// venue Locations (or adds a new one) before managing the grounds at it.
+/// Location management screen, reached from the "Grounds" tab's app bar:
+/// lets an owner add/edit/delete venue Locations and manage their
+/// documents. Tapping a location card still opens its grounds directly.
 class LocationsScreen extends StatefulWidget {
   const LocationsScreen({super.key});
 
@@ -108,7 +109,7 @@ class _LocationsScreenState extends State<LocationsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const AppText(text: 'My Locations', size: 18, weight: FontWeight.w700),
+        title: const AppText(text: 'Manage Locations', size: 18, weight: FontWeight.w700),
         centerTitle: true,
         actions: [
           IconButton(

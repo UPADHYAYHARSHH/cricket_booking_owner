@@ -30,6 +30,17 @@ dynamic sportIcon(String? sport) {
   return HugeIcons.strokeRoundedCricketBat;
 }
 
+/// Turns a stored sport slug (e.g. "box_cricket") into a display label
+/// (e.g. "Box Cricket").
+String formatSportName(String? sport) {
+  final slug = sport ?? '';
+  if (slug.isEmpty) return slug;
+  return slug
+      .split('_')
+      .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+      .join(' ');
+}
+
 /// Reusable widget that renders the correct sport icon for [sport].
 class SportIcon extends StatelessWidget {
   final String? sport;

@@ -73,15 +73,24 @@ class BookingsCubit extends Cubit<BookingsState> {
             };
           }).toList();
 
+          // Re-apply whatever search/date filter the owner already had
+          // selected, so a live update to the bookings list doesn't wipe it.
           final currentState = state;
-          final currentQuery =
-              currentState is BookingsLoaded ? currentState.searchQuery : '';
+          final query = currentState is BookingsLoaded ? currentState.searchQuery : '';
+          final dateFilter = currentState is BookingsLoaded
+              ? currentState.dateFilter
+              : BookingDateFilter.all;
+          final rangeStart = currentState is BookingsLoaded ? currentState.rangeStart : null;
+          final rangeEnd = currentState is BookingsLoaded ? currentState.rangeEnd : null;
 
-          final filtered = _applyFilter(allBookings, currentQuery);
           emit(BookingsLoaded(
             allBookings: allBookings,
-            filteredBookings: filtered,
-            searchQuery: currentQuery,
+            filteredBookings:
+                _applyFilters(allBookings, query, dateFilter, rangeStart, rangeEnd),
+            searchQuery: query,
+            dateFilter: dateFilter,
+            rangeStart: rangeStart,
+            rangeEnd: rangeEnd,
           ));
         } catch (_) {}
       });
@@ -92,24 +101,128 @@ class BookingsCubit extends Cubit<BookingsState> {
 
   void searchBookings(String query) {
     final currentState = state;
-    if (currentState is BookingsLoaded) {
-      final filtered = query.isEmpty
-          ? currentState.allBookings
-          : _applyFilter(currentState.allBookings, query);
-      emit(currentState.copyWith(filteredBookings: filtered, searchQuery: query));
+    if (currentState is! BookingsLoaded) return;
+    emit(currentState.copyWith(
+      searchQuery: query,
+      filteredBookings: _applyFilters(
+        currentState.allBookings,
+        query,
+        currentState.dateFilter,
+        currentState.rangeStart,
+        currentState.rangeEnd,
+      ),
+    ));
+  }
+
+  void setDateFilter(BookingDateFilter filter) {
+    final currentState = state;
+    if (currentState is! BookingsLoaded) return;
+    final rangeStart = filter == BookingDateFilter.range ? currentState.rangeStart : null;
+    final rangeEnd = filter == BookingDateFilter.range ? currentState.rangeEnd : null;
+    emit(BookingsLoaded(
+      allBookings: currentState.allBookings,
+      filteredBookings: _applyFilters(
+        currentState.allBookings,
+        currentState.searchQuery,
+        filter,
+        rangeStart,
+        rangeEnd,
+      ),
+      searchQuery: currentState.searchQuery,
+      dateFilter: filter,
+      rangeStart: rangeStart,
+      rangeEnd: rangeEnd,
+    ));
+  }
+
+  void setDateRange(DateTime start, DateTime end) {
+    final currentState = state;
+    if (currentState is! BookingsLoaded) return;
+    emit(currentState.copyWith(
+      dateFilter: BookingDateFilter.range,
+      rangeStart: start,
+      rangeEnd: end,
+      filteredBookings: _applyFilters(
+        currentState.allBookings,
+        currentState.searchQuery,
+        BookingDateFilter.range,
+        start,
+        end,
+      ),
+    ));
+  }
+
+  List<dynamic> _applyFilters(
+    List<dynamic> bookings,
+    String query,
+    BookingDateFilter dateFilter,
+    DateTime? rangeStart,
+    DateTime? rangeEnd,
+  ) {
+    var result = bookings;
+    if (dateFilter != BookingDateFilter.all) {
+      result =
+          result.where((b) => _matchesDateFilter(b, dateFilter, rangeStart, rangeEnd)).toList();
+    }
+    if (query.isNotEmpty) {
+      result = _applySearch(result, query);
+    }
+    return result;
+  }
+
+  bool _matchesDateFilter(
+    dynamic booking,
+    BookingDateFilter dateFilter,
+    DateTime? rangeStart,
+    DateTime? rangeEnd,
+  ) {
+    final slotTimeStr = booking['slot_time']?.toString();
+    if (slotTimeStr == null || slotTimeStr.isEmpty) return false;
+    final slotTime = DateTime.tryParse(slotTimeStr)?.toLocal();
+    if (slotTime == null) return false;
+
+    final today = _dateOnly(DateTime.now());
+    final slotDate = _dateOnly(slotTime);
+
+    switch (dateFilter) {
+      case BookingDateFilter.all:
+        return true;
+      case BookingDateFilter.today:
+        return slotDate == today;
+      case BookingDateFilter.tomorrow:
+        return slotDate == today.add(const Duration(days: 1));
+      case BookingDateFilter.range:
+        if (rangeStart == null || rangeEnd == null) return true;
+        final start = _dateOnly(rangeStart);
+        final end = _dateOnly(rangeEnd);
+        return !slotDate.isBefore(start) && !slotDate.isAfter(end);
     }
   }
 
-  List<dynamic> _applyFilter(List<dynamic> bookings, String query) {
-    if (query.isEmpty) return bookings;
+  DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
+
+  List<dynamic> _applySearch(List<dynamic> bookings, String query) {
     final lowerQuery = query.toLowerCase();
     return bookings.where((b) {
       final playerName = (b['player_name'] ?? '').toString().toLowerCase();
-      final bookingId = (b['id'] ?? '').toString().toLowerCase();
+      final groundName = (b['ground_name'] ?? '').toString().toLowerCase();
       final status = (b['status'] ?? '').toString().toLowerCase();
+      final bookingId = (b['id'] ?? '').toString().toLowerCase();
+      final displayId = _displayId(b).toLowerCase();
       return playerName.contains(lowerQuery) ||
+          groundName.contains(lowerQuery) ||
+          status.contains(lowerQuery) ||
           bookingId.contains(lowerQuery) ||
-          status.contains(lowerQuery);
+          displayId.contains(lowerQuery);
     }).toList();
+  }
+
+  /// Matches the "CB..." id shown to the owner on the booking cards/details
+  /// screen, since that's what an owner would actually type into search.
+  String _displayId(dynamic booking) {
+    final raw = booking['display_id']?.toString();
+    if (raw != null && raw.isNotEmpty && raw != '0') return 'cb$raw';
+    final fullId = booking['id']?.toString() ?? '';
+    return 'cb${fullId.length > 5 ? fullId.substring(0, 5) : fullId}';
   }
 }

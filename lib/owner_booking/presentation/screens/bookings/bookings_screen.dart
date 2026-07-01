@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:intl/intl.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -31,6 +32,26 @@ class _BookingsScreenState extends State<BookingsScreen> {
     super.dispose();
   }
 
+  Future<void> _pickDateRange() async {
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 2),
+      lastDate: DateTime(now.year + 2),
+      initialDateRange: DateTimeRange(start: now, end: now),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: Theme.of(context).colorScheme.copyWith(
+                primary: AppColors.primaryDarkGreen,
+              ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked == null || !mounted) return;
+    context.read<BookingsCubit>().setDateRange(picked.start, picked.end);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,16 +66,29 @@ class _BookingsScreenState extends State<BookingsScreen> {
         children: [
           Container(
             color: Colors.white,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
             child: TextField(
               controller: _searchController,
               onChanged: (query) {
                 context.read<BookingsCubit>().searchBookings(query);
               },
               decoration: InputDecoration(
-                hintText: "Search by player name or booking ID",
+                hintText: "Search by player name, ground or booking ID",
                 hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
                 prefixIcon: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: Colors.grey.shade400),
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _searchController,
+                  builder: (context, value, _) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return IconButton(
+                      icon: Icon(Icons.close_rounded, size: 18, color: Colors.grey.shade400),
+                      onPressed: () {
+                        _searchController.clear();
+                        context.read<BookingsCubit>().searchBookings('');
+                      },
+                    );
+                  },
+                ),
                 filled: true,
                 fillColor: Colors.grey.shade50,
                 border: OutlineInputBorder(
@@ -71,6 +105,53 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
+            ),
+          ),
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+            child: BlocBuilder<BookingsCubit, BookingsState>(
+              builder: (context, state) {
+                final dateFilter =
+                    state is BookingsLoaded ? state.dateFilter : BookingDateFilter.all;
+                final rangeStart = state is BookingsLoaded ? state.rangeStart : null;
+                final rangeEnd = state is BookingsLoaded ? state.rangeEnd : null;
+
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _DateFilterChip(
+                        label: 'All',
+                        selected: dateFilter == BookingDateFilter.all,
+                        onTap: () => context.read<BookingsCubit>().setDateFilter(BookingDateFilter.all),
+                      ),
+                      const SizedBox(width: 8),
+                      _DateFilterChip(
+                        label: 'Today',
+                        selected: dateFilter == BookingDateFilter.today,
+                        onTap: () => context.read<BookingsCubit>().setDateFilter(BookingDateFilter.today),
+                      ),
+                      const SizedBox(width: 8),
+                      _DateFilterChip(
+                        label: 'Tomorrow',
+                        selected: dateFilter == BookingDateFilter.tomorrow,
+                        onTap: () =>
+                            context.read<BookingsCubit>().setDateFilter(BookingDateFilter.tomorrow),
+                      ),
+                      const SizedBox(width: 8),
+                      _DateFilterChip(
+                        label: dateFilter == BookingDateFilter.range && rangeStart != null && rangeEnd != null
+                            ? '${DateFormat('d MMM').format(rangeStart)} – ${DateFormat('d MMM').format(rangeEnd)}'
+                            : 'Date Range',
+                        icon: Icons.date_range_rounded,
+                        selected: dateFilter == BookingDateFilter.range,
+                        onTap: _pickDateRange,
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
           Expanded(
@@ -127,10 +208,26 @@ class _BookingsScreenState extends State<BookingsScreen> {
   }
 }
 
-class _BookingCard extends StatelessWidget {
+class _BookingCard extends StatefulWidget {
   final Map<String, dynamic> booking;
 
   const _BookingCard({required this.booking});
+
+  @override
+  State<_BookingCard> createState() => _BookingCardState();
+}
+
+class _BookingCardState extends State<_BookingCard> {
+  bool _pressed = false;
+
+  void _openDetails() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookingDetailsScreen(booking: widget.booking),
+      ),
+    );
+  }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -169,16 +266,17 @@ class _BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final booking = widget.booking;
     final status = (booking['status'] ?? 'pending').toString();
     final statusColor = _getStatusColor(status);
     final statusBgColor = _getStatusBgColor(status);
-    
+
     final playerName = booking['player_name'] ?? 'Player Name';
     final groundName = booking['ground_name'] ?? 'Court';
     final period = booking['period'] ?? 'Time';
     final sportName = booking['sport_name'] ?? 'Sport';
     final amount = booking['amount'] ?? booking['total_amount'] ?? 0;
-    
+
     // Formatting booking ID
     String displayId = booking['display_id']?.toString() ?? '';
     if (displayId.isEmpty) {
@@ -186,93 +284,152 @@ class _BookingCard extends StatelessWidget {
       displayId = fullId.length > 5 ? fullId.substring(0, 5).toUpperCase() : fullId;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _getCardBorderColor(status), width: 1.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AppText(
-                text: playerName,
-                size: 16,
-                weight: FontWeight.w700,
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: _pressed ? 0.98 : 1,
+        duration: const Duration(milliseconds: 110),
+        curve: Curves.easeOut,
+        child: Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
+            onTap: _openDetails,
+            borderRadius: BorderRadius.circular(12),
+            splashColor: AppColors.primaryDarkGreen.withOpacity(0.08),
+            highlightColor: AppColors.primaryDarkGreen.withOpacity(0.04),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _getCardBorderColor(status), width: 1.5),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusBgColor,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: AppText(
-                  text: status[0].toUpperCase() + status.substring(1),
-                  color: statusColor,
-                  size: 12,
-                  weight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          AppText(
-            text: "$groundName • $period",
-            size: 13,
-            color: Colors.grey.shade600,
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              _InfoChip(icon: sportIcon(sportName.toString()), text: sportName),
-              const SizedBox(width: 12),
-              _InfoChip(icon: HugeIcons.strokeRoundedUserGroup, text: "Players"), // Mocked players
-              const SizedBox(width: 12),
-              _InfoChip(icon: HugeIcons.strokeRoundedMoneyBag01, text: "₹$amount"),
-            ],
-          ),
-          const SizedBox(height: 12),
-          AppText(
-            text: "Booking #CB$displayId",
-            size: 12,
-            color: Colors.grey.shade500,
-          ),
-          const SizedBox(height: 16),
-          // Actions Row - Only Details Button as per requirements
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => BookingDetailsScreen(booking: booking),
-                    ),
-                  );
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primaryDarkGreen,
-                  side: const BorderSide(color: AppColors.primaryDarkGreen),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AppText(
+                        text: playerName,
+                        size: 16,
+                        weight: FontWeight.w700,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: statusBgColor,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: AppText(
+                          text: status[0].toUpperCase() + status.substring(1),
+                          color: statusColor,
+                          size: 12,
+                          weight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                child: const AppText(
-                  text: "Details",
-                  color: AppColors.primaryDarkGreen,
-                  weight: FontWeight.w600,
-                  size: 14,
-                ),
+                  const SizedBox(height: 8),
+                  AppText(
+                    text: "$groundName • $period",
+                    size: 13,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      _InfoChip(
+                        icon: sportIcon(sportName.toString()),
+                        text: formatSportName(sportName.toString()),
+                      ),
+                      const SizedBox(width: 12),
+                      _InfoChip(icon: HugeIcons.strokeRoundedUserGroup, text: "Players"), // Mocked players
+                      const SizedBox(width: 12),
+                      _InfoChip(icon: HugeIcons.strokeRoundedMoneyBag01, text: "₹$amount"),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      AppText(
+                        text: "Booking #CB$displayId",
+                        size: 12,
+                        color: Colors.grey.shade500,
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppText(
+                            text: "View Details",
+                            size: 12,
+                            weight: FontWeight.w700,
+                            color: AppColors.primaryDarkGreen,
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 11,
+                            color: AppColors.primaryDarkGreen,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DateFilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final IconData? icon;
+
+  const _DateFilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primaryDarkGreen : Colors.grey.shade50,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? AppColors.primaryDarkGreen : Colors.grey.shade200,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 14, color: selected ? Colors.white : Colors.grey.shade600),
+              const SizedBox(width: 5),
+            ],
+            AppText(
+              text: label,
+              size: 13,
+              weight: FontWeight.w600,
+              color: selected ? Colors.white : Colors.grey.shade700,
+            ),
+          ],
+        ),
       ),
     );
   }

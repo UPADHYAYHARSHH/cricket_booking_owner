@@ -6,7 +6,7 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/dashb
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/bookings_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/slots/slots_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/profile_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/locations/locations_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/grounds/grounds_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/scan_ticket/scan_ticket_screen.dart';
 
 class MainNavbar extends StatefulWidget {
@@ -23,7 +23,7 @@ class _MainNavbarState extends State<MainNavbar> {
     const DashboardScreen(),
     const SlotsScreen(),
     const BookingsScreen(),
-    const LocationsScreen(),
+    const GroundsScreen(),
     const ProfileScreen(),
   ];
 

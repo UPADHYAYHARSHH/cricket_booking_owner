@@ -32,17 +32,23 @@ class GroundCubit extends Cubit<GroundState> {
     }
   }
 
+  /// Pass [locationId] to refresh a single location's grounds, or omit it
+  /// (e.g. when viewing "All Locations") to refresh the owner's full list.
   Future<void> setGroundAvailability(
     String groundId,
-    bool isAvailable,
-    String locationId,
-  ) async {
+    bool isAvailable, {
+    String? locationId,
+  }) async {
     try {
       await _groundRepository.updateGround(
         groundId: groundId,
         data: {'is_available': isAvailable},
       );
-      await fetchGroundsForLocation(locationId);
+      if (locationId != null) {
+        await fetchGroundsForLocation(locationId);
+      } else {
+        await fetchOwnerGrounds();
+      }
     } catch (e) {
       emit(GroundError(e.toString()));
     }
