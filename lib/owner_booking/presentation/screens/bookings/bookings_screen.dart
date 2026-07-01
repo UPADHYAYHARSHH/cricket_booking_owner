@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_state.dart';
@@ -227,7 +228,7 @@ class _BookingCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              _InfoChip(icon: HugeIcons.strokeRoundedCricketBat, text: sportName),
+              _InfoChip(icon: sportIcon(sportName.toString()), text: sportName),
               const SizedBox(width: 12),
               _InfoChip(icon: HugeIcons.strokeRoundedUserGroup, text: "Players"), // Mocked players
               const SizedBox(width: 12),

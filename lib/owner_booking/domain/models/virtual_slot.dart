@@ -8,6 +8,8 @@ class VirtualSlot {
   final String? bookedPlayerName;
   final int? bookedPlayersCount;
   final String? bookingId;
+  final String? blockedSlotId;
+  final String? blockReason;
 
   VirtualSlot({
     required this.startTime,
@@ -17,5 +19,7 @@ class VirtualSlot {
     this.bookedPlayerName,
     this.bookedPlayersCount,
     this.bookingId,
+    this.blockedSlotId,
+    this.blockReason,
   });
 }

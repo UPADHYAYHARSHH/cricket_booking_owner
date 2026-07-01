@@ -46,7 +46,7 @@ class RevenueCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppText(
-                  text: "Today's Revenue",
+                  text: "Today's Earnings",
                   color: Colors.white.withOpacity(0.75),
                   size: 13,
                   weight: FontWeight.w500,

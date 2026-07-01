@@ -158,11 +158,11 @@ class _SummaryRow extends StatelessWidget {
 
     return Row(
       children: [
-        _SummaryCard(label: 'Total Revenue', value: '₹${revenue.toInt()}'),
+        _SummaryCard(label: 'Net Earnings', value: '₹${revenue.toInt()}'),
         const SizedBox(width: 12),
         _SummaryCard(label: 'Bookings', value: '$count'),
         const SizedBox(width: 12),
-        _SummaryCard(label: 'Avg / Booking', value: '₹${avg.toInt()}'),
+        _SummaryCard(label: 'Avg Earn', value: '₹${avg.toInt()}'),
       ],
     );
   }

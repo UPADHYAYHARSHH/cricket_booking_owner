@@ -437,7 +437,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AppText(text: item.title, size: 14, weight: FontWeight.w500),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppText(text: item.title, size: 14, weight: FontWeight.w500),
+                          if (item.subtitle != null) ...[
+                            const SizedBox(height: 2),
+                            AppText(
+                              text: item.subtitle!,
+                              size: 11,
+                              color: Colors.grey.shade500,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                     Icon(Icons.chevron_right, size: 20, color: Colors.grey.shade400),
                   ],
                 ),
@@ -452,8 +467,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
 class _SettingsItem {
   final String title;
+  final String? subtitle;
   final VoidCallback onTap;
   final bool isLast;
 
-  _SettingsItem(this.title, {required this.onTap, this.isLast = false});
+  _SettingsItem(this.title, {this.subtitle, required this.onTap, this.isLast = false});
 }

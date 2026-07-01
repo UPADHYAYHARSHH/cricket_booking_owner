@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/location_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/owner_repository.dart';
+import 'package:turfpro_owner/common/constants/fee_constants.dart';
 import 'dashboard_state.dart';
 
 class DashboardCubit extends Cubit<DashboardState> {
@@ -98,7 +99,11 @@ class DashboardCubit extends Cubit<DashboardState> {
             try {
               final bDate = DateTime.parse(bookingDateStr).toLocal();
               final isRevenueCounted = status == 'confirmed' || status == 'completed' || status == 'paid';
-              final amount = (b['amount'] ?? b['total_amount'] ?? 0).toDouble();
+              final gross = (b['amount'] ?? b['total_amount'] ?? 0).toDouble();
+              final commissionFee = kCommissionIsPercentage
+                  ? gross * kCommissionRate / 100
+                  : kCommissionRate;
+              final amount = (gross - kPlatformFee - commissionFee).clamp(0.0, double.infinity);
 
               if (bDate.year == now.year &&
                   bDate.month == now.month &&

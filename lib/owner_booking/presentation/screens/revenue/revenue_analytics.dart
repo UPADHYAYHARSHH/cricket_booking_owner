@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:turfpro_owner/common/constants/fee_constants.dart';
 
 /// A single labeled value used to feed a bar/pie chart.
 class RevenuePoint {
@@ -9,8 +10,15 @@ class RevenuePoint {
 
 const _countedStatuses = {'confirmed', 'completed', 'paid'};
 
-double _amountOf(Map<String, dynamic> booking) =>
-    ((booking['amount'] ?? booking['total_amount'] ?? 0) as num).toDouble();
+/// Owner's net earn for a booking = gross minus platform fee minus commission.
+double _amountOf(Map<String, dynamic> booking) {
+  final gross =
+      ((booking['amount'] ?? booking['total_amount'] ?? 0) as num).toDouble();
+  final commissionFee = kCommissionIsPercentage
+      ? gross * kCommissionRate / 100
+      : kCommissionRate;
+  return (gross - kPlatformFee - commissionFee).clamp(0.0, double.infinity);
+}
 
 DateTime? _dateOf(Map<String, dynamic> booking) {
   final raw = booking['slot_time'] ?? booking['created_at'];

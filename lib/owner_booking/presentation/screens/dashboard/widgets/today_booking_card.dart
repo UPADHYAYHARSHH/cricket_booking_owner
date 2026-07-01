@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
 
@@ -118,7 +119,7 @@ class TodayBookingCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              _InfoChip(icon: HugeIcons.strokeRoundedCricketBat, text: sportName),
+              _InfoChip(icon: sportIcon((booking['sport_name'] ?? '').toString()), text: sportName),
               const SizedBox(width: 12),
               _InfoChip(icon: HugeIcons.strokeRoundedMoneyBag01, text: "₹$amount"),
             ],

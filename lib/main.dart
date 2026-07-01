@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:turfpro_owner/firebase_options.dart';
+import 'package:turfpro_owner/common/services/app_config_service.dart';
 import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart' as di;
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cubit.dart';
@@ -49,6 +50,7 @@ void main() async {
   );
 
   await di.init();
+  await AppConfigService.instance.load();
 
   runApp(const MyApp());
 }

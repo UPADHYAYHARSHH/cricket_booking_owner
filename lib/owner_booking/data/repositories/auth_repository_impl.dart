@@ -10,6 +10,9 @@ class AuthRepositoryImpl implements AuthRepository {
   User? get currentUser => _firebaseAuth.currentUser;
 
   @override
+  Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
+
+  @override
   Future<void> signUp({
     required String email,
     required String password,

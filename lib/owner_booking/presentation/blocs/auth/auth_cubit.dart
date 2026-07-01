@@ -11,8 +11,10 @@ class AuthCubit extends Cubit<AuthState> {
   AuthCubit(this._authRepository, this._ownerRepository) : super(AuthInitial());
 
   Future<void> init() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final user = _authRepository.currentUser;
+    // Wait for Firebase to restore its persisted session from disk.
+    // currentUser is unreliable on cold start; authStateChanges().first
+    // only resolves once Firebase has confirmed the actual auth state.
+    final user = await _authRepository.authStateChanges.first;
     if (user == null) {
       emit(AuthUnauthenticated());
     } else if (!user.emailVerified) {

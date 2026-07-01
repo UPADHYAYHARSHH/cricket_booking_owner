@@ -19,7 +19,7 @@ class SlotRepositoryImpl implements SlotRepository {
   Future<List<Map<String, dynamic>>> getOwnerGrounds(String ownerId) async {
     final response = await _supabase
         .from('grounds')
-        .select()
+        .select('id, name, category, ground_type, opening_time, closing_time, slot_duration, price_per_hour, weekend_price, created_at')
         .eq('owner_id', ownerId)
         .order('created_at', ascending: true);
     return List<Map<String, dynamic>>.from(response);
@@ -32,5 +32,35 @@ class SlotRepositoryImpl implements SlotRepository {
         .stream(primaryKey: ['id'])
         .eq('ground_id', groundId)
         .map((list) => List<Map<String, dynamic>>.from(list));
+  }
+
+  @override
+  Future<Map<String, dynamic>> insertOwnerBooking({
+    required String groundId,
+    required String slotTime,
+    required int price,
+    required String sportName,
+    required String period,
+  }) async {
+    final result = await _supabase
+        .from('bookings')
+        .insert({
+          'ground_id': groundId,
+          'slot_time': slotTime,
+          'amount': price,
+          'status': 'confirmed',
+          'sport_name': sportName,
+          'period': period,
+          'checked_in': false,
+          // user_id intentionally omitted — null user_id marks an owner booking
+        })
+        .select()
+        .single();
+    return Map<String, dynamic>.from(result);
+  }
+
+  @override
+  Future<void> deleteOwnerBooking(String bookingId) async {
+    await _supabase.from('bookings').delete().eq('id', bookingId);
   }
 }

@@ -1,13 +1,26 @@
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'package:turfpro_owner/owner_booking/domain/models/virtual_slot.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/slot_repository.dart';
 import 'slot_state.dart';
 
 class SlotCubit extends Cubit<SlotState> {
   final SlotRepository _slotRepository;
+
   StreamSubscription<List<Map<String, dynamic>>>? _bookingsSubscription;
+
+  // Cached state for stream rebuilds and optimistic updates
+  List<Map<String, dynamic>> _latestBookings = [];
+  String _venueName = '';
+  List<Map<String, dynamic>> _grounds = [];
+  String _selectedGroundId = '';
+  DateTime _selectedDate = DateTime.now();
+  DateTime _slotStart = DateTime.now();
+  DateTime _slotEnd = DateTime.now();
+  int _defaultPrice = 800;
+  int _slotDurationMins = 60;
 
   SlotCubit(this._slotRepository) : super(SlotInitial());
 
@@ -93,115 +106,232 @@ class SlotCubit extends Cubit<SlotState> {
       final openingTimeStr = ground['opening_time'] ?? '06:00:00';
       final closingTimeStr = ground['closing_time'] ?? '23:00:00';
       final slotDurationMins = ground['slot_duration'] ?? 60;
-      final int defaultPrice = (ground['price_per_hour'] as num?)?.toInt() ?? 800;
+      final int defaultPrice =
+          (ground['price_per_hour'] as num?)?.toInt() ?? 800;
 
       final openParts = openingTimeStr.split(':');
       final closeParts = closingTimeStr.split(':');
-      DateTime startTime = DateTime(date.year, date.month, date.day,
+      final slotStart = DateTime(date.year, date.month, date.day,
           int.parse(openParts[0]), int.parse(openParts[1]));
-      DateTime endTime = DateTime(date.year, date.month, date.day,
+      var slotEnd = DateTime(date.year, date.month, date.day,
           int.parse(closeParts[0]), int.parse(closeParts[1]));
 
-      if (endTime.isBefore(startTime) || endTime.isAtSameMomentAs(startTime)) {
-        endTime = endTime.add(const Duration(days: 1));
+      if (slotEnd.isBefore(slotStart) || slotEnd.isAtSameMomentAs(slotStart)) {
+        slotEnd = slotEnd.add(const Duration(days: 1));
       }
 
-      final dateStartStr =
-          DateTime(date.year, date.month, date.day).toIso8601String();
-      final dateEndStr =
-          DateTime(date.year, date.month, date.day, 23, 59, 59).toIso8601String();
+      _venueName = venueName;
+      _grounds = grounds;
+      _selectedGroundId = groundId;
+      _selectedDate = date;
+      _slotStart = slotStart;
+      _slotEnd = slotEnd;
+      _defaultPrice = defaultPrice;
+      _slotDurationMins = slotDurationMins;
+      _latestBookings = [];
 
       await _bookingsSubscription?.cancel();
       _bookingsSubscription = _slotRepository
           .watchBookingsForGround(groundId)
-          .listen((allBookingsData) {
-        final bookingsData = allBookingsData.where((b) {
-          if (b['status'] != 'confirmed') return false;
-          final slotTime = b['slot_time'];
-          if (slotTime == null) return false;
-          return slotTime.compareTo(dateStartStr) >= 0 &&
-              slotTime.compareTo(dateEndStr) <= 0;
-        }).toList();
-
-        List<VirtualSlot> virtualSlots = [];
-        DateTime currentSlotTime = startTime;
-
-        while (currentSlotTime.isBefore(endTime)) {
-          final nextSlotTime =
-              currentSlotTime.add(Duration(minutes: slotDurationMins));
-          if (nextSlotTime.isAfter(endTime)) break;
-
-          final isPeak =
-              currentSlotTime.hour >= 18 && currentSlotTime.hour <= 21;
-          virtualSlots.add(VirtualSlot(
-            startTime: currentSlotTime,
-            endTime: nextSlotTime,
-            status: SlotStatus.open,
-            price: isPeak ? defaultPrice + 100 : defaultPrice,
-          ));
-          currentSlotTime = nextSlotTime;
-        }
-
-        int todayRevenue = 0;
-        for (var b in bookingsData) {
-          todayRevenue += (b['amount'] as num?)?.toInt() ?? defaultPrice;
-        }
-
-        for (int i = 0; i < virtualSlots.length; i++) {
-          final vSlot = virtualSlots[i];
-          final matchingBooking =
-              bookingsData.cast<Map<String, dynamic>?>().firstWhere(
-            (b) {
-              if (b == null) return false;
-              final bookingTime =
-                  DateTime.parse(b['slot_time']).toLocal();
-              return bookingTime.hour == vSlot.startTime.hour &&
-                  bookingTime.minute == vSlot.startTime.minute;
-            },
-            orElse: () => null,
-          );
-
-          if (matchingBooking != null) {
-            virtualSlots[i] = VirtualSlot(
-              startTime: vSlot.startTime,
-              endTime: vSlot.endTime,
-              status: SlotStatus.booked,
-              price: (matchingBooking['amount'] as num?)?.toInt() ?? vSlot.price,
-              bookedPlayerName:
-                  'Customer (ID: ${matchingBooking['user_id'].toString().substring(0, 4)})',
-              bookedPlayersCount: 8,
-              bookingId: matchingBooking['id'],
-            );
-          } else if (vSlot.startTime.hour == 12) {
-            virtualSlots[i] = VirtualSlot(
-              startTime: vSlot.startTime,
-              endTime: vSlot.endTime,
-              status: SlotStatus.maintenance,
-              price: vSlot.price,
-            );
-          } else if (vSlot.startTime.hour >= 18 && vSlot.startTime.hour <= 21) {
-            virtualSlots[i] = VirtualSlot(
-              startTime: vSlot.startTime,
-              endTime: vSlot.endTime,
-              status: SlotStatus.peak,
-              price: vSlot.price,
-            );
-          }
-        }
-
-        emit(SlotLoaded(
-          venueName: venueName,
-          grounds: grounds,
-          selectedGroundId: groundId,
-          selectedDate: date,
-          slots: virtualSlots,
-          bookedCount: bookingsData.length,
-          totalSlots: virtualSlots.length,
-          todayRevenue: todayRevenue,
-        ));
+          .listen((data) {
+        _latestBookings = data;
+        _rebuildSlots();
       });
     } catch (e) {
       emit(SlotError(e.toString()));
+    }
+  }
+
+  void _rebuildSlots() {
+    final dateStartStr = DateTime(
+            _selectedDate.year, _selectedDate.month, _selectedDate.day)
+        .toIso8601String();
+    final dateEndStr = DateTime(
+            _selectedDate.year, _selectedDate.month, _selectedDate.day, 23, 59, 59)
+        .toIso8601String();
+
+    final bookingsForDate = _latestBookings.where((b) {
+      if (b['status'] != 'confirmed') return false;
+      final slotTime = b['slot_time'];
+      if (slotTime == null) return false;
+      return slotTime.compareTo(dateStartStr) >= 0 &&
+          slotTime.compareTo(dateEndStr) <= 0;
+    }).toList();
+
+    final List<VirtualSlot> virtualSlots = [];
+    DateTime currentSlotTime = _slotStart;
+
+    while (currentSlotTime.isBefore(_slotEnd)) {
+      final nextSlotTime =
+          currentSlotTime.add(Duration(minutes: _slotDurationMins));
+      if (nextSlotTime.isAfter(_slotEnd)) break;
+
+      final isPeak = currentSlotTime.hour >= 18 && currentSlotTime.hour <= 21;
+      virtualSlots.add(VirtualSlot(
+        startTime: currentSlotTime,
+        endTime: nextSlotTime,
+        status: isPeak ? SlotStatus.peak : SlotStatus.open,
+        price: isPeak ? _defaultPrice + 100 : _defaultPrice,
+      ));
+      currentSlotTime = nextSlotTime;
+    }
+
+    int todayRevenue = 0;
+    // Only count customer bookings in revenue (not owner bookings)
+    for (var b in bookingsForDate) {
+      if (b['user_id'] != null) {
+        todayRevenue += (b['amount'] as num?)?.toInt() ?? _defaultPrice;
+      }
+    }
+
+    for (int i = 0; i < virtualSlots.length; i++) {
+      final vSlot = virtualSlots[i];
+
+      final matchingBooking =
+          bookingsForDate.cast<Map<String, dynamic>?>().firstWhere(
+        (b) {
+          if (b == null) return false;
+          final bookingTime = DateTime.parse(b['slot_time']).toLocal();
+          return bookingTime.hour == vSlot.startTime.hour &&
+              bookingTime.minute == vSlot.startTime.minute;
+        },
+        orElse: () => null,
+      );
+
+      if (matchingBooking == null) continue;
+
+      final isOwner = matchingBooking['user_id'] == null;
+
+      if (isOwner) {
+        // Owner-booked slot — shown as blocked/owner style, tappable to unbook
+        virtualSlots[i] = VirtualSlot(
+          startTime: vSlot.startTime,
+          endTime: vSlot.endTime,
+          status: SlotStatus.blocked,
+          price: vSlot.price,
+          blockedSlotId: matchingBooking['id']?.toString(),
+        );
+      } else {
+        // Customer booking — read-only
+        virtualSlots[i] = VirtualSlot(
+          startTime: vSlot.startTime,
+          endTime: vSlot.endTime,
+          status: SlotStatus.booked,
+          price: (matchingBooking['amount'] as num?)?.toInt() ?? vSlot.price,
+          bookedPlayerName:
+              matchingBooking['player_name']?.toString().isNotEmpty == true
+                  ? matchingBooking['player_name']
+                  : 'Customer (ID: ${matchingBooking['user_id']?.toString().substring(0, 4) ?? '—'})',
+          bookedPlayersCount: 8,
+          bookingId: matchingBooking['id'],
+        );
+      }
+    }
+
+    emit(SlotLoaded(
+      venueName: _venueName,
+      grounds: _grounds,
+      selectedGroundId: _selectedGroundId,
+      selectedDate: _selectedDate,
+      slots: virtualSlots,
+      bookedCount: bookingsForDate.where((b) => b['user_id'] != null).length,
+      totalSlots: virtualSlots.length,
+      todayRevenue: todayRevenue,
+    ));
+  }
+
+  /// Books a slot as the owner. Uses optimistic update for instant UI feedback.
+  Future<void> bookOwnerSlot(DateTime startTime, int price) async {
+    try {
+      final localSlotTime = DateTime(
+        _selectedDate.year,
+        _selectedDate.month,
+        _selectedDate.day,
+        startTime.hour,
+        startTime.minute,
+      );
+      final slotTimeIso = localSlotTime.toUtc().toIso8601String();
+      final endTime = localSlotTime.add(Duration(minutes: _slotDurationMins));
+      final period = _periodForSlot(localSlotTime, endTime);
+      final sportName = _sportNameForGround(_selectedGroundId);
+
+      // Optimistic update — null user_id marks an owner booking
+      final placeholder = {
+        'id': '_pending_${startTime.millisecondsSinceEpoch}',
+        'ground_id': _selectedGroundId,
+        'slot_time': slotTimeIso,
+        'amount': price,
+        'status': 'confirmed',
+        'user_id': null,
+        'sport_name': sportName,
+        'period': period,
+        'checked_in': false,
+      };
+      _latestBookings = [..._latestBookings, placeholder];
+      _rebuildSlots();
+
+      // Persist and swap placeholder with real DB row
+      final inserted = await _slotRepository.insertOwnerBooking(
+        groundId: _selectedGroundId,
+        slotTime: slotTimeIso,
+        price: price,
+        sportName: sportName,
+        period: period,
+      );
+      _latestBookings = _latestBookings
+          .where((b) => b['id'] != placeholder['id'])
+          .toList()
+        ..add(inserted);
+      _rebuildSlots();
+    } catch (e) {
+      _latestBookings = _latestBookings
+          .where((b) => b['id']?.toString().startsWith('_pending_') != true)
+          .toList();
+      _rebuildSlots();
+      emit(SlotError('Failed to book slot: $e'));
+    }
+  }
+
+  String _periodForSlot(DateTime startTime, DateTime endTime) {
+    final fmt = DateFormat('h:mm a');
+    return '${fmt.format(startTime)} - ${fmt.format(endTime)}';
+  }
+
+  String _sportNameForGround(String groundId) {
+    final ground = _grounds.cast<Map<String, dynamic>?>().firstWhere(
+          (g) => g?['id'] == groundId,
+          orElse: () => null,
+        );
+    // Prefer category, fall back to ground_type, then ground name
+    final raw = (ground?['category']?.toString().trim().isNotEmpty == true
+            ? ground!['category']
+            : ground?['ground_type']?.toString().trim().isNotEmpty == true
+                ? ground!['ground_type']
+                : ground?['name'])
+        ?.toString()
+        .trim() ?? '';
+    if (raw.isEmpty) return 'Sport';
+    return raw[0].toUpperCase() + raw.substring(1).toLowerCase();
+  }
+
+  /// Removes an owner-booked slot. Optimistic — removes from UI before server confirms.
+  Future<void> unbookOwnerSlot(String bookingId) async {
+    final removed = _latestBookings.firstWhere(
+      (b) => b['id'] == bookingId,
+      orElse: () => {},
+    );
+    try {
+      _latestBookings =
+          _latestBookings.where((b) => b['id'] != bookingId).toList();
+      _rebuildSlots();
+      await _slotRepository.deleteOwnerBooking(bookingId);
+    } catch (e) {
+      // Rollback
+      if (removed.isNotEmpty) {
+        _latestBookings = [..._latestBookings, removed];
+        _rebuildSlots();
+      }
+      emit(SlotError('Failed to unbook slot: $e'));
     }
   }
 }

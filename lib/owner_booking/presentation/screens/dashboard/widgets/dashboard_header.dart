@@ -11,6 +11,7 @@ class DashboardHeader extends StatelessWidget {
   final List<Map<String, dynamic>> locations;
   final String? selectedLocationId;
   final ValueChanged<String?> onLocationSelected;
+  final VoidCallback? onLogout;
 
   const DashboardHeader({
     super.key,
@@ -20,6 +21,7 @@ class DashboardHeader extends StatelessWidget {
     required this.locations,
     required this.selectedLocationId,
     required this.onLocationSelected,
+    this.onLogout,
   });
 
   String _getInitials(String name) {
@@ -89,6 +91,26 @@ class DashboardHeader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
+                  if (onLogout != null)
+                    GestureDetector(
+                      onTap: onLogout,
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedLogout01,
+                            color: Colors.white,
+                            size: 20.0,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (onLogout != null) const SizedBox(width: 12),
                   Container(
                     width: 40,
                     height: 40,
