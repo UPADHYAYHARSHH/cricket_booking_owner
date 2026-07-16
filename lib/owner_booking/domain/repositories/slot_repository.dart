@@ -11,6 +11,7 @@ abstract class SlotRepository {
     required int price,
     required String sportName,
     required String period,
+    String? note,
   });
 
   Future<void> deleteOwnerBooking(String bookingId);

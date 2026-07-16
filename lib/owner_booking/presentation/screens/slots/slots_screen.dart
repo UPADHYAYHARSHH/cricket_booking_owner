@@ -4,9 +4,14 @@ import 'package:intl/intl.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
+import 'package:turfpro_owner/owner_booking/domain/models/virtual_slot.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_state.dart';
+import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_flow.dart';
 
 class SlotsScreen extends StatefulWidget {
   const SlotsScreen({super.key});
@@ -16,10 +21,20 @@ class SlotsScreen extends StatefulWidget {
 }
 
 class _SlotsScreenState extends State<SlotsScreen> {
+  final ScrollController _dateScrollController = ScrollController();
+  DateTime? _lastScrolledDate;
+  String _selectedTimeFilter = 'All';
+
   @override
   void initState() {
     super.initState();
     context.read<SlotCubit>().fetchInitialData();
+  }
+
+  @override
+  void dispose() {
+    _dateScrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -32,32 +47,38 @@ class _SlotsScreenState extends State<SlotsScreen> {
             if (state is SlotLoading || state is SlotInitial) {
               return const _SlotsSkeleton();
             } else if (state is SlotError) {
-              return Center(child: AppText(text: state.message, color: AppColors.error));
+              return Center(
+                child: AppText(text: state.message, color: AppColors.error),
+              );
             } else if (state is SlotLoaded) {
               return Column(
                 children: [
                   _buildHeader(state.venueName),
                   Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 16),
-                          _buildGroundSelector(state),
-                          const SizedBox(height: 24),
-                          _buildDateSelector(state),
-                          const SizedBox(height: 24),
-                          _buildSlotHeader(context, state),
-                          const SizedBox(height: 16),
-                          _buildLegend(),
-                          const SizedBox(height: 16),
-                          _buildSlotGrid(context, state),
-                          const SizedBox(height: 24),
-                          _buildSummaryCard(state),
-                          const SizedBox(height: 24),
-                        ],
-                      ),
-                    ),
+                    child: state.grounds.isEmpty
+                        ? _buildNoGroundsView(context, state)
+                        : SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 16),
+                                _buildGroundSelector(state),
+                                const SizedBox(height: 24),
+                                _buildDateSelector(state),
+                                const SizedBox(height: 24),
+                                _buildSlotHeader(context, state),
+                                const SizedBox(height: 16),
+                                _buildLegend(),
+                                const SizedBox(height: 16),
+                                _buildTimeFilters(),
+                                const SizedBox(height: 16),
+                                _buildSlotGrid(context, state),
+                                const SizedBox(height: 24),
+                                _buildSummaryCard(state),
+                                const SizedBox(height: 24),
+                              ],
+                            ),
+                          ),
                   ),
                 ],
               );
@@ -67,6 +88,79 @@ class _SlotsScreenState extends State<SlotsScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildNoGroundsView(BuildContext context, SlotLoaded state) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            HugeIcon(
+              icon: HugeIcons.strokeRoundedCricketBat,
+              size: 64,
+              color: Colors.grey.shade300,
+            ),
+            const SizedBox(height: 16),
+            const AppText(
+              text: "No Grounds Available",
+              size: 20,
+              weight: FontWeight.bold,
+            ),
+            const SizedBox(height: 8),
+            AppText(
+              text: "There are no grounds available for the selected location.",
+              size: 14,
+              color: Colors.grey.shade600,
+              align: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryDarkGreen,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.add, size: 18),
+              label: const AppText(
+                text: "Create Ground",
+                size: 14,
+                weight: FontWeight.w600,
+                color: Colors.white,
+              ),
+              onPressed: () => _navigateToCreateGround(context),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToCreateGround(BuildContext context) {
+    final locationId = SharedPrefsService.instance.selectedLocationId;
+    if (locationId == null || locationId.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a location from Home first.'),
+        ),
+      );
+      return;
+    }
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => GroundFormFlow(locationId: locationId)),
+    ).then((_) {
+      if (context.mounted) {
+        context.read<SlotCubit>().fetchInitialData();
+      }
+    });
   }
 
   Widget _buildHeader(String venueName) {
@@ -132,10 +226,8 @@ class _SlotsScreenState extends State<SlotsScreen> {
                   const SizedBox(width: 8),
                   AppText(
                     text: "Court ${index + 1} — ${ground['name']}",
-                    color:
-                        isSelected ? Colors.white : Colors.grey.shade800,
-                    weight:
-                        isSelected ? FontWeight.w600 : FontWeight.normal,
+                    color: isSelected ? Colors.white : Colors.grey.shade800,
+                    weight: isSelected ? FontWeight.w600 : FontWeight.normal,
                     size: 14,
                   ),
                 ],
@@ -149,11 +241,44 @@ class _SlotsScreenState extends State<SlotsScreen> {
 
   Widget _buildDateSelector(SlotLoaded state) {
     final today = DateTime.now();
-    final dates = List.generate(7, (i) => today.add(Duration(days: i)));
+    final lastDay = DateTime(today.year, today.month + 1, 0);
+    final daysInMonth = lastDay.day;
+    final dates = List.generate(
+      daysInMonth,
+      (i) => DateTime(today.year, today.month, i + 1),
+    );
+
+    int selectedIndex = dates.indexWhere((d) => _isSameDay(d, state.selectedDate));
+    if (selectedIndex == -1) selectedIndex = 0;
+
+    if (_lastScrolledDate == null || !_isSameDay(_lastScrolledDate!, state.selectedDate)) {
+      _lastScrolledDate = state.selectedDate;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_dateScrollController.hasClients) {
+          final screenWidth = MediaQuery.of(context).size.width;
+          const itemWidth = 52.0;
+          const separatorWidth = 16.0;
+          const totalItemWidth = itemWidth + separatorWidth;
+          
+          final offset = (selectedIndex * totalItemWidth) - (screenWidth / 2) + (itemWidth / 2) + 16.0;
+          final target = offset.clamp(
+            _dateScrollController.position.minScrollExtent,
+            _dateScrollController.position.maxScrollExtent,
+          );
+          
+          _dateScrollController.animateTo(
+            target,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
+        }
+      });
+    }
 
     return SizedBox(
       height: 70,
       child: ListView.separated(
+        controller: _dateScrollController,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: dates.length,
@@ -178,18 +303,14 @@ class _SlotsScreenState extends State<SlotsScreen> {
                   AppText(
                     text: DateFormat('EEE').format(date).toUpperCase(),
                     size: 12,
-                    color: isSelected
-                        ? Colors.white70
-                        : Colors.grey.shade500,
+                    color: isSelected ? Colors.white70 : Colors.grey.shade500,
                     weight: FontWeight.w500,
                   ),
                   const SizedBox(height: 4),
                   AppText(
                     text: "${date.day}",
                     size: 18,
-                    color: isSelected
-                        ? Colors.white
-                        : Colors.grey.shade800,
+                    color: isSelected ? Colors.white : Colors.grey.shade800,
                     weight: FontWeight.bold,
                   ),
                   const SizedBox(height: 4),
@@ -199,7 +320,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? Colors.orange.shade300
-                          : Colors.green.shade300,
+                          : Colors.transparent,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -216,12 +337,13 @@ class _SlotsScreenState extends State<SlotsScreen> {
       a.year == b.year && a.month == b.month && a.day == b.day;
 
   Widget _buildSlotHeader(BuildContext context, SlotLoaded state) {
-    final groundIndex =
-        state.grounds.indexWhere((g) => g['id'] == state.selectedGroundId);
-    final courtName =
-        groundIndex != -1 ? "COURT ${groundIndex + 1}" : "";
-    final dateStr =
-        DateFormat('EEE, MMM d').format(state.selectedDate).toUpperCase();
+    final groundIndex = state.grounds.indexWhere(
+      (g) => g['id'] == state.selectedGroundId,
+    );
+    final courtName = groundIndex != -1 ? "COURT ${groundIndex + 1}" : "";
+    final dateStr = DateFormat(
+      'EEE, MMM d',
+    ).format(state.selectedDate).toUpperCase();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -248,39 +370,106 @@ class _SlotsScreenState extends State<SlotsScreen> {
         runSpacing: 8,
         children: [
           _LegendChip(
-              label: "Open",
-              color: Colors.green.shade100,
-              textColor: Colors.green.shade800,
-              iconColor: Colors.green.shade700),
+            label: "Open",
+            color: Colors.green.shade100,
+            textColor: Colors.green.shade800,
+            iconColor: Colors.green.shade700,
+          ),
           _LegendChip(
-              label: "Booked",
-              color: Colors.grey.shade100,
-              textColor: Colors.grey.shade600,
-              iconColor: Colors.grey.shade500),
+            label: "Booked",
+            color: Colors.grey.shade100,
+            textColor: Colors.grey.shade600,
+            iconColor: Colors.grey.shade500,
+          ),
           _LegendChip(
-              label: "Owner Booked",
-              color: Colors.blue.shade50,
-              textColor: Colors.blue.shade700,
-              iconColor: Colors.blue.shade400),
+            label: "Owner Booked",
+            color: Colors.blue.shade50,
+            textColor: Colors.blue.shade700,
+            iconColor: Colors.blue.shade400,
+          ),
           _LegendChip(
-              label: "Peak",
-              color: Colors.orange.shade50,
-              textColor: Colors.orange.shade800,
-              iconColor: Colors.orange.shade600,
-              isPeak: true),
+            label: "Peak",
+            color: Colors.orange.shade50,
+            textColor: Colors.orange.shade800,
+            iconColor: Colors.orange.shade600,
+            isPeak: true,
+          ),
         ],
       ),
     );
   }
 
+  Widget _buildTimeFilters() {
+    final filters = ['All', 'Morning', 'Afternoon', 'Evening', 'Night'];
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        itemCount: filters.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final filter = filters[index];
+          final isSelected = _selectedTimeFilter == filter;
+          return GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedTimeFilter = filter;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected ? AppColors.primaryDarkGreen : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade300,
+                ),
+              ),
+              child: AppText(
+                text: filter,
+                color: isSelected ? Colors.white : Colors.grey.shade700,
+                weight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                size: 13,
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildSlotGrid(BuildContext context, SlotLoaded state) {
-    if (state.slots.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(32.0),
+    List<VirtualSlot> filteredSlots = state.slots;
+    
+    if (_selectedTimeFilter != 'All') {
+      filteredSlots = state.slots.where((slot) {
+        final hour = slot.startTime.hour;
+        switch (_selectedTimeFilter) {
+          case 'Morning':
+            return hour >= 6 && hour < 12;
+          case 'Afternoon':
+            return hour >= 12 && hour < 16;
+          case 'Evening':
+            return hour >= 16 && hour < 20;
+          case 'Night':
+            return hour >= 20 || hour < 6;
+          default:
+            return true;
+        }
+      }).toList();
+    }
+
+    if (filteredSlots.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(32.0),
         child: Center(
-            child: AppText(
-                text: "No slots available for this date.",
-                color: Colors.grey)),
+          child: AppText(
+            text: "No slots available for $_selectedTimeFilter.",
+            color: Colors.grey,
+          ),
+        ),
       );
     }
 
@@ -295,9 +484,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),
-        itemCount: state.slots.length,
+        itemCount: filteredSlots.length,
         itemBuilder: (context, index) {
-          final slot = state.slots[index];
+          final slot = filteredSlots[index];
           return _SlotCard(
             slot: slot,
             onTap: () => _handleSlotTap(context, slot),
@@ -310,16 +499,20 @@ class _SlotsScreenState extends State<SlotsScreen> {
   void _handleSlotTap(BuildContext context, VirtualSlot slot) {
     switch (slot.status) {
       case SlotStatus.booked:
-        _showBookingInfoSheet(context, slot);
-        break;
       case SlotStatus.blocked:
-        _showUnblockDialog(context, slot);
+      case SlotStatus.maintenance:
+        if (slot.bookingDetails != null) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => BookingDetailsScreen(booking: slot.bookingDetails!),
+            ),
+          );
+        }
         break;
       case SlotStatus.open:
       case SlotStatus.peak:
         _showBlockDialog(context, slot);
-        break;
-      case SlotStatus.maintenance:
         break;
     }
   }
@@ -335,6 +528,8 @@ class _SlotsScreenState extends State<SlotsScreen> {
         ? "${durationMins ~/ 60} hr"
         : "${(durationMins / 60).toStringAsFixed(1)} hr";
 
+    final reasonController = TextEditingController();
+
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -343,8 +538,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
       transitionDuration: const Duration(milliseconds: 280),
       pageBuilder: (ctx, anim1, anim2) => const SizedBox.shrink(),
       transitionBuilder: (ctx, anim, secondaryAnim, child) {
-        final curved =
-            CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
+        final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
         return Opacity(
           opacity: anim.value.clamp(0.0, 1.0),
           child: Transform.scale(
@@ -376,11 +570,15 @@ class _SlotsScreenState extends State<SlotsScreen> {
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: isPeak
-                              ? [Colors.orange.shade500, Colors.deepOrange.shade400]
+                              ? [
+                                  Colors.orange.shade500,
+                                  Colors.deepOrange.shade400,
+                                ]
                               : [Colors.blue.shade600, Colors.indigo.shade500],
                         ),
                         borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(24)),
+                          top: Radius.circular(24),
+                        ),
                       ),
                       child: Column(
                         children: [
@@ -390,8 +588,11 @@ class _SlotsScreenState extends State<SlotsScreen> {
                               color: Colors.white.withOpacity(0.18),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.event_available,
-                                color: Colors.white, size: 30),
+                            child: const Icon(
+                              Icons.event_available,
+                              color: Colors.white,
+                              size: 30,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           const Text(
@@ -433,12 +634,12 @@ class _SlotsScreenState extends State<SlotsScreen> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.access_time_filled_rounded,
-                                    size: 20,
-                                    color: (isPeak
-                                            ? Colors.orange
-                                            : Colors.blue)
-                                        .shade600),
+                                Icon(
+                                  Icons.access_time_filled_rounded,
+                                  size: 20,
+                                  color: (isPeak ? Colors.orange : Colors.blue)
+                                      .shade600,
+                                ),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
@@ -446,16 +647,17 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
-                                      color: (isPeak
-                                              ? Colors.orange
-                                              : Colors.blue)
-                                          .shade800,
+                                      color:
+                                          (isPeak ? Colors.orange : Colors.blue)
+                                              .shade800,
                                     ),
                                   ),
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     borderRadius: BorderRadius.circular(20),
@@ -465,10 +667,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: (isPeak
-                                              ? Colors.orange
-                                              : Colors.blue)
-                                          .shade700,
+                                      color:
+                                          (isPeak ? Colors.orange : Colors.blue)
+                                              .shade700,
                                     ),
                                   ),
                                 ),
@@ -508,9 +709,46 @@ class _SlotsScreenState extends State<SlotsScreen> {
                           Text(
                             "This slot will be marked as Booked by Owner and won't be available for customer bookings.",
                             style: TextStyle(
-                                fontSize: 12.5,
-                                color: Colors.grey.shade600,
-                                height: 1.4),
+                              fontSize: 12.5,
+                              color: Colors.grey.shade600,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextField(
+                            controller: reasonController,
+                            decoration: InputDecoration(
+                              hintText: "Optional note (e.g., Maintenance)",
+                              hintStyle: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade400,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey.shade50,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: AppColors.primaryDarkGreen,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
+                            ),
+                            maxLines: 2,
                           ),
                         ],
                       ),
@@ -523,17 +761,21 @@ class _SlotsScreenState extends State<SlotsScreen> {
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                    vertical: 14),
+                                  vertical: 14,
+                                ),
                                 side: BorderSide(color: Colors.grey.shade300),
                                 shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                               onPressed: () => Navigator.of(ctx).pop(),
-                              child: Text("Cancel",
-                                  style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontWeight: FontWeight.w600)),
+                              child: Text(
+                                "Cancel",
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -542,30 +784,38 @@ class _SlotsScreenState extends State<SlotsScreen> {
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                    vertical: 14),
+                                  vertical: 14,
+                                ),
                                 backgroundColor: isPeak
                                     ? Colors.orange.shade600
                                     : Colors.blue.shade600,
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                               ),
                               onPressed: () {
                                 Navigator.of(ctx).pop();
-                                context
-                                    .read<SlotCubit>()
-                                    .bookOwnerSlot(slot.startTime, slot.price);
+                                context.read<SlotCubit>().bookOwnerSlot(
+                                  slot.startTime,
+                                  slot.price,
+                                  note: reasonController.text.isNotEmpty
+                                      ? reasonController.text
+                                      : null,
+                                );
                               },
                               child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(Icons.check_circle_rounded, size: 18),
                                   SizedBox(width: 6),
-                                  Text("Confirm Booking",
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.w700)),
+                                  Text(
+                                    "Confirm Booking",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
@@ -585,77 +835,249 @@ class _SlotsScreenState extends State<SlotsScreen> {
 
   void _showUnblockDialog(BuildContext context, VirtualSlot slot) {
     final timeFormat = DateFormat('h:mm a');
-    final timeRange =
-        "${timeFormat.format(slot.startTime)} – ${timeFormat.format(slot.endTime)}";
+    final startStr = timeFormat.format(slot.startTime);
+    final endStr = timeFormat.format(slot.endTime);
+    final dateStr = DateFormat('EEE, d MMM').format(slot.startTime);
+    final durationMins = slot.endTime.difference(slot.startTime).inMinutes;
+    final durationLabel = durationMins % 60 == 0
+        ? "${durationMins ~/ 60} hr"
+        : "${(durationMins / 60).toStringAsFixed(1)} hr";
 
-    showDialog(
+    showGeneralDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            Icon(Icons.lock_open, color: Colors.blue.shade600, size: 20),
-            const SizedBox(width: 8),
-            const Text("Owner Booked Slot"),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.blue.shade50,
-                borderRadius: BorderRadius.circular(8),
+      barrierDismissible: true,
+      barrierLabel: "Unblock Slot",
+      barrierColor: Colors.black.withOpacity(0.45),
+      transitionDuration: const Duration(milliseconds: 280),
+      pageBuilder: (ctx, anim1, anim2) => const SizedBox.shrink(),
+      transitionBuilder: (ctx, anim, secondaryAnim, child) {
+        final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
+        return Opacity(
+          opacity: anim.value.clamp(0.0, 1.0),
+          child: Transform.scale(
+            scale: 0.85 + (curved.value.clamp(0.0, 1.2) * 0.15),
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryDarkGreen.withOpacity(0.25),
+                      blurRadius: 30,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Gradient header
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.blueGrey.shade600,
+                            Colors.blueGrey.shade400,
+                          ],
+                        ),
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(24),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.18),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.lock_open_rounded,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            "Unblock This Slot",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            dateStr,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.85),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Time range card
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: Colors.blueGrey.shade50,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: Colors.blueGrey.shade100,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time_filled_rounded,
+                                  size: 20,
+                                  color: Colors.blueGrey.shade600,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    "$startStr – $endStr",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.blueGrey.shade800,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    durationLabel,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.blueGrey.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: _InfoChip(
+                                  icon: Icons.info_outline_rounded,
+                                  label: "Owner Booked",
+                                  color: Colors.blueGrey.shade700,
+                                  bgColor: Colors.blueGrey.shade50,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            "Reason: ${slot.blockReason ?? 'Booked by owner'}\n\nMake this slot available for booking again?",
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              color: Colors.grey.shade600,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                side: BorderSide(color: Colors.grey.shade300),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              child: Text(
+                                "Cancel",
+                                style: TextStyle(
+                                  color: Colors.grey.shade700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                backgroundColor: AppColors.primaryDarkGreen,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.of(ctx).pop();
+                                if (slot.blockedSlotId != null) {
+                                  context.read<SlotCubit>().unbookOwnerSlot(
+                                    slot.blockedSlotId!,
+                                  );
+                                }
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.lock_open_rounded, size: 18),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    "Unblock Slot",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: Text(
-                timeRange,
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue.shade700),
-              ),
             ),
-            const SizedBox(height: 12),
-            Text(
-              "Reason: ${slot.blockReason ?? 'Booked by owner'}",
-              style:
-                  TextStyle(fontSize: 13, color: Colors.grey.shade600),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              "Make this slot available for booking again?",
-              style: TextStyle(
-                  fontSize: 13, color: Colors.grey.shade700),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text("Cancel"),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryDarkGreen,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              if (slot.blockedSlotId != null) {
-                context
-                    .read<SlotCubit>()
-                    .unbookOwnerSlot(slot.blockedSlotId!);
-              }
-            },
-            child: const Text("Unbook"),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -667,7 +1089,8 @@ class _SlotsScreenState extends State<SlotsScreen> {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (_) => Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -693,48 +1116,56 @@ class _SlotsScreenState extends State<SlotsScreen> {
                     color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.event_available,
-                      color: Colors.grey.shade600),
+                  child: Icon(
+                    Icons.event_available,
+                    color: Colors.grey.shade600,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(timeRange,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text("Booked Slot",
-                        style: TextStyle(
-                            color: Colors.grey.shade500, fontSize: 13)),
+                    Text(
+                      timeRange,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      "Booked Slot",
+                      style: TextStyle(
+                        color: Colors.grey.shade500,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 20),
             _InfoRow(
-                label: "Player",
-                value: slot.bookedPlayerName ?? 'Unknown'),
+              label: "Player",
+              value: slot.bookedPlayerName ?? 'Unknown',
+            ),
+            const SizedBox(height: 10),
+            _InfoRow(label: "Amount", value: "₹${slot.price}"),
             const SizedBox(height: 10),
             _InfoRow(
-                label: "Amount",
-                value: "₹${slot.price}"),
-            const SizedBox(height: 10),
-            _InfoRow(
-                label: "Booking ID",
-                value: slot.bookingId?.substring(0, 8) ?? '—'),
+              label: "Booking ID",
+              value: slot.bookingId?.substring(0, 8) ?? '—',
+            ),
             const SizedBox(height: 8),
             Container(
               margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 "This slot is booked and cannot be blocked.",
-                style:
-                    TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
               ),
             ),
           ],
@@ -757,12 +1188,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              AppText(text: "Booked today", color: Colors.grey.shade600),
               AppText(
-                  text: "Booked today",
-                  color: Colors.grey.shade600),
-              AppText(
-                text:
-                    "${state.bookedCount} / ${state.totalSlots} slots",
+                text: "${state.bookedCount} / ${state.totalSlots} slots",
                 color: AppColors.primaryDarkGreen,
                 weight: FontWeight.bold,
               ),
@@ -772,9 +1200,22 @@ class _SlotsScreenState extends State<SlotsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              AppText(text: "Blocked slots", color: Colors.grey.shade600),
               AppText(
-                  text: "Today's revenue (confirmed)",
-                  color: Colors.grey.shade600),
+                text: "${state.blockedCount} slots",
+                color: Colors.blue.shade700,
+                weight: FontWeight.bold,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              AppText(
+                text: "Today's revenue (confirmed)",
+                color: Colors.grey.shade600,
+              ),
               AppText(
                 text: "₹${state.todayRevenue}",
                 color: AppColors.primaryDarkGreen,
@@ -819,17 +1260,19 @@ class _LegendChip extends StatelessWidget {
         children: [
           if (isPeak)
             HugeIcon(
-                icon: HugeIcons.strokeRoundedEnergy,
-                size: 12,
-                color: iconColor)
+              icon: HugeIcons.strokeRoundedEnergy,
+              size: 12,
+              color: iconColor,
+            )
           else
             Container(width: 6, height: 6, color: iconColor),
           const SizedBox(width: 6),
           AppText(
-              text: label,
-              size: 12,
-              color: textColor,
-              weight: FontWeight.w500),
+            text: label,
+            size: 12,
+            color: textColor,
+            weight: FontWeight.w500,
+          ),
         ],
       ),
     );
@@ -862,15 +1305,17 @@ class _SlotCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AppText(
-                text: timeRange,
-                size: 12,
-                color: AppColors.primaryDarkGreen,
-                weight: FontWeight.w600),
+              text: timeRange,
+              size: 12,
+              color: AppColors.primaryDarkGreen,
+              weight: FontWeight.w600,
+            ),
             const SizedBox(height: 4),
             AppText(
-                text: "Open • ₹${slot.price}",
-                size: 11,
-                color: Colors.green.shade700),
+              text: "Open • ₹${slot.price}",
+              size: 11,
+              color: Colors.green.shade700,
+            ),
           ],
         );
         break;
@@ -882,21 +1327,31 @@ class _SlotCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AppText(
-                text: timeRange,
-                size: 12,
-                color: Colors.grey.shade500,
-                weight: FontWeight.w600),
+              text: timeRange,
+              size: 12,
+              color: Colors.grey.shade500,
+              weight: FontWeight.w600,
+            ),
             const SizedBox(height: 2),
             AppText(
-                text:
-                    "${slot.bookedPlayerName ?? 'Booked'} • ₹${slot.price}",
-                size: 11,
-                color: Colors.grey.shade500),
+              text: "${slot.bookedPlayerName ?? 'Booked'} • ₹${slot.price}",
+              size: 11,
+              color: Colors.grey.shade500,
+            ),
             const SizedBox(height: 2),
             AppText(
-                text: "${slot.bookedPlayersCount ?? 0} players",
-                size: 10,
-                color: Colors.grey.shade400),
+              text: "${slot.bookedPlayersCount ?? 0} players",
+              size: 10,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AppText(text: "Details ", size: 10, color: Colors.blue.shade600, weight: FontWeight.w700),
+                Icon(Icons.arrow_forward_ios, size: 8, color: Colors.blue.shade600),
+              ]
+            ),
           ],
         );
         break;
@@ -910,20 +1365,31 @@ class _SlotCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             AppText(
-                text: timeRange,
-                size: 12,
-                color: Colors.blue.shade700,
-                weight: FontWeight.w600),
+              text: timeRange,
+              size: 12,
+              color: Colors.blue.shade700,
+              weight: FontWeight.w600,
+            ),
             const SizedBox(height: 2),
             AppText(
-                text: "Booked by Owner",
-                size: 11,
-                color: Colors.blue.shade600),
+              text: "Booked by Owner",
+              size: 11,
+              color: Colors.blue.shade600,
+            ),
             const SizedBox(height: 2),
             AppText(
-                text: slot.blockReason ?? "—",
-                size: 9,
-                color: Colors.blue.shade300),
+              text: slot.blockReason ?? "—",
+              size: 9,
+              color: Colors.blue.shade300,
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AppText(text: "Details ", size: 10, color: Colors.blue.shade600, weight: FontWeight.w700),
+                Icon(Icons.arrow_forward_ios, size: 8, color: Colors.blue.shade600),
+              ]
+            ),
           ],
         );
         break;
@@ -935,22 +1401,23 @@ class _SlotCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AppText(
-                text: timeRange,
-                size: 12,
-                color: Colors.orange.shade800,
-                weight: FontWeight.w600),
+              text: timeRange,
+              size: 12,
+              color: Colors.orange.shade800,
+              weight: FontWeight.w600,
+            ),
             const SizedBox(height: 4),
             AppText(
-                text: "Peak • ₹${slot.price}",
-                size: 11,
-                color: Colors.orange.shade800),
+              text: "Peak • ₹${slot.price}",
+              size: 11,
+              color: Colors.orange.shade800,
+            ),
           ],
         );
         break;
     }
 
-    // Booked slots are not tappable for blocking; others are interactive.
-    final isInteractive = slot.status != SlotStatus.maintenance;
+    final isInteractive = true;
 
     return GestureDetector(
       onTap: isInteractive ? onTap : null,
@@ -959,8 +1426,9 @@ class _SlotCard extends StatelessWidget {
           color: bgColor,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-              color: borderColor,
-              width: slot.status == SlotStatus.peak ? 1.5 : 1),
+            color: borderColor,
+            width: slot.status == SlotStatus.peak ? 1.5 : 1,
+          ),
         ),
         child: content,
       ),
@@ -981,11 +1449,14 @@ class _InfoRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 13)),
-        Text(value,
-            style: const TextStyle(
-                fontWeight: FontWeight.w600, fontSize: 13)),
+        Text(
+          label,
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+        ),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        ),
       ],
     );
   }
@@ -1022,7 +1493,10 @@ class _InfoChip extends StatelessWidget {
               label,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                  fontSize: 12.5, fontWeight: FontWeight.w700, color: color),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
           ),
         ],
@@ -1059,18 +1533,22 @@ class _SlotsSkeleton extends StatelessWidget {
                     child: Row(
                       children: [
                         Container(
-                            width: 120,
-                            height: 44,
-                            decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8))),
+                          width: 120,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                         const SizedBox(width: 12),
                         Container(
-                            width: 120,
-                            height: 44,
-                            decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8))),
+                          width: 120,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -1084,14 +1562,16 @@ class _SlotsSkeleton extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(
-                          7,
-                          (_) => Container(
-                              width: 40,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius:
-                                      BorderRadius.circular(12)))),
+                        7,
+                        (_) => Container(
+                          width: 40,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -1106,16 +1586,17 @@ class _SlotsSkeleton extends StatelessWidget {
                       physics: const NeverScrollableScrollPhysics(),
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 2.2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
+                            crossAxisCount: 2,
+                            childAspectRatio: 2.2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
                       itemCount: 8,
                       itemBuilder: (_, __) => Container(
                         decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8)),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),

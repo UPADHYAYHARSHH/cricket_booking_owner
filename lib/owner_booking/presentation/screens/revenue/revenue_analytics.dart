@@ -31,6 +31,7 @@ DateTime? _dateOf(Map<String, dynamic> booking) {
 }
 
 bool _countsTowardsRevenue(Map<String, dynamic> booking) {
+  if (booking['user_id'] == null) return false;
   final status = booking['status']?.toString().toLowerCase() ?? '';
   return _countedStatuses.contains(status);
 }

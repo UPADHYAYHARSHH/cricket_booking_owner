@@ -3,7 +3,6 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/dashboard_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/bookings_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/slots/slots_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/profile_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/grounds/grounds_screen.dart';
@@ -22,7 +21,6 @@ class _MainNavbarState extends State<MainNavbar> {
   static final List<Widget> _screens = [
     const DashboardScreen(),
     const SlotsScreen(),
-    const BookingsScreen(),
     const GroundsScreen(),
     const ProfileScreen(),
   ];
@@ -64,24 +62,18 @@ class _MainNavbarState extends State<MainNavbar> {
                   selected: _selectedIndex == 1,
                   onTap: () => setState(() => _selectedIndex = 1),
                 ),
-                _NavItem(
-                  icon: HugeIcons.strokeRoundedTaskDone01,
-                  label: 'Bookings',
-                  selected: _selectedIndex == 2,
-                  onTap: () => setState(() => _selectedIndex = 2),
-                ),
                 const SizedBox(width: 64), // reserved space for the notch + scan FAB
                 _NavItem(
                   icon: HugeIcons.strokeRoundedCricketBat,
                   label: 'Grounds',
-                  selected: _selectedIndex == 3,
-                  onTap: () => setState(() => _selectedIndex = 3),
+                  selected: _selectedIndex == 2,
+                  onTap: () => setState(() => _selectedIndex = 2),
                 ),
                 _NavItem(
                   icon: HugeIcons.strokeRoundedUser,
                   label: 'Profile',
-                  selected: _selectedIndex == 4,
-                  onTap: () => setState(() => _selectedIndex = 4),
+                  selected: _selectedIndex == 3,
+                  onTap: () => setState(() => _selectedIndex = 3),
                 ),
               ],
             ),
@@ -94,24 +86,58 @@ class _MainNavbarState extends State<MainNavbar> {
 
 /// The center scan button: raised above the bar and nested in its notch so
 /// the owner can jump straight into ticket scanning from anywhere.
-class _ScanFab extends StatelessWidget {
+class _ScanFab extends StatefulWidget {
   final VoidCallback onTap;
   const _ScanFab({required this.onTap});
+
+  @override
+  State<_ScanFab> createState() => _ScanFabState();
+}
+
+class _ScanFabState extends State<_ScanFab> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Transform.translate(
       offset: const Offset(0, -8),
-      child: SizedBox(
-        width: 62,
-        height: 62,
-        child: FloatingActionButton(
-          onPressed: onTap,
-          backgroundColor: AppColors.primaryDarkGreen,
-          elevation: 6,
-          shape: const CircleBorder(),
-          child: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 28),
-        ),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Container(
+            width: 62,
+            height: 62,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primaryDarkGreen.withValues(alpha: 0.3 + 0.2 * _controller.value),
+                  blurRadius: 8 + 4 * _controller.value,
+                  spreadRadius: 2 + 2 * _controller.value,
+                ),
+              ],
+            ),
+            child: FloatingActionButton(
+              onPressed: widget.onTap,
+              backgroundColor: AppColors.primaryDarkGreen,
+              elevation: 0,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 28),
+            ),
+          );
+        },
       ),
     );
   }
@@ -132,22 +158,34 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.primaryDarkGreen : Colors.grey.shade400;
     return Expanded(
       child: InkWell(
         onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            HugeIcon(icon: icon, color: color, size: 22),
-            const SizedBox(height: 4),
-            AppText(
-              text: label,
-              size: 11,
-              weight: selected ? FontWeight.w700 : FontWeight.w500,
-              color: color,
-            ),
-          ],
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: selected ? 1.0 : 0.0),
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          builder: (context, value, child) {
+            final color = Color.lerp(Colors.grey.shade400, AppColors.primaryDarkGreen, value)!;
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Transform.scale(
+                  scale: 1.0 + (0.15 * value),
+                  child: HugeIcon(icon: icon, color: color, size: 22),
+                ),
+                const SizedBox(height: 4),
+                AppText(
+                  text: label,
+                  size: 11,
+                  weight: selected ? FontWeight.w700 : FontWeight.w500,
+                  color: color,
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

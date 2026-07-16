@@ -15,6 +15,7 @@ class SlotLoaded extends SlotState {
   final DateTime selectedDate;
   final List<VirtualSlot> slots;
   final int bookedCount;
+  final int blockedCount;
   final int totalSlots;
   final int todayRevenue;
 
@@ -25,6 +26,7 @@ class SlotLoaded extends SlotState {
     required this.selectedDate,
     required this.slots,
     required this.bookedCount,
+    required this.blockedCount,
     required this.totalSlots,
     required this.todayRevenue,
   });
@@ -36,6 +38,7 @@ class SlotLoaded extends SlotState {
     DateTime? selectedDate,
     List<VirtualSlot>? slots,
     int? bookedCount,
+    int? blockedCount,
     int? totalSlots,
     int? todayRevenue,
   }) {
@@ -46,6 +49,7 @@ class SlotLoaded extends SlotState {
       selectedDate: selectedDate ?? this.selectedDate,
       slots: slots ?? this.slots,
       bookedCount: bookedCount ?? this.bookedCount,
+      blockedCount: blockedCount ?? this.blockedCount,
       totalSlots: totalSlots ?? this.totalSlots,
       todayRevenue: todayRevenue ?? this.todayRevenue,
     );

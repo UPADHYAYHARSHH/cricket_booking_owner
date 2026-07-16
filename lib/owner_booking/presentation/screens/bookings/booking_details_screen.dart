@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
+import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/fee_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 
 class BookingDetailsScreen extends StatelessWidget {
   final Map<String, dynamic> booking;
@@ -122,6 +125,8 @@ class BookingDetailsScreen extends StatelessWidget {
     // Payment reference
     final paymentId = booking['razorpay_payment_id']?.toString() ?? '';
 
+    final isOwnerBooking = booking['user_id'] == null;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
@@ -134,8 +139,8 @@ class BookingDetailsScreen extends StatelessWidget {
           ),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const AppText(
-          text: "Booking Details",
+        title: AppText(
+          text: isOwnerBooking ? "Blocked Slot Details" : "Booking Details",
           size: 16,
           weight: FontWeight.w600,
           color: Colors.white,
@@ -204,50 +209,85 @@ class BookingDetailsScreen extends StatelessWidget {
                   _CheckInBanner(isCheckedIn: isCheckedIn, checkedInAt: checkedInFormatted),
                   const SizedBox(height: 16),
 
-                  // Player card
-                  _SectionCard(
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 26,
-                          backgroundColor: AppColors.primaryDarkGreen,
-                          backgroundImage:
-                              playerImage.isNotEmpty ? NetworkImage(playerImage) : null,
-                          child: playerImage.isEmpty
-                              ? AppText(
-                                  text: playerName.isNotEmpty
-                                      ? playerName[0].toUpperCase()
-                                      : 'P',
-                                  color: Colors.white,
-                                  size: 20,
-                                  weight: FontWeight.bold,
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 14),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AppText(
-                                text: playerName,
-                                size: 15,
-                                weight: FontWeight.bold,
+                  // Player card or Owner Block Reason
+                  if (isOwnerBooking)
+                    _SectionCard(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Row(
+                          children: [
+                            const CircleAvatar(
+                              radius: 26,
+                              backgroundColor: Colors.blue,
+                              child: Icon(Icons.lock, color: Colors.white),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const AppText(
+                                    text: "Booked by Owner",
+                                    size: 15,
+                                    weight: FontWeight.bold,
+                                  ),
+                                  const SizedBox(height: 3),
+                                  AppText(
+                                    text: "Reason: ${booking['notes']?.toString().isNotEmpty == true ? booking['notes'] : 'No reason provided'}",
+                                    size: 13,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ],
                               ),
-                              if (memberSinceFormatted.isNotEmpty) ...[
-                                const SizedBox(height: 3),
-                                AppText(
-                                  text: "Member since $memberSinceFormatted",
-                                  size: 12,
-                                  color: Colors.grey.shade600,
-                                ),
-                              ],
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                    )
+                  else
+                    _SectionCard(
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 26,
+                            backgroundColor: AppColors.primaryDarkGreen,
+                            backgroundImage:
+                                playerImage.isNotEmpty ? NetworkImage(playerImage) : null,
+                            child: playerImage.isEmpty
+                                ? AppText(
+                                    text: playerName.isNotEmpty
+                                        ? playerName[0].toUpperCase()
+                                        : 'P',
+                                    color: Colors.white,
+                                    size: 20,
+                                    weight: FontWeight.bold,
+                                  )
+                                : null,
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                AppText(
+                                  text: playerName,
+                                  size: 15,
+                                  weight: FontWeight.bold,
+                                ),
+                                if (memberSinceFormatted.isNotEmpty) ...[
+                                  const SizedBox(height: 3),
+                                  AppText(
+                                    text: "Member since $memberSinceFormatted",
+                                    size: 12,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
                   const SizedBox(height: 20),
                   const _SectionLabel(title: "BOOKING DETAILS"),
@@ -273,78 +313,114 @@ class BookingDetailsScreen extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 20),
-                  const _SectionLabel(title: "PAYMENT SUMMARY"),
-                  const SizedBox(height: 8),
+                  if (!isOwnerBooking) ...[
+                    const SizedBox(height: 20),
+                    const _SectionLabel(title: "PAYMENT SUMMARY"),
+                    const SizedBox(height: 8),
 
-                  _SectionCard(
-                    child: Column(
-                      children: [
-                        _PaymentRow(
-                          label: "Customer Paid",
-                          value: "₹${totalAmount.toStringAsFixed(0)}",
-                        ),
-                        const _RowDivider(),
-                        _PaymentRow(
-                          label: "Platform Fee",
-                          value: "– ₹${kPlatformFee.toStringAsFixed(0)}",
-                          valueColor: AppColors.error,
-                        ),
-                        if (kCommissionRate > 0) ...[
+                    _SectionCard(
+                      child: Column(
+                        children: [
+                          _PaymentRow(
+                            label: "Customer Paid",
+                            value: "₹${totalAmount.toStringAsFixed(0)}",
+                          ),
                           const _RowDivider(),
                           _PaymentRow(
-                            label: kCommissionIsPercentage
-                                ? "Commission (${kCommissionRate.toStringAsFixed(kCommissionRate % 1 == 0 ? 0 : 1)}%)"
-                                : "Commission Fee",
-                            value: "– ₹${commissionFee.toStringAsFixed(0)}",
+                            label: "Platform Fee",
+                            value: "– ₹${kPlatformFee.toStringAsFixed(0)}",
                             valueColor: AppColors.error,
                           ),
-                        ],
-                        const _RowDivider(),
-                        _PaymentRow(
-                          label: "Taxes & Charges",
-                          value: "Included",
-                          valueColor: Colors.grey.shade500,
-                        ),
-                        const _RowDivider(),
-                        // You earn row — highlighted
-                        Container(
-                          margin: const EdgeInsets.only(top: 4, bottom: 2),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8F5E9),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const AppText(
-                                text: "You Earn",
-                                size: 14,
-                                weight: FontWeight.bold,
-                                color: AppColors.primaryDarkGreen,
-                              ),
-                              AppText(
-                                text: "₹${groundRate.toStringAsFixed(0)}",
-                                size: 18,
-                                weight: FontWeight.w800,
-                                color: AppColors.primaryDarkGreen,
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (paymentId.isNotEmpty) ...[
-                          const SizedBox(height: 4),
+                          if (kCommissionRate > 0) ...[
+                            const _RowDivider(),
+                            _PaymentRow(
+                              label: kCommissionIsPercentage
+                                  ? "Commission (${kCommissionRate.toStringAsFixed(kCommissionRate % 1 == 0 ? 0 : 1)}%)"
+                                  : "Commission Fee",
+                              value: "– ₹${commissionFee.toStringAsFixed(0)}",
+                              valueColor: AppColors.error,
+                            ),
+                          ],
                           const _RowDivider(),
                           _PaymentRow(
-                            label: "Payment Ref.",
-                            value: paymentId,
+                            label: "Taxes & Charges",
+                            value: "Included",
                             valueColor: Colors.grey.shade500,
                           ),
+                          const _RowDivider(),
+                          // You earn row — highlighted
+                          Container(
+                            margin: const EdgeInsets.only(top: 4, bottom: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE8F5E9),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const AppText(
+                                  text: "You Earn",
+                                  size: 14,
+                                  weight: FontWeight.bold,
+                                  color: AppColors.primaryDarkGreen,
+                                ),
+                                AppText(
+                                  text: "₹${groundRate.toStringAsFixed(0)}",
+                                  size: 18,
+                                  weight: FontWeight.w800,
+                                  color: AppColors.primaryDarkGreen,
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (paymentId.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            const _RowDivider(),
+                            _PaymentRow(
+                              label: "Payment Ref.",
+                              value: paymentId,
+                              valueColor: Colors.grey.shade500,
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
+
+                  if (isOwnerBooking) ...[
+                    const SizedBox(height: 40),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          context.read<SlotCubit>().unbookOwnerSlot(booking['id'].toString());
+                          toastification.show(
+                            context: context,
+                            title: const Text("Slot Unblocked"),
+                            type: ToastificationType.success,
+                            autoCloseDuration: const Duration(seconds: 3),
+                          );
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.blue.shade700,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.blue.shade200, width: 1.5),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const AppText(
+                          text: "Unblock Slot",
+                          size: 16,
+                          weight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

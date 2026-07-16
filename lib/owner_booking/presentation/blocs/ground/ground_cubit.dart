@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/ground_repository.dart';
+import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 import 'ground_state.dart';
 
 class GroundCubit extends Cubit<GroundState> {
@@ -14,7 +15,12 @@ class GroundCubit extends Cubit<GroundState> {
     if (userId == null) return;
 
     try {
-      final grounds = await _groundRepository.getOwnerGrounds(userId);
+      final allGrounds = await _groundRepository.getOwnerGrounds(userId);
+      final locationId = SharedPrefsService.instance.selectedLocationId;
+      var grounds = allGrounds;
+      if (locationId != null) {
+        grounds = grounds.where((g) => g['location_id'] == locationId).toList();
+      }
       emit(GroundLoaded(grounds));
     } catch (e) {
       emit(GroundError(e.toString()));

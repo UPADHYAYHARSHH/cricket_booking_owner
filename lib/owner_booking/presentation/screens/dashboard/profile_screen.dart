@@ -8,6 +8,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.d
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/utils/auth_helper.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/bookings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -272,6 +273,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     // Venue Settings
                     _buildSettingsSection("Venue Settings", [
+                      _SettingsItem("All Bookings", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingsScreen()))),
                       _SettingsItem("Edit Venue Details", onTap: _showComingSoon),
                       _SettingsItem("Manage Courts / Grounds", onTap: _showComingSoon),
                       _SettingsItem("Update Amenities", onTap: () => Navigator.pushNamed(context, '/amenities-settings')),

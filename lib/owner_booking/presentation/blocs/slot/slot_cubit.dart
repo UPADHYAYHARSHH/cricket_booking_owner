@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:turfpro_owner/owner_booking/domain/models/virtual_slot.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/slot_repository.dart';
+import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 import 'slot_state.dart';
 
 class SlotCubit extends Cubit<SlotState> {
@@ -42,7 +43,12 @@ class SlotCubit extends Cubit<SlotState> {
       final ownerRes = await _slotRepository.getOwnerDetails(user.uid);
       final venueName = ownerRes?['venue_name'] ?? 'Your Venue';
 
-      final groundsData = await _slotRepository.getOwnerGrounds(user.uid);
+      final allGroundsData = await _slotRepository.getOwnerGrounds(user.uid);
+      final locationId = SharedPrefsService.instance.selectedLocationId;
+      var groundsData = allGroundsData;
+      if (locationId != null) {
+        groundsData = groundsData.where((g) => g['location_id'] == locationId).toList();
+      }
       if (groundsData.isEmpty) {
         emit(SlotLoaded(
           venueName: venueName,
@@ -51,6 +57,7 @@ class SlotCubit extends Cubit<SlotState> {
           selectedDate: DateTime.now(),
           slots: [],
           bookedCount: 0,
+          blockedCount: 0,
           totalSlots: 0,
           todayRevenue: 0,
         ));
@@ -210,6 +217,8 @@ class SlotCubit extends Cubit<SlotState> {
           status: SlotStatus.blocked,
           price: vSlot.price,
           blockedSlotId: matchingBooking['id']?.toString(),
+          blockReason: matchingBooking['notes']?.toString(),
+          bookingDetails: matchingBooking,
         );
       } else {
         // Customer booking — read-only
@@ -224,6 +233,7 @@ class SlotCubit extends Cubit<SlotState> {
                   : 'Customer (ID: ${matchingBooking['user_id']?.toString().substring(0, 4) ?? '—'})',
           bookedPlayersCount: 8,
           bookingId: matchingBooking['id'],
+          bookingDetails: matchingBooking,
         );
       }
     }
@@ -235,13 +245,14 @@ class SlotCubit extends Cubit<SlotState> {
       selectedDate: _selectedDate,
       slots: virtualSlots,
       bookedCount: bookingsForDate.where((b) => b['user_id'] != null).length,
+      blockedCount: bookingsForDate.where((b) => b['user_id'] == null).length,
       totalSlots: virtualSlots.length,
       todayRevenue: todayRevenue,
     ));
   }
 
   /// Books a slot as the owner. Uses optimistic update for instant UI feedback.
-  Future<void> bookOwnerSlot(DateTime startTime, int price) async {
+  Future<void> bookOwnerSlot(DateTime startTime, int price, {String? note}) async {
     try {
       final localSlotTime = DateTime(
         _selectedDate.year,
@@ -266,6 +277,7 @@ class SlotCubit extends Cubit<SlotState> {
         'sport_name': sportName,
         'period': period,
         'checked_in': false,
+        if (note != null) 'notes': note,
       };
       _latestBookings = [..._latestBookings, placeholder];
       _rebuildSlots();
@@ -277,6 +289,7 @@ class SlotCubit extends Cubit<SlotState> {
         price: price,
         sportName: sportName,
         period: period,
+        note: note,
       );
       _latestBookings = _latestBookings
           .where((b) => b['id'] != placeholder['id'])

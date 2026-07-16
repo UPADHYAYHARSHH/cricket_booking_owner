@@ -46,9 +46,10 @@ class _StepPhotosState extends State<StepPhotos> {
     for (final image in images) {
       try {
         final fileName = '$userId/grounds/${DateTime.now().millisecondsSinceEpoch}_${image.name}';
+        final fileBytes = await image.readAsBytes();
         await Supabase.instance.client.storage
             .from('venue_media')
-            .upload(fileName, File(image.path));
+            .uploadBinary(fileName, fileBytes);
         final url = Supabase.instance.client.storage.from('venue_media').getPublicUrl(fileName);
         setState(() => _imageUrls = [..._imageUrls, url]);
       } catch (e) {

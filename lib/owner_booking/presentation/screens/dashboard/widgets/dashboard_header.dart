@@ -3,6 +3,7 @@ import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/widgets/location_dropdown.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'dart:ui';
 
 class DashboardHeader extends StatelessWidget {
   final String ownerName;
@@ -75,57 +76,32 @@ class DashboardHeader extends StatelessWidget {
               ),
               Row(
                 children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Center(
-                      child: HugeIcon(
-                        icon: HugeIcons.strokeRoundedNotification03,
-                        color: Colors.white,
-                        size: 20.0,
-                      ),
+                  _buildGlassCircle(
+                    const HugeIcon(
+                      icon: HugeIcons.strokeRoundedNotification03,
+                      color: Colors.white,
+                      size: 20.0,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  if (onLogout != null)
-                    GestureDetector(
-                      onTap: onLogout,
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.12),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Center(
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedLogout01,
-                            color: Colors.white,
-                            size: 20.0,
-                          ),
-                        ),
-                      ),
-                    ),
-                  if (onLogout != null) const SizedBox(width: 12),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
-                    ),
-                    child: Center(
-                      child: AppText(
-                        text: _getInitials(ownerName),
+                  if (onLogout != null) ...[
+                    _buildGlassCircle(
+                      const HugeIcon(
+                        icon: HugeIcons.strokeRoundedLogout01,
                         color: Colors.white,
-                        weight: FontWeight.w700,
+                        size: 20.0,
                       ),
+                      onTap: onLogout,
                     ),
+                    const SizedBox(width: 12),
+                  ],
+                  _buildGlassCircle(
+                    AppText(
+                      text: _getInitials(ownerName),
+                      color: Colors.white,
+                      weight: FontWeight.w700,
+                    ),
+                    bordered: true,
                   ),
                 ],
               ),
@@ -171,6 +147,27 @@ class DashboardHeader extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildGlassCircle(Widget child, {VoidCallback? onTap, bool bordered = false}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipOval(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+              border: bordered ? Border.all(color: Colors.white.withValues(alpha: 0.4), width: 1) : null,
+            ),
+            child: Center(child: child),
+          ),
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
+import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 import 'bookings_state.dart';
 
 class BookingsCubit extends Cubit<BookingsState> {
@@ -25,7 +26,12 @@ class BookingsCubit extends Cubit<BookingsState> {
         return;
       }
 
-      final groundsData = await _bookingRepository.getOwnerGrounds(user.uid);
+      final allGroundsData = await _bookingRepository.getOwnerGrounds(user.uid);
+      final locationId = SharedPrefsService.instance.selectedLocationId;
+      var groundsData = allGroundsData;
+      if (locationId != null) {
+        groundsData = groundsData.where((g) => g['location_id'] == locationId).toList();
+      }
       if (groundsData.isEmpty) {
         emit(BookingsLoaded(allBookings: [], filteredBookings: []));
         return;

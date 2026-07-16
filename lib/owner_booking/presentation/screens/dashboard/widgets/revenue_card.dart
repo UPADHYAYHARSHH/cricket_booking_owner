@@ -25,16 +25,17 @@ class RevenueCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF2E6A4F), Color(0xFF1F4E3A)],
+          colors: [Color(0xFF348F5E), Color(0xFF1B4332)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1F4E3A).withOpacity(0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+            color: const Color(0xFF348F5E).withValues(alpha: 0.4),
+            blurRadius: 24,
+            spreadRadius: 2,
+            offset: const Offset(0, 12),
           ),
         ],
       ),

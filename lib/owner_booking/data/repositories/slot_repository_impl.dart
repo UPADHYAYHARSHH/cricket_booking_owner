@@ -19,7 +19,7 @@ class SlotRepositoryImpl implements SlotRepository {
   Future<List<Map<String, dynamic>>> getOwnerGrounds(String ownerId) async {
     final response = await _supabase
         .from('grounds')
-        .select('id, name, category, ground_type, opening_time, closing_time, slot_duration, price_per_hour, weekend_price, created_at')
+        .select('id, name, location_id, category, ground_type, opening_time, closing_time, slot_duration, price_per_hour, weekend_price, created_at')
         .eq('owner_id', ownerId)
         .order('created_at', ascending: true);
     return List<Map<String, dynamic>>.from(response);
@@ -41,19 +41,25 @@ class SlotRepositoryImpl implements SlotRepository {
     required int price,
     required String sportName,
     required String period,
+    String? note,
   }) async {
+    final data = {
+      'ground_id': groundId,
+      'slot_time': slotTime,
+      'amount': price,
+      'status': 'confirmed',
+      'sport_name': sportName,
+      'period': period,
+      'checked_in': false,
+    };
+    
+    if (note != null && note.trim().isNotEmpty) {
+      data['notes'] = note.trim();
+    }
+
     final result = await _supabase
         .from('bookings')
-        .insert({
-          'ground_id': groundId,
-          'slot_time': slotTime,
-          'amount': price,
-          'status': 'confirmed',
-          'sport_name': sportName,
-          'period': period,
-          'checked_in': false,
-          // user_id intentionally omitted — null user_id marks an owner booking
-        })
+        .insert(data)
         .select()
         .single();
     return Map<String, dynamic>.from(result);

@@ -5,6 +5,7 @@ import 'package:turfpro_owner/owner_booking/domain/repositories/booking_reposito
 import 'package:turfpro_owner/owner_booking/domain/repositories/location_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/owner_repository.dart';
 import 'package:turfpro_owner/common/constants/fee_constants.dart';
+import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 import 'dashboard_state.dart';
 
 class DashboardCubit extends Cubit<DashboardState> {
@@ -19,7 +20,9 @@ class DashboardCubit extends Cubit<DashboardState> {
     this._ownerRepository,
     this._bookingRepository,
     this._locationRepository,
-  ) : super(DashboardInitial());
+  ) : super(DashboardInitial()) {
+    _selectedLocationId = SharedPrefsService.instance.selectedLocationId;
+  }
 
   @override
   Future<void> close() {
@@ -98,7 +101,7 @@ class DashboardCubit extends Cubit<DashboardState> {
           if (bookingDateStr != null) {
             try {
               final bDate = DateTime.parse(bookingDateStr).toLocal();
-              final isRevenueCounted = status == 'confirmed' || status == 'completed' || status == 'paid';
+              final isRevenueCounted = b['user_id'] != null && (status == 'confirmed' || status == 'completed' || status == 'paid');
               final gross = (b['amount'] ?? b['total_amount'] ?? 0).toDouble();
               final commissionFee = kCommissionIsPercentage
                   ? gross * kCommissionRate / 100
@@ -193,6 +196,9 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   void selectLocation(String? locationId) {
     if (locationId == _selectedLocationId) return;
+    if (locationId != null) {
+      SharedPrefsService.instance.setSelectedLocationId(locationId);
+    }
     fetchDashboardData(locationId: locationId);
   }
 }

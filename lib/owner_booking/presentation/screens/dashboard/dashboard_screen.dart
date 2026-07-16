@@ -50,7 +50,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<bool> _needsForceUpdate() async {
     try {
       final svc = AppConfigService.instance;
-      final minVersion = Platform.isAndroid ? svc.androidMinVersion : svc.iosMinVersion;
+      final minVersion = Platform.isAndroid
+          ? svc.androidMinVersion
+          : svc.iosMinVersion;
       if (minVersion.isEmpty) return false;
       final info = await PackageInfo.fromPlatform();
       return _isVersionLower(info.version, minVersion);
@@ -99,7 +101,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       context: ctx,
       builder: (dialogCtx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const AppText(text: 'Log Out', size: 16, weight: FontWeight.w700),
+        title: const AppText(
+          text: 'Log Out',
+          size: 16,
+          weight: FontWeight.w700,
+        ),
         content: const AppText(
           text: 'Are you sure you want to log out?',
           size: 14,
@@ -136,10 +142,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: const Color(0xFFF5F6FA),
-        body: SafeArea(
-          bottom: false,
-          child: BlocBuilder<DashboardCubit, DashboardState>(
+      backgroundColor: const Color(0xFFF5F6FA),
+      body: SafeArea(
+        bottom: false,
+        child: BlocBuilder<DashboardCubit, DashboardState>(
           builder: (context, state) {
             if (state is DashboardLoading || state is DashboardInitial) {
               return const _DashboardSkeleton();
@@ -147,129 +153,164 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             if (state is DashboardError) {
               return Center(
-                child: AppText(
-                  text: state.message,
-                  color: AppColors.error,
-                ),
+                child: AppText(text: state.message, color: AppColors.error),
               );
             }
 
             if (state is DashboardLoaded) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.only(bottom: 30),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header and Overlapping Revenue Card
-                    Stack(
-                      clipBehavior: Clip.none,
+              return RefreshIndicator(
+                color: AppColors.primaryDarkGreen,
+                onRefresh: () async {
+                  await context.read<DashboardCubit>().fetchDashboardData();
+                },
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 400),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Opacity(
+                      opacity: value,
+                      child: Transform.translate(
+                        offset: Offset(0, 20 * (1 - value)),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.only(bottom: 30),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
+                        // Header and Overlapping Revenue Card
+                        Stack(
+                          clipBehavior: Clip.none,
                           children: [
-                            DashboardHeader(
-                              ownerName: state.ownerName,
-                              venueName: state.venueName,
-                              activeCourts: state.activeCourts,
-                              locations: state.locations,
-                              selectedLocationId: state.selectedLocationId,
-                              onLocationSelected: (locationId) =>
-                                  context.read<DashboardCubit>().selectLocation(locationId),
-                              onLogout: () => _confirmLogout(context),
+                            Column(
+                              children: [
+                                DashboardHeader(
+                                  ownerName: state.ownerName,
+                                  venueName: state.venueName,
+                                  activeCourts: state.activeCourts,
+                                  locations: state.locations,
+                                  selectedLocationId: state.selectedLocationId,
+                                  onLocationSelected: (locationId) => context
+                                      .read<DashboardCubit>()
+                                      .selectLocation(locationId),
+                                  onLogout: () => _confirmLogout(context),
+                                ),
+                                const SizedBox(
+                                  height: 110,
+                                ), // Space for revenue card overlap
+                              ],
                             ),
-                            const SizedBox(height: 110), // Space for revenue card overlap
-                          ],
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          left: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => BlocProvider(
-                                  create: (_) => getIt<RevenueCubit>(),
-                                  child: const RevenueScreen(),
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              child: GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => BlocProvider(
+                                      create: (_) => getIt<RevenueCubit>(),
+                                      child: const RevenueScreen(),
+                                    ),
+                                  ),
+                                ),
+                                child: RevenueCard(
+                                  amount: state.todayRevenue,
+                                  percentageChange: state.revenueChangeLabel,
+                                  bookingsCount: state.todayBookingsCount
+                                      .toString(),
                                 ),
                               ),
                             ),
-                            child: RevenueCard(
-                              amount: state.todayRevenue,
-                              percentageChange: state.revenueChangeLabel,
-                              bookingsCount: state.todayBookingsCount.toString(),
-                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 28),
+
+                        // Stats Row
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            children: [
+                              StatCard(
+                                value: state.todayBookingsCount.toString(),
+                                label: "Today's Bookings",
+                              ),
+                              const SizedBox(width: 12),
+                              StatCard(
+                                value: state.pendingAcceptCount.toString(),
+                                label: "Pending Accept",
+                              ),
+                              const SizedBox(width: 12),
+                              StatCard(
+                                value: state.occupancyPercentage,
+                                label: "Occupancy",
+                              ),
+                            ],
                           ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Today's Slots Header
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const AppText(
+                                text: "Today's Slots",
+                                color: Colors.black87,
+                                size: 16,
+                                weight: FontWeight.w700,
+                              ),
+                              AppText(
+                                text: DateFormat(
+                                  'EEE, d MMM',
+                                ).format(DateTime.now()),
+                                color: Colors.grey.shade500,
+                                size: 13,
+                                weight: FontWeight.w500,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Today's Slots List
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: state.todaySlots.isNotEmpty
+                              ? Column(
+                                  children: state.todaySlots.map((slot) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                        bottom: 12,
+                                      ),
+                                      child: TodayBookingCard(
+                                        booking: slot as Map<String, dynamic>,
+                                      ),
+                                    );
+                                  }).toList(),
+                                )
+                              : const AppText(
+                                  text: "No bookings for today yet.",
+                                  color: Colors.grey,
+                                ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 28),
-
-                    // Stats Row
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          StatCard(value: state.todayBookingsCount.toString(), label: "Today's Bookings"),
-                          const SizedBox(width: 12),
-                          StatCard(value: state.pendingAcceptCount.toString(), label: "Pending Accept"),
-                          const SizedBox(width: 12),
-                          StatCard(value: state.occupancyPercentage, label: "Occupancy"),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Today's Slots Header
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const AppText(
-                            text: "Today's Slots",
-                            color: Colors.black87,
-                            size: 16,
-                            weight: FontWeight.w700,
-                          ),
-                          AppText(
-                            text: DateFormat('EEE, d MMM').format(DateTime.now()),
-                            color: Colors.grey.shade500,
-                            size: 13,
-                            weight: FontWeight.w500,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Today's Slots List
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: state.todaySlots.isNotEmpty
-                          ? Column(
-                              children: state.todaySlots.map((slot) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: TodayBookingCard(
-                                    booking: slot as Map<String, dynamic>,
-                                  ),
-                                );
-                              }).toList(),
-                            )
-                          : const AppText(
-                              text: "No bookings for today yet.",
-                              color: Colors.grey,
-                            ),
-                    ),
-                  ],
+                  ),
                 ),
               );
             }
             return const SizedBox.shrink();
           },
-          ),
         ),
-      );
+      ),
+    );
   }
 }
 
@@ -337,7 +378,8 @@ class _ForceUpdateDialog extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               AppText(
-                text: 'A newer version of the app is required to continue. Please update to the latest version.',
+                text:
+                    'A newer version of the app is required to continue. Please update to the latest version.',
                 size: 13,
                 color: Colors.grey.shade500,
                 align: TextAlign.center,
@@ -412,9 +454,10 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog>
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
-    _scale = Tween<double>(begin: 0.92, end: 1.08).animate(
-      CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 0.92,
+      end: 1.08,
+    ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
   }
 
   @override
@@ -540,11 +583,35 @@ class _DashboardSkeleton extends StatelessWidget {
               highlightColor: Colors.grey.shade100,
               child: Row(
                 children: [
-                  Expanded(child: Container(height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)))),
+                  Expanded(
+                    child: Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: Container(height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)))),
+                  Expanded(
+                    child: Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: Container(height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)))),
+                  Expanded(
+                    child: Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -567,7 +634,17 @@ class _DashboardSkeleton extends StatelessWidget {
               child: Wrap(
                 spacing: 12,
                 runSpacing: 12,
-                children: List.generate(4, (index) => Container(width: 100, height: 40, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)))),
+                children: List.generate(
+                  4,
+                  (index) => Container(
+                    width: 100,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -576,4 +653,3 @@ class _DashboardSkeleton extends StatelessWidget {
     );
   }
 }
-

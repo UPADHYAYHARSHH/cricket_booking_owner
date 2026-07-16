@@ -10,6 +10,7 @@ class VirtualSlot {
   final String? bookingId;
   final String? blockedSlotId;
   final String? blockReason;
+  final Map<String, dynamic>? bookingDetails;
 
   VirtualSlot({
     required this.startTime,
@@ -21,5 +22,6 @@ class VirtualSlot {
     this.bookingId,
     this.blockedSlotId,
     this.blockReason,
+    this.bookingDetails,
   });
 }
