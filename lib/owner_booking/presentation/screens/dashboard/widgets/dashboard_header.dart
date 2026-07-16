@@ -12,7 +12,6 @@ class DashboardHeader extends StatelessWidget {
   final List<Map<String, dynamic>> locations;
   final String? selectedLocationId;
   final ValueChanged<String?> onLocationSelected;
-  final VoidCallback? onLogout;
 
   const DashboardHeader({
     super.key,
@@ -22,7 +21,6 @@ class DashboardHeader extends StatelessWidget {
     required this.locations,
     required this.selectedLocationId,
     required this.onLocationSelected,
-    this.onLogout,
   });
 
   String _getInitials(String name) {
@@ -84,17 +82,6 @@ class DashboardHeader extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  if (onLogout != null) ...[
-                    _buildGlassCircle(
-                      const HugeIcon(
-                        icon: HugeIcons.strokeRoundedLogout01,
-                        color: Colors.white,
-                        size: 20.0,
-                      ),
-                      onTap: onLogout,
-                    ),
-                    const SizedBox(width: 12),
-                  ],
                   _buildGlassCircle(
                     AppText(
                       text: _getInitials(ownerName),

@@ -100,48 +100,65 @@ class _GroundsScreenState extends State<GroundsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const AppText(text: 'Grounds', size: 18, weight: FontWeight.w700),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            tooltip: 'Manage locations',
-            icon: const HugeIcon(
-              icon: HugeIcons.strokeRoundedLocation01,
-              size: 22,
-              color: AppColors.primaryDarkGreen,
-            ),
-            onPressed: _openManageLocations,
-          ),
-        ],
-      ),
       body: BlocBuilder<LocationCubit, LocationState>(
         builder: (context, locationState) {
           final locations =
               locationState is LocationLoaded ? locationState.locations : <Map<String, dynamic>>[];
 
-          return Column(
-            children: [
-              if (locations.length > 1)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                  child: LocationDropdown(
-                    locations: locations,
-                    selectedLocationId: _selectedLocationId,
-                    onSelected: _onLocationSelected,
+          return BlocBuilder<GroundCubit, GroundState>(
+            builder: (context, state) {
+              return CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                slivers: [
+                  SliverAppBar(
+                    backgroundColor: Colors.white,
+                    elevation: 0,
+                    pinned: true,
+                    expandedHeight: locations.length > 1 ? 130.0 : 60.0,
+                    flexibleSpace: FlexibleSpaceBar(
+                      titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+                      title: locations.length > 1
+                          ? null
+                          : const AppText(
+                              text: 'Grounds',
+                              size: 18,
+                              weight: FontWeight.w700,
+                              color: Colors.black,
+                            ),
+                      background: locations.length > 1
+                          ? SafeArea(
+                              child: Container(
+                                padding: const EdgeInsets.only(top: 60, left: 20, right: 20),
+                                child: LocationDropdown(
+                                  locations: locations,
+                                  selectedLocationId: _selectedLocationId,
+                                  onSelected: _onLocationSelected,
+                                ),
+                              ),
+                            )
+                          : null,
+                    ),
+                    actions: [
+                      IconButton(
+                        tooltip: 'Manage locations',
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedLocation01,
+                          size: 22,
+                          color: AppColors.primaryDarkGreen,
+                        ),
+                        onPressed: _openManageLocations,
+                      ),
+                    ],
                   ),
-                ),
-              Expanded(
-                child: BlocBuilder<GroundCubit, GroundState>(
-                  builder: (context, state) {
-                    if (state is GroundLoading || state is GroundInitial) {
-                      return const GroundsSkeleton();
-                    }
-
-                    if (state is GroundError) {
-                      return Center(
+                  if (state is GroundLoading || state is GroundInitial)
+                    const SliverPadding(
+                      padding: EdgeInsets.only(top: 20),
+                      sliver: SliverToBoxAdapter(child: GroundsSkeleton()),
+                    )
+                  else if (state is GroundError)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -162,50 +179,48 @@ class _GroundsScreenState extends State<GroundsScreen> {
                             ),
                           ],
                         ),
-                      );
-                    }
-
-                    if (state is GroundLoaded) {
-                      if (state.grounds.isEmpty) {
-                        return EmptyGrounds(
-                          onAdd: () => _openAddFlow(locations),
-                          title: _selectedLocationId == null ? 'No Grounds Yet' : 'No Grounds Here Yet',
-                          message: locations.isEmpty
-                              ? 'Add a venue location first, then add grounds to it.'
-                              : 'Add a ground (one sport at a time) to start accepting bookings.',
-                          buttonLabel: locations.isEmpty ? 'Add Location' : 'Add Ground',
-                        );
-                      }
-
-                      return RefreshIndicator(
-                        color: AppColors.primaryDarkGreen,
-                        onRefresh: () async => _fetchGrounds(),
-                        child: ListView.separated(
-                          padding: const EdgeInsets.all(20),
-                          itemCount: state.grounds.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 16),
-                          itemBuilder: (context, index) {
+                      ),
+                    )
+                  else if (state is GroundLoaded && state.grounds.isEmpty)
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: EmptyGrounds(
+                        onAdd: () => _openAddFlow(locations),
+                        title: _selectedLocationId == null ? 'No Grounds Yet' : 'No Grounds Here Yet',
+                        message: locations.isEmpty
+                            ? 'Add a venue location first, then add grounds to it.'
+                            : 'Add a ground (one sport at a time) to start accepting bookings.',
+                        buttonLabel: locations.isEmpty ? 'Add Location' : 'Add Ground',
+                      ),
+                    )
+                  else if (state is GroundLoaded)
+                    SliverPadding(
+                      padding: const EdgeInsets.all(20),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) {
                             final ground = state.grounds[index] as Map<String, dynamic>;
-                            return GroundCard(
-                              ground: ground,
-                              onEdit: () => _openEditFlow(ground),
-                              onAvailabilityChanged: (value) =>
-                                  context.read<GroundCubit>().setGroundAvailability(
-                                        ground['id'] as String,
-                                        value,
-                                        locationId: _selectedLocationId,
-                                      ),
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 20),
+                              child: GroundCard(
+                                ground: ground,
+                                onEdit: () => _openEditFlow(ground),
+                                onAvailabilityChanged: (value) =>
+                                    context.read<GroundCubit>().setGroundAvailability(
+                                          ground['id'] as String,
+                                          value,
+                                          locationId: _selectedLocationId,
+                                        ),
+                              ),
                             );
                           },
+                          childCount: state.grounds.length,
                         ),
-                      );
-                    }
-
-                    return const SizedBox.shrink();
-                  },
-                ),
-              ),
-            ],
+                      ),
+                    ),
+                ],
+              );
+            },
           );
         },
       ),

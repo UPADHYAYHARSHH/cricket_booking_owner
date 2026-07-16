@@ -29,124 +29,254 @@ class GroundCard extends StatelessWidget {
     final closingTime = ground['closing_time'] as String? ?? '';
 
     return Opacity(
-      opacity: isAvailable ? 1 : 0.55,
+      opacity: isAvailable ? 1 : 0.6,
       child: Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-            child: Stack(
-              children: [
-                imageUrl != null
-                    ? Image.network(
-                        imageUrl,
-                        height: 150,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _ImagePlaceholder(name: name),
-                      )
-                    : _ImagePlaceholder(name: name),
-              ],
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppText(text: name, size: 16, weight: FontWeight.w700, color: const Color(0xFF212121)),
-                if (category.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  AppText(
-                    text: _formatSport(category),
-                    size: 12,
-                    color: AppColors.primaryDarkGreen,
-                    weight: FontWeight.w600,
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image with Gradient Overlay and Badge
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              child: Stack(
+                children: [
+                  imageUrl != null
+                      ? Image.network(
+                          imageUrl,
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => _ImagePlaceholder(name: name, category: category),
+                        )
+                      : _ImagePlaceholder(name: name, category: category),
+                  // Gradient Overlay
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withOpacity(0.6),
+                          ],
+                          stops: const [0.5, 1.0],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Category Badge
+                  if (category.isNotEmpty)
+                    Positioned(
+                      top: 16,
+                      left: 16,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.9),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _getSportIcon(category),
+                              size: 16,
+                              color: AppColors.primaryDarkGreen,
+                            ),
+                            const SizedBox(width: 4),
+                            AppText(
+                              text: _formatSport(category),
+                              size: 12,
+                              color: AppColors.primaryDarkGreen,
+                              weight: FontWeight.w700,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  // Availability Indicator Dot
+                  Positioned(
+                    top: 16,
+                    right: 16,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: isAvailable ? Colors.greenAccent : Colors.redAccent,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          AppText(
+                            text: isAvailable ? 'Active' : 'Hidden',
+                            size: 11,
+                            color: Colors.white,
+                            weight: FontWeight.w600,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    if (price != null) ...[
-                      const HugeIcon(
-                          icon: HugeIcons.strokeRoundedMoneyBag01,
-                          size: 13,
-                          color: AppColors.primaryDarkGreen),
-                      const SizedBox(width: 4),
-                      AppText(
-                        text: '₹$price/hr',
-                        size: 13,
-                        weight: FontWeight.w700,
-                        color: AppColors.primaryDarkGreen,
-                      ),
-                    ],
-                    if (openingTime.isNotEmpty && closingTime.isNotEmpty) ...[
-                      const SizedBox(width: 14),
-                      const HugeIcon(
-                          icon: HugeIcons.strokeRoundedClock01, size: 13, color: Colors.grey),
-                      const SizedBox(width: 4),
-                      AppText(
-                        text: '$openingTime – $closingTime',
-                        size: 12,
-                        color: Colors.grey,
-                      ),
-                    ],
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: onEdit,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryDarkGreen.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
-                        ),
-                        child: const AppText(
-                          text: 'Manage',
-                          size: 12,
-                          weight: FontWeight.w700,
-                          color: AppColors.primaryDarkGreen,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Divider(height: 1, color: Colors.grey.shade100),
-                const SizedBox(height: 6),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    AppText(
-                      text: isAvailable ? 'Available to players' : 'Hidden from players',
-                      size: 12,
-                      weight: FontWeight.w600,
-                      color: isAvailable ? AppColors.primaryDarkGreen : Colors.grey,
-                    ),
-                    Switch(
-                      value: isAvailable,
-                      activeColor: AppColors.primaryDarkGreen,
-                      onChanged: onAvailabilityChanged,
-                    ),
-                  ],
-                ),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
+            // Info Section
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppText(
+                    text: name,
+                    size: 18,
+                    weight: FontWeight.w800,
+                    color: const Color(0xFF1E293B),
+                  ),
+                  const SizedBox(height: 12),
+                  // Chips for Price and Time
+                  Row(
+                    children: [
+                      if (price != null)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryDarkGreen.withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const HugeIcon(
+                                icon: HugeIcons.strokeRoundedMoneyBag01,
+                                size: 14,
+                                color: AppColors.primaryDarkGreen,
+                              ),
+                              const SizedBox(width: 6),
+                              AppText(
+                                text: '₹$price/hr',
+                                size: 13,
+                                weight: FontWeight.w700,
+                                color: AppColors.primaryDarkGreen,
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (price != null && openingTime.isNotEmpty)
+                        const SizedBox(width: 10),
+                      if (openingTime.isNotEmpty && closingTime.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              HugeIcon(
+                                icon: HugeIcons.strokeRoundedClock01,
+                                size: 14,
+                                color: Colors.grey.shade700,
+                              ),
+                              const SizedBox(width: 6),
+                              AppText(
+                                text: '$openingTime – $closingTime',
+                                size: 13,
+                                weight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // Actions Row
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => _toggleAvailability(context, isAvailable, name),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: isAvailable ? Colors.red : AppColors.primaryDarkGreen,
+                            side: BorderSide(
+                              color: isAvailable ? Colors.red.shade200 : AppColors.primaryDarkGreen.withOpacity(0.5),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: Icon(
+                            isAvailable ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                            size: 18,
+                          ),
+                          label: AppText(
+                            text: isAvailable ? 'Hide' : 'Show',
+                            size: 14,
+                            weight: FontWeight.w600,
+                            color: isAvailable ? Colors.red : AppColors.primaryDarkGreen,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: onEdit,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryDarkGreen,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          icon: const HugeIcon(
+                            icon: HugeIcons.strokeRoundedSettings01,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                          label: const AppText(
+                            text: 'Manage',
+                            size: 14,
+                            weight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -155,24 +285,71 @@ class GroundCard extends StatelessWidget {
       .split('_')
       .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
       .join(' ');
+
+  void _toggleAvailability(BuildContext context, bool isCurrentlyAvailable, String groundName) {
+    if (isCurrentlyAvailable) {
+      showDialog<void>(
+        context: context,
+        builder: (dialogCtx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const AppText(
+            text: 'Disable Ground?',
+            size: 16,
+            weight: FontWeight.w700,
+          ),
+          content: AppText(
+            text: 'Are you sure you want to hide "$groundName"? It will no longer be visible to players for booking.',
+            size: 14,
+            color: Colors.black54,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogCtx),
+              child: AppText(
+                text: 'Cancel',
+                size: 14,
+                color: Colors.grey.shade600,
+                weight: FontWeight.w600,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(dialogCtx);
+                onAvailabilityChanged(false);
+              },
+              child: const AppText(
+                text: 'Disable',
+                size: 14,
+                color: Color(0xFFE53935),
+                weight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      onAvailabilityChanged(true);
+    }
+  }
 }
 
 class _ImagePlaceholder extends StatelessWidget {
   final String name;
-  const _ImagePlaceholder({required this.name});
+  final String category;
+  const _ImagePlaceholder({required this.name, required this.category});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 150,
+      height: 180,
       width: double.infinity,
       color: AppColors.primaryDarkGreen.withOpacity(0.1),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const HugeIcon(
-              icon: HugeIcons.strokeRoundedCricketBat,
+            Icon(
+              _getSportIcon(category),
               size: 40,
               color: AppColors.primaryDarkGreen,
             ),
@@ -270,5 +447,31 @@ class GroundsSkeleton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+IconData _getSportIcon(String category) {
+  switch (category.toLowerCase()) {
+    case 'box_cricket':
+    case 'cricket':
+      return Icons.sports_cricket;
+    case 'football':
+    case 'futsal':
+      return Icons.sports_soccer;
+    case 'badminton':
+    case 'tennis':
+    case 'pickleball':
+    case 'table_tennis':
+      return Icons.sports_tennis;
+    case 'volleyball':
+      return Icons.sports_volleyball;
+    case 'basketball':
+      return Icons.sports_basketball;
+    case 'swimming':
+      return Icons.pool;
+    case 'golf':
+      return Icons.sports_golf;
+    default:
+      return Icons.sports;
   }
 }

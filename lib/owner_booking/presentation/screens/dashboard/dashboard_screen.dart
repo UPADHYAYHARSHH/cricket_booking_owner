@@ -96,48 +96,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _confirmLogout(BuildContext ctx) {
-    showDialog<void>(
-      context: ctx,
-      builder: (dialogCtx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const AppText(
-          text: 'Log Out',
-          size: 16,
-          weight: FontWeight.w700,
-        ),
-        content: const AppText(
-          text: 'Are you sure you want to log out?',
-          size: 14,
-          color: Colors.black54,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogCtx),
-            child: AppText(
-              text: 'Cancel',
-              size: 14,
-              color: Colors.grey.shade600,
-              weight: FontWeight.w600,
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(dialogCtx);
-              ctx.read<AuthCubit>().logout();
-              Navigator.pushNamedAndRemoveUntil(ctx, '/', (route) => false);
-            },
-            child: const AppText(
-              text: 'Log Out',
-              size: 14,
-              color: Color(0xFFE53935),
-              weight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -197,7 +155,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   onLocationSelected: (locationId) => context
                                       .read<DashboardCubit>()
                                       .selectLocation(locationId),
-                                  onLogout: () => _confirmLogout(context),
                                 ),
                                 const SizedBox(
                                   height: 110,
