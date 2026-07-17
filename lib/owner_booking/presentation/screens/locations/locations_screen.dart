@@ -69,7 +69,9 @@ class _LocationsScreenState extends State<LocationsScreen>
   Future<void> _openEditLocation(Map<String, dynamic> location) async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => LocationFormScreen(locationData: location)),
+      MaterialPageRoute(
+        builder: (_) => LocationFormScreen(locationData: location),
+      ),
     );
   }
 
@@ -90,10 +92,18 @@ class _LocationsScreenState extends State<LocationsScreen>
                 color: AppColors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppSizes.radiusSm),
               ),
-              child: const Icon(Icons.warning_amber_rounded, color: AppColors.error, size: 22),
+              child: const Icon(
+                Icons.warning_amber_rounded,
+                color: AppColors.error,
+                size: 22,
+              ),
             ),
             const SizedBox(width: AppSizes.md),
-            const AppText(text: 'Delete Location', size: 18, weight: FontWeight.w700),
+            const AppText(
+              text: 'Delete Location',
+              size: 18,
+              weight: FontWeight.w700,
+            ),
           ],
         ),
         content: AppText(
@@ -133,7 +143,9 @@ class _LocationsScreenState extends State<LocationsScreen>
       ),
     );
     if (confirmed != true || !mounted) return;
-    await context.read<LocationCubit>().deleteLocation(location['id'] as String);
+    await context.read<LocationCubit>().deleteLocation(
+      location['id'] as String,
+    );
   }
 
   Future<void> _openDocuments(Map<String, dynamic> location) async {
@@ -261,10 +273,15 @@ class _LocationsScreenState extends State<LocationsScreen>
                     color: AppColors.textPrimaryLight,
                   ),
                   const SizedBox(height: AppSizes.sm),
-                  AppText(text: state.message, color: AppColors.error, size: 14),
+                  AppText(
+                    text: state.message,
+                    color: AppColors.error,
+                    size: 14,
+                  ),
                   const SizedBox(height: AppSizes.xl),
                   TextButton(
-                    onPressed: () => context.read<LocationCubit>().fetchOwnerLocations(),
+                    onPressed: () =>
+                        context.read<LocationCubit>().fetchOwnerLocations(),
                     child: const AppText(
                       text: 'Retry',
                       color: AppColors.primaryDarkGreen,
@@ -283,19 +300,21 @@ class _LocationsScreenState extends State<LocationsScreen>
 
             return RefreshIndicator(
               color: AppColors.primaryDarkGreen,
-              onRefresh: () async => context.read<LocationCubit>().fetchOwnerLocations(),
+              onRefresh: () async =>
+                  context.read<LocationCubit>().fetchOwnerLocations(),
               child: ListView.separated(
                 padding: const EdgeInsets.all(AppSizes.xl),
                 itemCount: state.locations.length,
-                separatorBuilder: (_, __) => const SizedBox(height: AppSizes.lg),
+                separatorBuilder: (_, _) => const SizedBox(height: AppSizes.lg),
                 itemBuilder: (context, index) {
                   final location = state.locations[index];
                   return AnimatedBuilder(
                     animation: _staggerAnimation,
                     builder: (context, child) {
                       final delay = (index * 0.15).clamp(0.0, 0.6);
-                      final itemProgress = ((_staggerAnimation.value - delay) / (1.0 - delay))
-                          .clamp(0.0, 1.0);
+                      final itemProgress =
+                          ((_staggerAnimation.value - delay) / (1.0 - delay))
+                              .clamp(0.0, 1.0);
                       return Opacity(
                         opacity: itemProgress,
                         child: Transform.translate(
@@ -312,9 +331,9 @@ class _LocationsScreenState extends State<LocationsScreen>
                       onDocuments: () => _openDocuments(location),
                       onActiveChanged: (value) =>
                           context.read<LocationCubit>().updateLocation(
-                                locationId: location['id'] as String,
-                                data: {'is_active': value},
-                              ),
+                            locationId: location['id'] as String,
+                            data: {'is_active': value},
+                          ),
                     ),
                   );
                 },
@@ -373,8 +392,8 @@ class _LocationCard extends StatelessWidget {
     final accentColor = isVerified
         ? AppColors.primaryDarkGreen
         : isActive
-            ? AppColors.accentOrange
-            : AppColors.borderLight;
+        ? AppColors.accentOrange
+        : AppColors.borderLight;
 
     return Opacity(
       opacity: isActive ? 1.0 : 0.65,
@@ -429,7 +448,9 @@ class _LocationCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           AppText(
-                            text: address.isEmpty ? 'Unnamed location' : address,
+                            text: address.isEmpty
+                                ? 'Unnamed location'
+                                : address,
                             size: 15,
                             weight: FontWeight.w700,
                             color: AppColors.textPrimaryLight,
@@ -453,7 +474,9 @@ class _LocationCard extends StatelessWidget {
                         padding: const EdgeInsets.all(AppSizes.xs),
                         decoration: BoxDecoration(
                           color: AppColors.bgLight,
-                          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.radiusSm,
+                          ),
                         ),
                         child: const Icon(
                           Icons.more_vert,
@@ -470,7 +493,11 @@ class _LocationCard extends StatelessWidget {
                           value: 'edit',
                           child: Row(
                             children: [
-                              Icon(Icons.edit_outlined, size: 18, color: AppColors.primaryDarkGreen),
+                              Icon(
+                                Icons.edit_outlined,
+                                size: 18,
+                                color: AppColors.primaryDarkGreen,
+                              ),
                               SizedBox(width: 10),
                               Text('Edit'),
                             ],
@@ -480,7 +507,11 @@ class _LocationCard extends StatelessWidget {
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(Icons.delete_outline, size: 18, color: AppColors.error),
+                              Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: AppColors.error,
+                              ),
                               SizedBox(width: 10),
                               Text('Delete'),
                             ],
@@ -488,7 +519,10 @@ class _LocationCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const Icon(Icons.chevron_right, color: AppColors.textSecondaryLight),
+                    const Icon(
+                      Icons.chevron_right,
+                      color: AppColors.textSecondaryLight,
+                    ),
                   ],
                 ),
               ),
@@ -517,7 +551,9 @@ class _LocationCard extends StatelessWidget {
                       width: 6,
                       height: 6,
                       decoration: BoxDecoration(
-                        color: isVerified ? AppColors.primaryDarkGreen : AppColors.accentOrange,
+                        color: isVerified
+                            ? AppColors.primaryDarkGreen
+                            : AppColors.accentOrange,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -528,7 +564,9 @@ class _LocationCard extends StatelessWidget {
                           : 'Pending Approval',
                       size: 11,
                       weight: FontWeight.w600,
-                      color: isVerified ? AppColors.primaryDarkGreen : AppColors.accentOrange,
+                      color: isVerified
+                          ? AppColors.primaryDarkGreen
+                          : AppColors.accentOrange,
                     ),
                   ],
                 ),
@@ -575,16 +613,22 @@ class _LocationCard extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(
-                          isActive ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          isActive
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
                           size: 16,
-                          color: isActive ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+                          color: isActive
+                              ? AppColors.primaryDarkGreen
+                              : AppColors.textSecondaryLight,
                         ),
                         const SizedBox(width: AppSizes.xs),
                         AppText(
                           text: isActive ? 'Active' : 'Disabled',
                           size: 12,
                           weight: FontWeight.w600,
-                          color: isActive ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+                          color: isActive
+                              ? AppColors.primaryDarkGreen
+                              : AppColors.textSecondaryLight,
                         ),
                         const Spacer(),
                         Switch(
@@ -610,7 +654,9 @@ class _LocationCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                         border: Border.all(
                           color: hasDocuments
-                              ? AppColors.primaryDarkGreen.withValues(alpha: 0.2)
+                              ? AppColors.primaryDarkGreen.withValues(
+                                  alpha: 0.2,
+                                )
                               : AppColors.borderLight,
                         ),
                       ),
@@ -618,7 +664,9 @@ class _LocationCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            hasDocuments ? Icons.description : Icons.upload_file_outlined,
+                            hasDocuments
+                                ? Icons.description
+                                : Icons.upload_file_outlined,
                             size: 14,
                             color: hasDocuments
                                 ? AppColors.primaryDarkGreen
@@ -665,7 +713,9 @@ class _LocationCard extends StatelessWidget {
                         padding: const EdgeInsets.all(AppSizes.xs),
                         decoration: BoxDecoration(
                           color: AppColors.accentOrange.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(AppSizes.radiusXs),
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.radiusXs,
+                          ),
                         ),
                         child: const Icon(
                           Icons.hourglass_top,
@@ -771,8 +821,8 @@ class _LocationsSkeleton extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.all(AppSizes.xl),
       itemCount: 3,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.lg),
-      itemBuilder: (_, __) => Shimmer.fromColors(
+      separatorBuilder: (_, _) => const SizedBox(height: AppSizes.lg),
+      itemBuilder: (_, _) => Shimmer.fromColors(
         baseColor: AppColors.borderLight,
         highlightColor: AppColors.white,
         child: Container(

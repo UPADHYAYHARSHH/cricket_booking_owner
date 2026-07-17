@@ -362,20 +362,22 @@ class _AnimatedStatCardState extends State<_AnimatedStatCard>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: Opacity(
-            opacity: _fadeAnimation.value,
-            child: StatCard(
-              value: widget.value,
-              label: widget.label,
+    return Expanded(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: Opacity(
+              opacity: _fadeAnimation.value,
+              child: StatCard(
+                value: widget.value,
+                label: widget.label,
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

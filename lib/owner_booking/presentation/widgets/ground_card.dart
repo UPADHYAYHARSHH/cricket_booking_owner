@@ -50,7 +50,9 @@ class GroundCard extends StatelessWidget {
           children: [
             // Image with Gradient Overlay and Badges
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSizes.radiusXl)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppSizes.radiusXl),
+              ),
               child: Stack(
                 children: [
                   imageUrl != null
@@ -59,7 +61,8 @@ class GroundCard extends StatelessWidget {
                           height: 180,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _ImagePlaceholder(name: name, category: category),
+                          errorBuilder: (_, _, _) =>
+                              _ImagePlaceholder(name: name, category: category),
                         )
                       : _ImagePlaceholder(name: name, category: category),
                   // Gradient Overlay
@@ -84,7 +87,9 @@ class GroundCard extends StatelessWidget {
                       top: AppSizes.lg,
                       left: AppSizes.lg,
                       child: ClipRRect(
-                        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.radiusFull,
+                        ),
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                           child: Container(
@@ -94,7 +99,9 @@ class GroundCard extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: AppColors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusFull,
+                              ),
                               border: Border.all(
                                 color: AppColors.white.withValues(alpha: 0.3),
                                 width: 1,
@@ -134,7 +141,9 @@ class GroundCard extends StatelessWidget {
                         color: isAvailable
                             ? AppColors.success.withValues(alpha: 0.9)
                             : AppColors.error.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.radiusFull,
+                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -190,7 +199,9 @@ class GroundCard extends StatelessWidget {
                           label: '\u20B9$price/hr',
                           iconColor: AppColors.primaryDarkGreen,
                           textColor: AppColors.primaryDarkGreen,
-                          bgColor: AppColors.primaryDarkGreen.withValues(alpha: 0.06),
+                          bgColor: AppColors.primaryDarkGreen.withValues(
+                            alpha: 0.06,
+                          ),
                         ),
                       if (price != null && openingTime.isNotEmpty)
                         const SizedBox(width: AppSizes.sm),
@@ -210,28 +221,41 @@ class GroundCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton.icon(
-                          onPressed: () => _toggleAvailability(context, isAvailable, name),
+                          onPressed: () =>
+                              _toggleAvailability(context, isAvailable, name),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: isAvailable ? AppColors.error : AppColors.primaryDarkGreen,
+                            foregroundColor: isAvailable
+                                ? AppColors.error
+                                : AppColors.primaryDarkGreen,
                             side: BorderSide(
                               color: isAvailable
                                   ? AppColors.error.withValues(alpha: 0.3)
-                                  : AppColors.primaryDarkGreen.withValues(alpha: 0.3),
+                                  : AppColors.primaryDarkGreen.withValues(
+                                      alpha: 0.3,
+                                    ),
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: AppSizes.md,
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusMd,
+                              ),
                             ),
                           ),
                           icon: Icon(
-                            isAvailable ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                            isAvailable
+                                ? Icons.visibility_off_outlined
+                                : Icons.visibility_outlined,
                             size: 18,
                           ),
                           label: AppText(
                             text: isAvailable ? 'Hide' : 'Show',
                             size: 14,
                             weight: FontWeight.w600,
-                            color: isAvailable ? AppColors.error : AppColors.primaryDarkGreen,
+                            color: isAvailable
+                                ? AppColors.error
+                                : AppColors.primaryDarkGreen,
                           ),
                         ),
                       ),
@@ -245,7 +269,9 @@ class GroundCard extends StatelessWidget {
                                 Color(0xFF0FA968),
                               ],
                             ),
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusMd,
+                            ),
                           ),
                           child: ElevatedButton.icon(
                             onPressed: onEdit,
@@ -254,9 +280,13 @@ class GroundCard extends StatelessWidget {
                               shadowColor: Colors.transparent,
                               foregroundColor: AppColors.white,
                               elevation: 0,
-                              padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppSizes.md,
+                              ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusMd,
+                                ),
                               ),
                             ),
                             icon: const HugeIcon(
@@ -289,7 +319,11 @@ class GroundCard extends StatelessWidget {
       .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
       .join(' ');
 
-  void _toggleAvailability(BuildContext context, bool isCurrentlyAvailable, String groundName) {
+  void _toggleAvailability(
+    BuildContext context,
+    bool isCurrentlyAvailable,
+    String groundName,
+  ) {
     if (isCurrentlyAvailable) {
       showDialog<void>(
         context: context,
@@ -443,49 +477,25 @@ class _ImagePlaceholder extends StatelessWidget {
     switch (category.toLowerCase()) {
       case 'box_cricket':
       case 'cricket':
-        return [
-          const Color(0xFF1B5E20),
-          const Color(0xFF43A047),
-        ];
+        return [const Color(0xFF1B5E20), const Color(0xFF43A047)];
       case 'football':
       case 'futsal':
-        return [
-          const Color(0xFF0D47A1),
-          const Color(0xFF1E88E5),
-        ];
+        return [const Color(0xFF0D47A1), const Color(0xFF1E88E5)];
       case 'badminton':
       case 'tennis':
       case 'pickleball':
       case 'table_tennis':
-        return [
-          const Color(0xFFBF360C),
-          const Color(0xFFE65100),
-        ];
+        return [const Color(0xFFBF360C), const Color(0xFFE65100)];
       case 'volleyball':
-        return [
-          const Color(0xFF4A148C),
-          const Color(0xFF7B1FA2),
-        ];
+        return [const Color(0xFF4A148C), const Color(0xFF7B1FA2)];
       case 'basketball':
-        return [
-          const Color(0xFFE65100),
-          const Color(0xFFFF9800),
-        ];
+        return [const Color(0xFFE65100), const Color(0xFFFF9800)];
       case 'swimming':
-        return [
-          const Color(0xFF006064),
-          const Color(0xFF00ACC1),
-        ];
+        return [const Color(0xFF006064), const Color(0xFF00ACC1)];
       case 'golf':
-        return [
-          const Color(0xFF1B5E20),
-          const Color(0xFF66BB6A),
-        ];
+        return [const Color(0xFF1B5E20), const Color(0xFF66BB6A)];
       default:
-        return [
-          AppColors.primaryDarkGreen,
-          const Color(0xFF43A047),
-        ];
+        return [AppColors.primaryDarkGreen, const Color(0xFF43A047)];
     }
   }
 }
@@ -500,7 +510,8 @@ class EmptyGrounds extends StatefulWidget {
     super.key,
     required this.onAdd,
     this.title = 'No Grounds Yet',
-    this.message = 'Add a ground (one sport at a time) at this location to start accepting bookings.',
+    this.message =
+        'Add a ground (one sport at a time) at this location to start accepting bookings.',
     this.buttonLabel = 'Add Ground',
   });
 
@@ -508,7 +519,8 @@ class EmptyGrounds extends StatefulWidget {
   State<EmptyGrounds> createState() => _EmptyGroundsState();
 }
 
-class _EmptyGroundsState extends State<EmptyGrounds> with SingleTickerProviderStateMixin {
+class _EmptyGroundsState extends State<EmptyGrounds>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _iconController;
   late final Animation<double> _iconBounce;
 
@@ -625,8 +637,8 @@ class GroundsSkeleton extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.all(AppSizes.xl),
       itemCount: 3,
-      separatorBuilder: (_, __) => const SizedBox(height: AppSizes.lg),
-      itemBuilder: (_, __) => Shimmer.fromColors(
+      separatorBuilder: (_, _) => const SizedBox(height: AppSizes.lg),
+      itemBuilder: (_, _) => Shimmer.fromColors(
         baseColor: AppColors.borderLight,
         highlightColor: AppColors.surfaceLight,
         child: Container(

@@ -144,8 +144,9 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
     setState(() => _isMapLoading = true);
     try {
       LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied)
+      if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
+      }
       if (permission == LocationPermission.deniedForever) {
         _showPermissionDialog("Location");
         return;
@@ -347,10 +348,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
             backgroundColor: AppColors.bgLight,
             appBar: AppBar(
               leading: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios,
-                  size: 20,
-                ),
+                icon: const Icon(Icons.arrow_back_ios, size: 20),
                 onPressed: () => _currentStep > 0
                     ? setState(() => _currentStep--)
                     : Navigator.pop(context),
@@ -560,12 +558,17 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                 child: FloatingActionButton(
                   onPressed: _getCurrentLocation,
                   backgroundColor: Colors.white,
-                  child: const Icon(Icons.my_location, color: AppColors.primaryDarkGreen),
+                  child: const Icon(
+                    Icons.my_location,
+                    color: AppColors.primaryDarkGreen,
+                  ),
                 ),
               ),
               if (_isMapLoading)
                 const Center(
-                  child: CircularProgressIndicator(color: AppColors.primaryDarkGreen),
+                  child: CircularProgressIndicator(
+                    color: AppColors.primaryDarkGreen,
+                  ),
                 ),
             ],
           ),
@@ -764,7 +767,10 @@ class _CustomTextField extends StatelessWidget {
       maxLines: maxLines,
       enabled: enabled,
       validator: validator,
-      style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface),
+      style: TextStyle(
+        fontSize: 14,
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
@@ -784,7 +790,7 @@ class _DocumentUploadCard extends StatelessWidget {
   final VoidCallback onRemove;
   final bool isLoading;
   final Color color;
-  _DocumentUploadCard({
+  const _DocumentUploadCard({
     required this.label,
     required this.subtitle,
     required this.icon,
@@ -824,9 +830,7 @@ class _DocumentUploadCard extends StatelessWidget {
                 width: 72,
                 height: 72,
                 decoration: BoxDecoration(
-                  color: hasImage
-                      ? Colors.transparent
-                      : AppColors.bgLight,
+                  color: hasImage ? Colors.transparent : AppColors.bgLight,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: hasImage
@@ -845,7 +849,11 @@ class _DocumentUploadCard extends StatelessWidget {
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(icon, color: AppColors.textSecondaryLight, size: 26),
+                          Icon(
+                            icon,
+                            color: AppColors.textSecondaryLight,
+                            size: 26,
+                          ),
                           const AppSizedBox(height: 4),
                           const AppText(
                             text: "Tap to add",

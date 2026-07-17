@@ -120,8 +120,9 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
     final userId = currentUserId;
     if (userId == null) return null;
 
-    final fileName = "${userId}/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}";
-    
+    final fileName =
+        "$userId/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}";
+
     try {
       await Supabase.instance.client.storage
           .from('kyc_documents')
@@ -130,7 +131,7 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
       final url = Supabase.instance.client.storage
           .from('kyc_documents')
           .getPublicUrl(fileName);
-      
+
       return url;
     } catch (e) {
       debugPrint("Upload error for $key: $e");
@@ -139,7 +140,9 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
   }
 
   void _onSave() async {
-    if (_panController.text.isEmpty || _aadharController.text.isEmpty || _accNumberController.text.isEmpty) {
+    if (_panController.text.isEmpty ||
+        _aadharController.text.isEmpty ||
+        _accNumberController.text.isEmpty) {
       toastification.show(
         context: context,
         type: ToastificationType.warning,
@@ -152,7 +155,7 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
 
     try {
       final Map<String, String?> finalUrls = Map.from(_uploadUrls);
-      
+
       for (var entry in _files.entries) {
         if (entry.value != null) {
           final url = await _uploadFile(entry.key, entry.value!);
@@ -223,29 +226,58 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
               children: [
                 _buildSecurityNotice(),
                 const AppSizedBox(height: 32),
-                
+
                 _buildSectionHeader("IDENTITY DOCUMENTS"),
                 _buildLabel("PAN CARD NUMBER *"),
-                _buildTextField(_panController, "ABCDE1234F", helper: "Required for TDS compliance on payouts above ₹30,000"),
+                _buildTextField(
+                  _panController,
+                  "ABCDE1234F",
+                  helper:
+                      "Required for TDS compliance on payouts above ₹30,000",
+                ),
                 const AppSizedBox(height: 16),
-                _buildUploadField("pan", "PAN CARD (UPLOAD)", "JPG, PNG or PDF • Max 5MB"),
+                _buildUploadField(
+                  "pan",
+                  "PAN CARD (UPLOAD)",
+                  "JPG, PNG or PDF • Max 5MB",
+                ),
 
                 const AppSizedBox(height: 32),
                 _buildLabel("AADHAR NUMBER *"),
-                _buildTextField(_aadharController, "XXXX XXXX XXXX", helper: "Last 4 digits shown only"),
+                _buildTextField(
+                  _aadharController,
+                  "XXXX XXXX XXXX",
+                  helper: "Last 4 digits shown only",
+                ),
                 const AppSizedBox(height: 16),
-                _buildUploadField("aadhar", "AADHAR CARD (UPLOAD)", "Upload front & back • JPG, PNG or PDF • Max 5MB"),
+                _buildUploadField(
+                  "aadhar",
+                  "AADHAR CARD (UPLOAD)",
+                  "Upload front & back • JPG, PNG or PDF • Max 5MB",
+                ),
 
                 const AppSizedBox(height: 32),
                 _buildSectionHeader("BUSINESS / GST"),
                 _buildLabel("GST NUMBER"),
-                _buildTextField(_gstController, "e.g. 24ABCDE1234F1Z5", helper: "Optional — if GST registered"),
+                _buildTextField(
+                  _gstController,
+                  "e.g. 24ABCDE1234F1Z5",
+                  helper: "Optional — if GST registered",
+                ),
                 const AppSizedBox(height: 16),
-                _buildUploadField("gst", "GST CERTIFICATE (UPLOAD)", "PDF only • Max 5MB"),
+                _buildUploadField(
+                  "gst",
+                  "GST CERTIFICATE (UPLOAD)",
+                  "PDF only • Max 5MB",
+                ),
                 const AppSizedBox(height: 24),
                 _buildLabel("BUSINESS TYPE"),
                 _buildChoiceChips(
-                  options: ['Individual / Proprietorship', 'Partnership Firm', 'LLP / Pvt Ltd'],
+                  options: [
+                    'Individual / Proprietorship',
+                    'Partnership Firm',
+                    'LLP / Pvt Ltd',
+                  ],
                   selected: _businessType,
                   onSelected: (v) => setState(() => _businessType = v),
                 ),
@@ -254,14 +286,26 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
                 _buildSectionHeader("PROPERTY OWNERSHIP"),
                 _buildLabel("PROPERTY STATUS *"),
                 _buildChoiceChips(
-                  options: ['Owned Property', 'Lease / Rent Agreement', 'Society Permission'],
+                  options: [
+                    'Owned Property',
+                    'Lease / Rent Agreement',
+                    'Society Permission',
+                  ],
                   selected: _propertyStatus,
                   onSelected: (v) => setState(() => _propertyStatus = v),
                 ),
                 const AppSizedBox(height: 16),
-                _buildUploadField("property", "PROPERTY DOCUMENT (UPLOAD)", "Ownership deed / Lease agreement / NOC • PDF only • Max 10MB"),
+                _buildUploadField(
+                  "property",
+                  "PROPERTY DOCUMENT (UPLOAD)",
+                  "Ownership deed / Lease agreement / NOC • PDF only • Max 10MB",
+                ),
                 const AppSizedBox(height: 16),
-                _buildUploadField("noc", "LOCAL BODY / MUNICIPAL NOC", "NOC from municipal corporation or panchayat • Optional but recommended"),
+                _buildUploadField(
+                  "noc",
+                  "LOCAL BODY / MUNICIPAL NOC",
+                  "NOC from municipal corporation or panchayat • Optional but recommended",
+                ),
 
                 const AppSizedBox(height: 32),
                 _buildSectionHeader("BANK DETAILS (FOR PAYOUTS)"),
@@ -276,13 +320,36 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
                 const AppSizedBox(height: 16),
                 Row(
                   children: [
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildLabel("BANK NAME"), _buildTextField(_bankNameController, "State Bank of India")])),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel("BANK NAME"),
+                          _buildTextField(
+                            _bankNameController,
+                            "State Bank of India",
+                          ),
+                        ],
+                      ),
+                    ),
                     const AppSizedBox(width: 16),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [_buildLabel("BRANCH"), _buildTextField(_branchController, "Prahlad Nagar")])),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildLabel("BRANCH"),
+                          _buildTextField(_branchController, "Prahlad Nagar"),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
                 const AppSizedBox(height: 16),
-                _buildUploadField("cheque", "CANCELLED CHEQUE (UPLOAD)", "Cancelled cheque or bank passbook front page • JPG or PDF • Max 3MB"),
+                _buildUploadField(
+                  "cheque",
+                  "CANCELLED CHEQUE (UPLOAD)",
+                  "Cancelled cheque or bank passbook front page • JPG or PDF • Max 3MB",
+                ),
               ],
             ),
           );
@@ -306,7 +373,8 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
           const AppSizedBox(width: 12),
           Expanded(
             child: AppText(
-              text: "All documents are encrypted & stored securely. Used only for KYC verification & payouts. Not shared publicly.",
+              text:
+                  "All documents are encrypted & stored securely. Used only for KYC verification & payouts. Not shared publicly.",
               size: 13,
               color: Colors.blue.shade800,
               weight: FontWeight.w500,
@@ -342,7 +410,11 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String hint, {String? helper}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hint, {
+    String? helper,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -353,9 +425,18 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
             hintText: hint,
             filled: true,
             fillColor: AppColors.slotAvailableBg.withValues(alpha: 0.3),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.borderLight)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.borderLight)),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 16,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.borderLight),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: AppColors.borderLight),
+            ),
           ),
         ),
         if (helper != null) ...[
@@ -381,56 +462,95 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
-              color: isUploaded ? AppColors.slotAvailableBg.withValues(alpha: 0.5) : AppColors.white,
+              color: isUploaded
+                  ? AppColors.slotAvailableBg.withValues(alpha: 0.5)
+                  : AppColors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isUploaded ? AppColors.primaryDarkGreen.withValues(alpha: 0.3) : AppColors.primaryDarkGreen.withValues(alpha: 0.2),
+                color: isUploaded
+                    ? AppColors.primaryDarkGreen.withValues(alpha: 0.3)
+                    : AppColors.primaryDarkGreen.withValues(alpha: 0.2),
                 style: isUploaded ? BorderStyle.solid : BorderStyle.none,
               ),
             ),
-            child: isUploaded 
-              ? Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: AppColors.primaryDarkGreen, borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.description, color: AppColors.white, size: 24),
-                    ),
-                    const AppSizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AppText(
-                            text: file != null ? path.basename(file.path) : "Document uploaded",
-                            size: 14,
-                            weight: FontWeight.w600,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          AppText(text: "Verified ✓", size: 12, color: AppColors.primaryDarkGreen, weight: FontWeight.w600),
-                        ],
+            child: isUploaded
+                ? Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryDarkGreen,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.description,
+                          color: AppColors.white,
+                          size: 24,
+                        ),
                       ),
-                    ),
-                    const Icon(Icons.check_circle, color: AppColors.primaryDarkGreen, size: 20),
-                  ],
-                )
-              : Column(
-                  children: [
-                    const Icon(Icons.upload_file_outlined, size: 40, color: AppColors.primaryDarkGreen),
-                    const AppSizedBox(height: 8),
-                    AppText(text: "Upload document", size: 15, weight: FontWeight.w700, color: AppColors.primaryDarkGreen),
-                    const AppSizedBox(height: 4),
-                    AppText(text: hint, size: 12, color: AppColors.textSecondaryLight),
-                  ],
-                ),
+                      const AppSizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AppText(
+                              text: file != null
+                                  ? path.basename(file.path)
+                                  : "Document uploaded",
+                              size: 14,
+                              weight: FontWeight.w600,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            AppText(
+                              text: "Verified ✓",
+                              size: 12,
+                              color: AppColors.primaryDarkGreen,
+                              weight: FontWeight.w600,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.check_circle,
+                        color: AppColors.primaryDarkGreen,
+                        size: 20,
+                      ),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      const Icon(
+                        Icons.upload_file_outlined,
+                        size: 40,
+                        color: AppColors.primaryDarkGreen,
+                      ),
+                      const AppSizedBox(height: 8),
+                      AppText(
+                        text: "Upload document",
+                        size: 15,
+                        weight: FontWeight.w700,
+                        color: AppColors.primaryDarkGreen,
+                      ),
+                      const AppSizedBox(height: 4),
+                      AppText(
+                        text: hint,
+                        size: 12,
+                        color: AppColors.textSecondaryLight,
+                      ),
+                    ],
+                  ),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildChoiceChips({required List<String> options, required String selected, required Function(String) onSelected}) {
+  Widget _buildChoiceChips({
+    required List<String> options,
+    required String selected,
+    required Function(String) onSelected,
+  }) {
     return Wrap(
       spacing: 10,
       runSpacing: 10,
@@ -443,9 +563,21 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
             decoration: BoxDecoration(
               color: isSelected ? AppColors.slotAvailableBg : AppColors.white,
               borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight, width: isSelected ? 1.5 : 1),
+              border: Border.all(
+                color: isSelected
+                    ? AppColors.primaryDarkGreen
+                    : AppColors.borderLight,
+                width: isSelected ? 1.5 : 1,
+              ),
             ),
-            child: AppText(text: option, size: 13, weight: isSelected ? FontWeight.w700 : FontWeight.w500, color: isSelected ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight),
+            child: AppText(
+              text: option,
+              size: 13,
+              weight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              color: isSelected
+                  ? AppColors.primaryDarkGreen
+                  : AppColors.textSecondaryLight,
+            ),
           ),
         );
       }).toList(),

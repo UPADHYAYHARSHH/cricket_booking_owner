@@ -96,13 +96,13 @@ class _ProfileScreenState extends State<ProfileScreen>
           .select('id')
           .eq('owner_id', userId);
 
-      final List<Object> groundIds =
-          groundsRes.map((g) => g['id'] as Object).toList();
+      final List<Object> groundIds = groundsRes
+          .map((g) => g['id'] as Object)
+          .toList();
 
       if (groundIds.isNotEmpty) {
         final now = DateTime.now();
-        final startOfMonth =
-            DateTime(now.year, now.month, 1).toIso8601String();
+        final startOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
 
         _bookingsSubscription = Supabase.instance.client
             .from('bookings')
@@ -114,14 +114,15 @@ class _ProfileScreenState extends State<ProfileScreen>
               for (var booking in bookingsRes) {
                 final createdAt = booking['created_at'];
                 if (createdAt == null ||
-                    createdAt.compareTo(startOfMonth) < 0) continue;
+                    createdAt.compareTo(startOfMonth) < 0) {
+                  continue;
+                }
 
                 if (booking['status'] != 'cancelled' &&
                     booking['status'] != 'declined') {
                   bookingsCount++;
                   if (booking['amount'] != null) {
-                    revenue +=
-                        double.parse(booking['amount'].toString());
+                    revenue += double.parse(booking['amount'].toString());
                   }
                 }
               }
@@ -205,8 +206,9 @@ class _ProfileScreenState extends State<ProfileScreen>
           .map((w) => w[0].toUpperCase() + w.substring(1))
           .join(' ');
     }).toList();
-    final sportsStr =
-        sportsList.isNotEmpty ? sportsList.join(', ') : 'No sports configured';
+    final sportsStr = sportsList.isNotEmpty
+        ? sportsList.join(', ')
+        : 'No sports configured';
 
     int activeCourts = 0;
     sportsConfig.forEach((key, value) {
@@ -283,9 +285,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.phone_outlined,
-                          size: 14,
-                          color: AppColors.white.withValues(alpha: 0.7)),
+                      Icon(
+                        Icons.phone_outlined,
+                        size: 14,
+                        color: AppColors.white.withValues(alpha: 0.7),
+                      ),
                       const SizedBox(width: 4),
                       AppText(
                         text: phone,
@@ -303,9 +307,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                         ),
                       ),
-                      Icon(Icons.location_on_outlined,
-                          size: 14,
-                          color: AppColors.white.withValues(alpha: 0.7)),
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 14,
+                        color: AppColors.white.withValues(alpha: 0.7),
+                      ),
                       const SizedBox(width: 4),
                       AppText(
                         text: city,
@@ -317,12 +323,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                   const SizedBox(height: 14),
                   // Member badge
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.white.withValues(alpha: 0.15),
-                      borderRadius:
-                          BorderRadius.circular(AppSizes.radiusFull),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                       border: Border.all(
                         color: AppColors.white.withValues(alpha: 0.3),
                       ),
@@ -330,8 +337,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.star_rounded,
-                            size: 16, color: AppColors.goldenYellow),
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 16,
+                          color: AppColors.goldenYellow,
+                        ),
                         const SizedBox(width: 6),
                         AppText(
                           text: "Partner since $memberSince",
@@ -353,7 +363,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 opacity: _fadeAnimation,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.screenPaddingHorizontal),
+                    horizontal: AppSizes.screenPaddingHorizontal,
+                  ),
                   child: Column(
                     children: [
                       // Venue Card
@@ -396,69 +407,85 @@ class _ProfileScreenState extends State<ProfileScreen>
                       // Account Settings
                       _buildSettingsSection("Account Settings", [
                         _SettingsItem(
-                            icon: Icons.person_outline,
-                            title: "Edit Personal Info",
-                            onTap: _showComingSoon),
+                          icon: Icons.person_outline,
+                          title: "Edit Personal Info",
+                          onTap: _showComingSoon,
+                        ),
                         _SettingsItem(
-                            icon: Icons.group_outlined,
-                            title: "Manage Staff / Managers",
-                            onTap: _showComingSoon),
+                          icon: Icons.group_outlined,
+                          title: "Manage Staff / Managers",
+                          onTap: _showComingSoon,
+                        ),
                         _SettingsItem(
-                            icon: Icons.account_balance_outlined,
-                            title: "Bank & Payout Settings",
-                            onTap: _showComingSoon),
+                          icon: Icons.account_balance_outlined,
+                          title: "Bank & Payout Settings",
+                          onTap: _showComingSoon,
+                        ),
                         _SettingsItem(
-                            icon: Icons.notifications_outlined,
-                            title: "Notification Preferences",
-                            onTap: _showComingSoon),
+                          icon: Icons.notifications_outlined,
+                          title: "Notification Preferences",
+                          onTap: _showComingSoon,
+                        ),
                         _SettingsItem(
-                            icon: Icons.card_membership_outlined,
-                            title: "Subscription & Plan",
-                            onTap: _showComingSoon),
+                          icon: Icons.card_membership_outlined,
+                          title: "Subscription & Plan",
+                          onTap: _showComingSoon,
+                        ),
                         _SettingsItem(
-                            icon: Icons.lock_outline,
-                            title: "Privacy & Data",
-                            onTap: _showComingSoon,
-                            isLast: true),
+                          icon: Icons.lock_outline,
+                          title: "Privacy & Data",
+                          onTap: _showComingSoon,
+                          isLast: true,
+                        ),
                       ]),
                       const SizedBox(height: AppSizes.xxl),
 
                       // Venue Settings
                       _buildSettingsSection("Venue Settings", [
                         _SettingsItem(
-                            icon: Icons.calendar_month_outlined,
-                            title: "All Bookings",
-                            onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        const BookingsScreen()))),
+                          icon: Icons.calendar_month_outlined,
+                          title: "All Bookings",
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const BookingsScreen(),
+                            ),
+                          ),
+                        ),
                         _SettingsItem(
-                            icon: Icons.edit_location_alt_outlined,
-                            title: "Edit Venue Details",
-                            onTap: _showComingSoon),
+                          icon: Icons.edit_location_alt_outlined,
+                          title: "Edit Venue Details",
+                          onTap: _showComingSoon,
+                        ),
                         _SettingsItem(
-                            icon: Icons.sports_tennis_outlined,
-                            title: "Manage Courts / Grounds",
-                            onTap: _showComingSoon),
+                          icon: Icons.sports_tennis_outlined,
+                          title: "Manage Courts / Grounds",
+                          onTap: _showComingSoon,
+                        ),
                         _SettingsItem(
-                            icon: Icons.sports_baseball_outlined,
-                            title: "Update Amenities",
-                            onTap: () => Navigator.pushNamed(
-                                context, '/amenities-settings')),
+                          icon: Icons.sports_baseball_outlined,
+                          title: "Update Amenities",
+                          onTap: () => Navigator.pushNamed(
+                            context,
+                            '/amenities-settings',
+                          ),
+                        ),
                         _SettingsItem(
-                            icon: Icons.price_change_outlined,
-                            title: "Adjust Pricing",
-                            onTap: _showComingSoon),
+                          icon: Icons.price_change_outlined,
+                          title: "Adjust Pricing",
+                          onTap: _showComingSoon,
+                        ),
                         _SettingsItem(
-                            icon: Icons.event_busy_outlined,
-                            title: "Holiday / Closure Schedule",
-                            onTap: _showComingSoon),
+                          icon: Icons.event_busy_outlined,
+                          title: "Holiday / Closure Schedule",
+                          onTap: _showComingSoon,
+                        ),
                         _SettingsItem(
-                            icon: Icons.rule_outlined,
-                            title: "Booking Rules",
-                            onTap: _showComingSoon,
-                            isLast: true),
+                          icon: Icons.rule_outlined,
+                          title: "Booking Rules",
+                          onTap: _showComingSoon,
+                          isLast: true,
+                        ),
                       ]),
                       const SizedBox(height: AppSizes.xxl),
 
@@ -477,10 +504,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                           style: OutlinedButton.styleFrom(
                             side: const BorderSide(
-                                color: AppColors.error, width: 1.5),
+                              color: AppColors.error,
+                              width: 1.5,
+                            ),
                             shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppSizes.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusMd,
+                              ),
                             ),
                           ),
                         ),
@@ -491,17 +521,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.info_outline,
-                              size: 12,
-                              color: AppColors.textSecondaryLight
-                                  .withValues(alpha: 0.6)),
+                          Icon(
+                            Icons.info_outline,
+                            size: 12,
+                            color: AppColors.textSecondaryLight.withValues(
+                              alpha: 0.6,
+                            ),
+                          ),
                           const SizedBox(width: 4),
                           AppText(
                             text:
                                 "CricBook Owner App v1.0.0  •  Made for India IN",
                             size: 12,
-                            color: AppColors.textSecondaryLight
-                                .withValues(alpha: 0.6),
+                            color: AppColors.textSecondaryLight.withValues(
+                              alpha: 0.6,
+                            ),
                           ),
                         ],
                       ),
@@ -537,10 +571,15 @@ class _ProfileScreenState extends State<ProfileScreen>
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.xl, vertical: AppSizes.md),
+              horizontal: AppSizes.xl,
+              vertical: AppSizes.md,
+            ),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [AppColors.primaryDarkGreen, AppColors.primaryLightGreen],
+                colors: [
+                  AppColors.primaryDarkGreen,
+                  AppColors.primaryLightGreen,
+                ],
               ),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(AppSizes.radiusLg),
@@ -560,11 +599,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                   onTap: _showComingSoon,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 4),
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.white.withValues(alpha: 0.2),
-                      borderRadius:
-                          BorderRadius.circular(AppSizes.radiusFull),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                     ),
                     child: const AppText(
                       text: "Edit",
@@ -582,15 +622,23 @@ class _ProfileScreenState extends State<ProfileScreen>
             padding: const EdgeInsets.all(AppSizes.xl),
             child: Column(
               children: [
+                _buildVenueDetailRow(Icons.store_outlined, "Venue", venueName),
                 _buildVenueDetailRow(
-                    Icons.store_outlined, "Venue", venueName),
+                  Icons.sports_outlined,
+                  "Sports",
+                  sportsStr,
+                ),
                 _buildVenueDetailRow(
-                    Icons.sports_outlined, "Sports", sportsStr),
-                _buildVenueDetailRow(
-                    Icons.grid_view_outlined, "Courts", "$activeCourts active"),
+                  Icons.grid_view_outlined,
+                  "Courts",
+                  "$activeCourts active",
+                ),
                 _buildStatusRow("Status", "Live", true),
                 _buildVenueDetailRow(
-                    Icons.star_outline, "Rating", "4.7 (38 reviews)"),
+                  Icons.star_outline,
+                  "Rating",
+                  "4.7 (38 reviews)",
+                ),
               ],
             ),
           ),
@@ -606,11 +654,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         children: [
           Icon(icon, size: AppSizes.iconSm, color: AppColors.primaryDarkGreen),
           const SizedBox(width: AppSizes.sm),
-          AppText(
-            text: label,
-            size: 13,
-            color: AppColors.textSecondaryLight,
-          ),
+          AppText(text: label, size: 13, color: AppColors.textSecondaryLight),
           const Spacer(),
           Flexible(
             child: AppText(
@@ -630,19 +674,21 @@ class _ProfileScreenState extends State<ProfileScreen>
       padding: const EdgeInsets.only(bottom: AppSizes.md),
       child: Row(
         children: [
-          Icon(Icons.circle,
-              size: 8,
-              color: isLive ? AppColors.statusConfirmed : AppColors.textSecondaryLight),
-          const SizedBox(width: AppSizes.sm),
-          AppText(
-            text: label,
-            size: 13,
-            color: AppColors.textSecondaryLight,
+          Icon(
+            Icons.circle,
+            size: 8,
+            color: isLive
+                ? AppColors.statusConfirmed
+                : AppColors.textSecondaryLight,
           ),
+          const SizedBox(width: AppSizes.sm),
+          AppText(text: label, size: 13, color: AppColors.textSecondaryLight),
           const Spacer(),
           Container(
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.sm + 2, vertical: AppSizes.xxs),
+              horizontal: AppSizes.sm + 2,
+              vertical: AppSizes.xxs,
+            ),
             decoration: BoxDecoration(
               color: AppColors.statusConfirmedBg,
               borderRadius: BorderRadius.circular(AppSizes.radiusFull),
@@ -671,7 +717,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   }) {
     return Container(
       padding: const EdgeInsets.symmetric(
-          vertical: AppSizes.lg, horizontal: AppSizes.sm),
+        vertical: AppSizes.lg,
+        horizontal: AppSizes.sm,
+      ),
       decoration: BoxDecoration(
         color: AppColors.slotAvailableBg,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
@@ -726,7 +774,11 @@ class _ProfileScreenState extends State<ProfileScreen>
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                AppSizes.xl, AppSizes.xl, AppSizes.xl, AppSizes.sm),
+              AppSizes.xl,
+              AppSizes.xl,
+              AppSizes.xl,
+              AppSizes.sm,
+            ),
             child: AppText(
               text: title,
               size: 14,
@@ -744,7 +796,9 @@ class _ProfileScreenState extends State<ProfileScreen>
               ),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSizes.xl, vertical: AppSizes.md + 2),
+                  horizontal: AppSizes.xl,
+                  vertical: AppSizes.md + 2,
+                ),
                 decoration: item.isLast
                     ? null
                     : const BoxDecoration(
@@ -759,8 +813,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       height: 36,
                       decoration: BoxDecoration(
                         color: AppColors.slotAvailableBg,
-                        borderRadius:
-                            BorderRadius.circular(AppSizes.radiusSm),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                       ),
                       child: Icon(
                         item.icon,
@@ -789,10 +842,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right,
-                        size: 20,
-                        color: AppColors.textSecondaryLight
-                            .withValues(alpha: 0.5)),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 20,
+                      color: AppColors.textSecondaryLight.withValues(
+                        alpha: 0.5,
+                      ),
+                    ),
                   ],
                 ),
               ),

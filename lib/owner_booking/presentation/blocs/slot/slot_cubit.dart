@@ -305,7 +305,7 @@ class SlotCubit extends Cubit<SlotState> {
         'sport_name': sportName,
         'period': period,
         'checked_in': false,
-        if (note != null) 'notes': note,
+        'notes': ?note,
       };
       _latestBookings = [..._latestBookings, placeholder];
       _rebuildSlots();

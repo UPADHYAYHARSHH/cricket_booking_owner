@@ -8,7 +8,6 @@ import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/common/widgets/onboarding_layout.dart';
-import 'package:toastification/toastification.dart';
 
 class ReviewSubmitScreen extends StatefulWidget {
   const ReviewSubmitScreen({super.key});
@@ -37,7 +36,7 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
           .select()
           .eq('id', userId)
           .maybeSingle();
-      
+
       setState(() {
         _data = data;
         _isLoading = false;
@@ -84,7 +83,10 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
 
               _buildSectionHeader("PERSONAL INFO", 1),
               _buildReviewRow("Owner", personal['owner_name'] ?? "N/A"),
-              _buildReviewRow("Mobile", "${personal['owner_phone'] ?? 'N/A'} ✓"),
+              _buildReviewRow(
+                "Mobile",
+                "${personal['owner_phone'] ?? 'N/A'} ✓",
+              ),
               _buildReviewRow("Email", personal['owner_email'] ?? "N/A"),
 
               const AppSizedBox(height: 32),
@@ -95,19 +97,34 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
 
               const AppSizedBox(height: 32),
               _buildSectionHeader("SLOTS & PRICING", 6),
-              _buildReviewRow("Hours", "${slotConfig['opening_time'] ?? 'N/A'} – ${slotConfig['closing_time'] ?? 'N/A'}"),
-              _buildReviewRow("Slot duration", slotConfig['slot_duration'] ?? "N/A"),
+              _buildReviewRow(
+                "Hours",
+                "${slotConfig['opening_time'] ?? 'N/A'} – ${slotConfig['closing_time'] ?? 'N/A'}",
+              ),
+              _buildReviewRow(
+                "Slot duration",
+                slotConfig['slot_duration'] ?? "N/A",
+              ),
 
               const AppSizedBox(height: 32),
               _buildSectionHeader("DOCUMENTS", 8),
               _buildReviewStatusRow("PAN", kycConfig['pan_url'] != null),
-              _buildReviewStatusRow("Property docs", kycConfig['property_url'] != null),
-              _buildReviewStatusRow("Bank details", kycConfig['acc_number'] != null),
+              _buildReviewStatusRow(
+                "Property docs",
+                kycConfig['property_url'] != null,
+              ),
+              _buildReviewStatusRow(
+                "Bank details",
+                kycConfig['acc_number'] != null,
+              ),
 
               const AppSizedBox(height: 32),
               _buildSectionHeader("PHOTOS", 9),
-              _buildReviewRow("Cover photo", mediaConfig['cover_url'] != null ? "Set ✓" : "Missing"),
-              
+              _buildReviewRow(
+                "Cover photo",
+                mediaConfig['cover_url'] != null ? "Set ✓" : "Missing",
+              ),
+
               const AppSizedBox(height: 32),
               _buildTermsNotice(),
             ],
@@ -127,11 +144,24 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
       ),
       child: Column(
         children: [
-          const Icon(Icons.celebration_outlined, size: 48, color: AppColors.primaryDarkGreen),
+          const Icon(
+            Icons.celebration_outlined,
+            size: 48,
+            color: AppColors.primaryDarkGreen,
+          ),
           const AppSizedBox(height: 16),
-          const AppText(text: "You're almost live on CricBook!", size: 18, weight: FontWeight.w800, color: AppColors.primaryDarkGreen),
+          const AppText(
+            text: "You're almost live on CricBook!",
+            size: 18,
+            weight: FontWeight.w800,
+            color: AppColors.primaryDarkGreen,
+          ),
           const AppSizedBox(height: 4),
-          AppText(text: "Review takes 24–48 hours after submission", size: 14, color: AppColors.primaryDarkGreen.withValues(alpha: 0.6)),
+          AppText(
+            text: "Review takes 24–48 hours after submission",
+            size: 14,
+            color: AppColors.primaryDarkGreen.withValues(alpha: 0.6),
+          ),
         ],
       ),
     );
@@ -143,15 +173,29 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            AppText(text: title, size: 13, weight: FontWeight.w800, color: AppColors.primaryDarkGreen.withValues(alpha: 0.8), letterSpacing: 0.5),
+            AppText(
+              text: title,
+              size: 13,
+              weight: FontWeight.w800,
+              color: AppColors.primaryDarkGreen.withValues(alpha: 0.8),
+              letterSpacing: 0.5,
+            ),
             GestureDetector(
               onTap: () => _editStep(step),
-              child: const AppText(text: "Edit", size: 12, weight: FontWeight.w700, color: AppColors.primaryDarkGreen),
+              child: const AppText(
+                text: "Edit",
+                size: 12,
+                weight: FontWeight.w700,
+                color: AppColors.primaryDarkGreen,
+              ),
             ),
           ],
         ),
         const AppSizedBox(height: 8),
-        Divider(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1), thickness: 1),
+        Divider(
+          color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+          thickness: 1,
+        ),
         const AppSizedBox(height: 12),
       ],
     );
@@ -164,7 +208,12 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           AppText(text: label, size: 14, color: AppColors.textSecondaryLight),
-          AppText(text: value, size: 14, weight: FontWeight.w700, color: AppColors.textPrimaryLight),
+          AppText(
+            text: value,
+            size: 14,
+            weight: FontWeight.w700,
+            color: AppColors.textPrimaryLight,
+          ),
         ],
       ),
     );
@@ -180,7 +229,9 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: isDone ? AppColors.slotAvailableBg : const Color(0xFFFFF4E6),
+              color: isDone
+                  ? AppColors.slotAvailableBg
+                  : const Color(0xFFFFF4E6),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -189,11 +240,17 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
                   text: isDone ? "Uploaded" : "Pending",
                   size: 12,
                   weight: FontWeight.w700,
-                  color: isDone ? AppColors.primaryDarkGreen : const Color(0xFFD97706),
+                  color: isDone
+                      ? AppColors.primaryDarkGreen
+                      : const Color(0xFFD97706),
                 ),
                 if (isDone) ...[
                   const AppSizedBox(width: 4),
-                  const Icon(Icons.check, size: 12, color: AppColors.primaryDarkGreen),
+                  const Icon(
+                    Icons.check,
+                    size: 12,
+                    color: AppColors.primaryDarkGreen,
+                  ),
                 ],
               ],
             ),
@@ -209,14 +266,29 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
       decoration: BoxDecoration(
         color: AppColors.slotAvailableBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
+        border: Border.all(
+          color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+        ),
       ),
       child: RichText(
         text: const TextSpan(
-          style: TextStyle(color: AppColors.textPrimaryLight, fontSize: 13, height: 1.5),
+          style: TextStyle(
+            color: AppColors.textPrimaryLight,
+            fontSize: 13,
+            height: 1.5,
+          ),
           children: [
-            TextSpan(text: "By submitting, you confirm that all information is accurate and you agree to CricBook's "),
-            TextSpan(text: "Venue Partner Terms", style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryDarkGreen)),
+            TextSpan(
+              text:
+                  "By submitting, you confirm that all information is accurate and you agree to CricBook's ",
+            ),
+            TextSpan(
+              text: "Venue Partner Terms",
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: AppColors.primaryDarkGreen,
+              ),
+            ),
             TextSpan(text: "."),
           ],
         ),

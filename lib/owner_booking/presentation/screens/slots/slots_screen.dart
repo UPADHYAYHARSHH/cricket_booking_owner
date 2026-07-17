@@ -175,10 +175,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.primaryDarkGreen,
-            Color(0xFF066B3E),
-          ],
+          colors: [AppColors.primaryDarkGreen, Color(0xFF066B3E)],
         ),
       ),
       child: Row(
@@ -227,7 +224,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
         scrollDirection: Axis.horizontal,
         itemCount: state.grounds.length,
-        separatorBuilder: (_, __) => const SizedBox(width: AppSizes.md),
+        separatorBuilder: (_, _) => const SizedBox(width: AppSizes.md),
         itemBuilder: (context, index) {
           final ground = state.grounds[index];
           final isSelected = ground['id'] == state.selectedGroundId;
@@ -243,7 +240,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primaryDarkGreen : AppColors.white,
+                color: isSelected
+                    ? AppColors.primaryDarkGreen
+                    : AppColors.white,
                 borderRadius: BorderRadius.circular(AppSizes.radiusRound),
                 border: Border.all(
                   color: isSelected
@@ -254,7 +253,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: AppColors.primaryDarkGreen.withValues(alpha: 0.25),
+                          color: AppColors.primaryDarkGreen.withValues(
+                            alpha: 0.25,
+                          ),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -273,7 +274,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                   const SizedBox(width: AppSizes.sm),
                   AppText(
                     text: "Court ${index + 1} — ${ground['name']}",
-                    color: isSelected ? AppColors.white : AppColors.textPrimaryLight,
+                    color: isSelected
+                        ? AppColors.white
+                        : AppColors.textPrimaryLight,
                     weight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     size: 13,
                   ),
@@ -295,10 +298,13 @@ class _SlotsScreenState extends State<SlotsScreen> {
       (i) => DateTime(today.year, today.month, i + 1),
     );
 
-    int selectedIndex = dates.indexWhere((d) => _isSameDay(d, state.selectedDate));
+    int selectedIndex = dates.indexWhere(
+      (d) => _isSameDay(d, state.selectedDate),
+    );
     if (selectedIndex == -1) selectedIndex = 0;
 
-    if (_lastScrolledDate == null || !_isSameDay(_lastScrolledDate!, state.selectedDate)) {
+    if (_lastScrolledDate == null ||
+        !_isSameDay(_lastScrolledDate!, state.selectedDate)) {
       _lastScrolledDate = state.selectedDate;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_dateScrollController.hasClients) {
@@ -307,7 +313,11 @@ class _SlotsScreenState extends State<SlotsScreen> {
           const separatorWidth = 12.0;
           const totalItemWidth = itemWidth + separatorWidth;
 
-          final offset = (selectedIndex * totalItemWidth) - (screenWidth / 2) + (itemWidth / 2) + 16.0;
+          final offset =
+              (selectedIndex * totalItemWidth) -
+              (screenWidth / 2) +
+              (itemWidth / 2) +
+              16.0;
           final target = offset.clamp(
             _dateScrollController.position.minScrollExtent,
             _dateScrollController.position.maxScrollExtent,
@@ -329,7 +339,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
         scrollDirection: Axis.horizontal,
         itemCount: dates.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, _) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final date = dates[index];
           final isSelected = _isSameDay(date, state.selectedDate);
@@ -341,7 +351,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
               duration: const Duration(milliseconds: 200),
               width: 56,
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primaryDarkGreen : AppColors.white,
+                color: isSelected
+                    ? AppColors.primaryDarkGreen
+                    : AppColors.white,
                 borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                 border: Border.all(
                   color: isSelected
@@ -352,7 +364,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                 boxShadow: isSelected
                     ? [
                         BoxShadow(
-                          color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
+                          color: AppColors.primaryDarkGreen.withValues(
+                            alpha: 0.2,
+                          ),
                           blurRadius: 8,
                           offset: const Offset(0, 3),
                         ),
@@ -374,7 +388,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                   AppText(
                     text: "${date.day}",
                     size: 18,
-                    color: isSelected ? AppColors.white : AppColors.textPrimaryLight,
+                    color: isSelected
+                        ? AppColors.white
+                        : AppColors.textPrimaryLight,
                     weight: FontWeight.bold,
                   ),
                   const SizedBox(height: AppSizes.xs),
@@ -415,7 +431,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
       (g) => g['id'] == state.selectedGroundId,
     );
     final courtName = groundIndex != -1 ? "COURT ${groundIndex + 1}" : "";
-    final dateStr = DateFormat('EEE, MMM d').format(state.selectedDate).toUpperCase();
+    final dateStr = DateFormat(
+      'EEE, MMM d',
+    ).format(state.selectedDate).toUpperCase();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
@@ -440,7 +458,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
             ),
             const SizedBox(width: AppSizes.sm),
             AppText(
-              text: "$dateStr",
+              text: dateStr,
               size: 13,
               color: AppColors.primaryDarkGreen,
               weight: FontWeight.w600,
@@ -512,7 +530,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
         scrollDirection: Axis.horizontal,
         itemCount: filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 6),
+        separatorBuilder: (_, _) => const SizedBox(width: 6),
         itemBuilder: (context, index) {
           final filter = filters[index];
           final isSelected = _selectedTimeFilter == filter;
@@ -527,7 +545,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primaryDarkGreen : AppColors.white,
+                color: isSelected
+                    ? AppColors.primaryDarkGreen
+                    : AppColors.white,
                 borderRadius: BorderRadius.circular(AppSizes.radiusRound),
                 border: Border.all(
                   color: isSelected
@@ -552,7 +572,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                   ],
                   AppText(
                     text: filter,
-                    color: isSelected ? AppColors.white : AppColors.textSecondaryLight,
+                    color: isSelected
+                        ? AppColors.white
+                        : AppColors.textSecondaryLight,
                     weight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     size: 13,
                   ),
@@ -630,7 +652,8 @@ class _SlotsScreenState extends State<SlotsScreen> {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => BookingDetailsScreen(booking: slot.bookingDetails!),
+              builder: (_) =>
+                  BookingDetailsScreen(booking: slot.bookingDetails!),
             ),
           );
         }
@@ -764,7 +787,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                               color: isPeak
                                   ? AppColors.statusPendingBg
                                   : AppColors.statusConfirmedBg,
-                              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusLg,
+                              ),
                               border: Border.all(
                                 color: isPeak
                                     ? AppColors.statusPendingBorder
@@ -800,7 +825,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: AppColors.white,
-                                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSizes.radiusFull,
+                                    ),
                                   ),
                                   child: Text(
                                     durationLabel,
@@ -865,19 +892,25 @@ class _SlotsScreenState extends State<SlotsScreen> {
                               filled: true,
                               fillColor: AppColors.bgLight,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusMd,
+                                ),
                                 borderSide: const BorderSide(
                                   color: AppColors.borderLight,
                                 ),
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusMd,
+                                ),
                                 borderSide: const BorderSide(
                                   color: AppColors.borderLight,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusMd,
+                                ),
                                 borderSide: const BorderSide(
                                   color: AppColors.primaryDarkGreen,
                                 ),
@@ -907,9 +940,13 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: AppSizes.lg - 2,
                                 ),
-                                side: const BorderSide(color: AppColors.borderLight),
+                                side: const BorderSide(
+                                  color: AppColors.borderLight,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusMd,
+                                  ),
                                 ),
                               ),
                               onPressed: () => Navigator.of(ctx).pop(),
@@ -936,7 +973,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                 foregroundColor: AppColors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusMd,
+                                  ),
                                 ),
                               ),
                               onPressed: () {
@@ -1088,7 +1127,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                             padding: const EdgeInsets.all(AppSizes.lg),
                             decoration: BoxDecoration(
                               color: AppColors.bgLight,
-                              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusLg,
+                              ),
                               border: Border.all(color: AppColors.borderLight),
                             ),
                             child: Row(
@@ -1116,7 +1157,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: AppColors.white,
-                                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSizes.radiusFull,
+                                    ),
                                   ),
                                   child: const Text(
                                     "",
@@ -1135,7 +1178,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: AppColors.white,
-                                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSizes.radiusFull,
+                                    ),
                                   ),
                                   child: Text(
                                     durationLabel,
@@ -1183,9 +1228,13 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                 padding: const EdgeInsets.symmetric(
                                   vertical: AppSizes.lg - 2,
                                 ),
-                                side: const BorderSide(color: AppColors.borderLight),
+                                side: const BorderSide(
+                                  color: AppColors.borderLight,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusMd,
+                                  ),
                                 ),
                               ),
                               onPressed: () => Navigator.of(ctx).pop(),
@@ -1210,7 +1259,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                 foregroundColor: AppColors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusMd,
+                                  ),
                                 ),
                               ),
                               onPressed: () {
@@ -1428,9 +1479,7 @@ class _LegendChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: bgColor,
         borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-        border: Border.all(
-          color: textColor.withValues(alpha: 0.15),
-        ),
+        border: Border.all(color: textColor.withValues(alpha: 0.15)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1494,12 +1543,7 @@ class _SummaryStat extends StatelessWidget {
             child: Icon(icon, size: AppSizes.iconSm, color: color),
           ),
           const SizedBox(height: AppSizes.sm - 2),
-          AppText(
-            text: value,
-            size: 16,
-            color: color,
-            weight: FontWeight.bold,
-          ),
+          AppText(text: value, size: 16, color: color, weight: FontWeight.bold),
           const SizedBox(height: AppSizes.xxs),
           AppText(
             text: label,
@@ -1641,7 +1685,8 @@ class _SlotCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     AppText(
-                      text: "${slot.bookedPlayerName ?? 'Booked'} • ₹${slot.price}",
+                      text:
+                          "${slot.bookedPlayerName ?? 'Booked'} • ₹${slot.price}",
                       size: 11,
                       color: AppColors.textSecondaryLight,
                     ),
@@ -1729,7 +1774,9 @@ class _SlotCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.statusConfirmed,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusFull,
+                            ),
                           ),
                           child: const AppText(
                             text: "Owner",
@@ -1943,10 +1990,7 @@ class _SlotsSkeleton extends StatelessWidget {
           width: double.infinity,
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [
-                AppColors.primaryDarkGreen,
-                Color(0xFF066B3E),
-              ],
+              colors: [AppColors.primaryDarkGreen, Color(0xFF066B3E)],
             ),
           ),
         ),
@@ -1970,7 +2014,9 @@ class _SlotsSkeleton extends StatelessWidget {
                           margin: const EdgeInsets.only(right: AppSizes.md),
                           decoration: BoxDecoration(
                             color: AppColors.white,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusRound),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusRound,
+                            ),
                           ),
                         ),
                       ),
@@ -1992,7 +2038,9 @@ class _SlotsSkeleton extends StatelessWidget {
                           height: 70,
                           decoration: BoxDecoration(
                             color: AppColors.white,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusMd,
+                            ),
                           ),
                         ),
                       ),
@@ -2008,17 +2056,20 @@ class _SlotsSkeleton extends StatelessWidget {
                     child: GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 2.2,
-                        crossAxisSpacing: AppSizes.md,
-                        mainAxisSpacing: AppSizes.md,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            childAspectRatio: 2.2,
+                            crossAxisSpacing: AppSizes.md,
+                            mainAxisSpacing: AppSizes.md,
+                          ),
                       itemCount: 8,
-                      itemBuilder: (_, __) => Container(
+                      itemBuilder: (_, _) => Container(
                         decoration: BoxDecoration(
                           color: AppColors.white,
-                          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.radiusSm,
+                          ),
                         ),
                       ),
                     ),

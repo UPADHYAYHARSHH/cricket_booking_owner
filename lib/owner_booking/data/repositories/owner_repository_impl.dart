@@ -32,16 +32,13 @@ class OwnerRepositoryImpl implements OwnerRepository {
     required String email,
     required String phone,
   }) async {
-    await _supabase.from('owner_details').upsert(
-      {
-        'id': userId,
-        'owner_name': fullName,
-        'business_email': email,
-        'phone': phone,
-        'updated_at': DateTime.now().toIso8601String(),
-      },
-      onConflict: 'id',
-    );
+    await _supabase.from('owner_details').upsert({
+      'id': userId,
+      'owner_name': fullName,
+      'business_email': email,
+      'phone': phone,
+      'updated_at': DateTime.now().toIso8601String(),
+    }, onConflict: 'id');
   }
 
   @override
@@ -64,15 +61,38 @@ class OwnerRepositoryImpl implements OwnerRepository {
     }
 
     // New user mid-onboarding — determine which step they left off at
-    if (data['owner_name'] == null || (data['owner_name'] as String).isEmpty) return 1;
-    if (data['sports_config'] == null || data['sports_config'] is! Map || (data['sports_config'] as Map).isEmpty) return 2;
-    if (data['venue_name'] == null || (data['venue_name'] as String).isEmpty) return 3;
-    if (data['ground_config'] == null || data['ground_config'] is! Map || (data['ground_config'] as Map).isEmpty) return 4;
-    if (data['amenities_config'] == null || data['amenities_config'] is! Map || (data['amenities_config'] as Map).isEmpty) return 5;
-    if (data['slot_config'] == null || data['slot_config'] is! Map || (data['slot_config'] as Map).isEmpty) return 6;
-    if (data['pricing_config'] == null || data['pricing_config'] is! Map || (data['pricing_config'] as Map).isEmpty) return 7;
-    if (data['kyc_config'] == null || data['kyc_config'] is! Map || (data['kyc_config'] as Map).isEmpty) return 8;
-    if (data['media_config'] == null || data['media_config'] is! Map || (data['media_config'] as Map).isEmpty) return 9;
+    if (data['owner_name'] == null || (data['owner_name'] as String).isEmpty)
+      return 1;
+    if (data['sports_config'] == null ||
+        data['sports_config'] is! Map ||
+        (data['sports_config'] as Map).isEmpty)
+      return 2;
+    if (data['venue_name'] == null || (data['venue_name'] as String).isEmpty)
+      return 3;
+    if (data['ground_config'] == null ||
+        data['ground_config'] is! Map ||
+        (data['ground_config'] as Map).isEmpty)
+      return 4;
+    if (data['amenities_config'] == null ||
+        data['amenities_config'] is! Map ||
+        (data['amenities_config'] as Map).isEmpty)
+      return 5;
+    if (data['slot_config'] == null ||
+        data['slot_config'] is! Map ||
+        (data['slot_config'] as Map).isEmpty)
+      return 6;
+    if (data['pricing_config'] == null ||
+        data['pricing_config'] is! Map ||
+        (data['pricing_config'] as Map).isEmpty)
+      return 7;
+    if (data['kyc_config'] == null ||
+        data['kyc_config'] is! Map ||
+        (data['kyc_config'] as Map).isEmpty)
+      return 8;
+    if (data['media_config'] == null ||
+        data['media_config'] is! Map ||
+        (data['media_config'] as Map).isEmpty)
+      return 9;
     return 10;
   }
 
@@ -85,18 +105,15 @@ class OwnerRepositoryImpl implements OwnerRepository {
     required String state,
     required String phone,
   }) async {
-    await _supabase.from('owner_details').upsert(
-      {
-        'id': userId,
-        'owner_name': fullName,
-        'business_email': email,
-        'city': city,
-        'state': state,
-        'phone': phone,
-        'updated_at': DateTime.now().toIso8601String(),
-      },
-      onConflict: 'id',
-    );
+    await _supabase.from('owner_details').upsert({
+      'id': userId,
+      'owner_name': fullName,
+      'business_email': email,
+      'city': city,
+      'state': state,
+      'phone': phone,
+      'updated_at': DateTime.now().toIso8601String(),
+    }, onConflict: 'id');
   }
 
   @override
@@ -105,11 +122,14 @@ class OwnerRepositoryImpl implements OwnerRepository {
     required Map<String, int> sportsConfig,
     required String category,
   }) async {
-    await _supabase.from('owner_details').update({
-      'sports_config': sportsConfig,
-      'venue_category': category,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    await _supabase
+        .from('owner_details')
+        .update({
+          'sports_config': sportsConfig,
+          'venue_category': category,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
   }
 
   @override
@@ -123,16 +143,19 @@ class OwnerRepositoryImpl implements OwnerRepository {
     required String mapsLink,
     required String contact,
   }) async {
-    await _supabase.from('owner_details').update({
-      'venue_name': venueName,
-      'venue_tagline': tagline,
-      'address': address,
-      'city': city,
-      'pincode': pincode,
-      'google_maps_link': mapsLink,
-      'venue_contact': contact,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    await _supabase
+        .from('owner_details')
+        .update({
+          'venue_name': venueName,
+          'venue_tagline': tagline,
+          'address': address,
+          'city': city,
+          'pincode': pincode,
+          'google_maps_link': mapsLink,
+          'venue_contact': contact,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
   }
 
   @override
@@ -140,10 +163,13 @@ class OwnerRepositoryImpl implements OwnerRepository {
     required String userId,
     required Map<String, dynamic> groundConfig,
   }) async {
-    await _supabase.from('owner_details').update({
-      'ground_config': groundConfig,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    await _supabase
+        .from('owner_details')
+        .update({
+          'ground_config': groundConfig,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
   }
 
   @override
@@ -151,10 +177,13 @@ class OwnerRepositoryImpl implements OwnerRepository {
     required String userId,
     required Map<String, dynamic> amenitiesConfig,
   }) async {
-    await _supabase.from('owner_details').update({
-      'amenities_config': amenitiesConfig,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    await _supabase
+        .from('owner_details')
+        .update({
+          'amenities_config': amenitiesConfig,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
   }
 
   @override
@@ -162,10 +191,13 @@ class OwnerRepositoryImpl implements OwnerRepository {
     required String userId,
     required Map<String, dynamic> slotConfig,
   }) async {
-    await _supabase.from('owner_details').update({
-      'slot_config': slotConfig,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    await _supabase
+        .from('owner_details')
+        .update({
+          'slot_config': slotConfig,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
   }
 
   @override
@@ -173,10 +205,13 @@ class OwnerRepositoryImpl implements OwnerRepository {
     required String userId,
     required Map<String, dynamic> pricingConfig,
   }) async {
-    await _supabase.from('owner_details').update({
-      'pricing_config': pricingConfig,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    await _supabase
+        .from('owner_details')
+        .update({
+          'pricing_config': pricingConfig,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
   }
 
   @override
@@ -184,10 +219,13 @@ class OwnerRepositoryImpl implements OwnerRepository {
     required String userId,
     required Map<String, dynamic> kycConfig,
   }) async {
-    await _supabase.from('owner_details').update({
-      'kyc_config': kycConfig,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    await _supabase
+        .from('owner_details')
+        .update({
+          'kyc_config': kycConfig,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
   }
 
   @override
@@ -195,10 +233,13 @@ class OwnerRepositoryImpl implements OwnerRepository {
     required String userId,
     required Map<String, dynamic> mediaConfig,
   }) async {
-    await _supabase.from('owner_details').update({
-      'media_config': mediaConfig,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    await _supabase
+        .from('owner_details')
+        .update({
+          'media_config': mediaConfig,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
   }
 
   @override
@@ -219,10 +260,13 @@ class OwnerRepositoryImpl implements OwnerRepository {
 
   @override
   Future<void> submitApplication(String userId) async {
-    await _supabase.from('owner_details').update({
-      'status': 'submitted',
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', userId);
+    await _supabase
+        .from('owner_details')
+        .update({
+          'status': 'submitted',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
 
     await _syncGroundsToTable(userId);
   }
@@ -233,8 +277,10 @@ class OwnerRepositoryImpl implements OwnerRepository {
       if (ownerData == null) return;
 
       final groundConfig = ownerData['ground_config'] as Map<String, dynamic>?;
-      final amenitiesConfig = ownerData['amenities_config'] as Map<String, dynamic>? ?? {};
-      final slotConfig = ownerData['slot_config'] as Map<String, dynamic>? ?? {};
+      final amenitiesConfig =
+          ownerData['amenities_config'] as Map<String, dynamic>? ?? {};
+      final slotConfig =
+          ownerData['slot_config'] as Map<String, dynamic>? ?? {};
 
       if (groundConfig == null) return;
 
@@ -261,9 +307,11 @@ class OwnerRepositoryImpl implements OwnerRepository {
           final numCourtsRaw = sportDetails['num_courts'];
           int numCourts = 1;
           if (numCourtsRaw is int) numCourts = numCourtsRaw;
-          if (numCourtsRaw is String) numCourts = int.tryParse(numCourtsRaw) ?? 1;
+          if (numCourtsRaw is String)
+            numCourts = int.tryParse(numCourtsRaw) ?? 1;
 
-          final courtNames = sportDetails['court_names'] as List<dynamic>? ?? [];
+          final courtNames =
+              sportDetails['court_names'] as List<dynamic>? ?? [];
 
           for (int i = 0; i < numCourts; i++) {
             final courtName = (courtNames.length > i)
@@ -272,8 +320,10 @@ class OwnerRepositoryImpl implements OwnerRepository {
 
             int price = 800;
             try {
-              final pricing = ownerData['pricing_config']?[sportKey]?['weekday']?['off_peak'];
-              if (pricing != null) price = int.tryParse(pricing.toString()) ?? 800;
+              final pricing =
+                  ownerData['pricing_config']?[sportKey]?['weekday']?['off_peak'];
+              if (pricing != null)
+                price = int.tryParse(pricing.toString()) ?? 800;
             } catch (_) {}
 
             groundsToInsert.add({
@@ -286,12 +336,24 @@ class OwnerRepositoryImpl implements OwnerRepository {
               'closing_time': _formatTime(slotConfig['closing_time']),
               'ground_type': sportKey,
               'category': sportKey,
-              'turf_type': sportDetails['surface_type'] ?? sportDetails['pitch_type'] ?? '',
-              'players_allowed': int.tryParse(sportDetails['players_per_side']?.toString() ?? '12') ?? 12,
+              'turf_type':
+                  sportDetails['surface_type'] ??
+                  sportDetails['pitch_type'] ??
+                  '',
+              'players_allowed':
+                  int.tryParse(
+                    sportDetails['players_per_side']?.toString() ?? '12',
+                  ) ??
+                  12,
               'is_indoor': ownerData['venue_category'] == 'Indoor',
               'has_parking': amenitiesConfig['parking'] == true,
               'has_washroom': amenitiesConfig['washrooms'] == true,
-              'has_floodlights': sportDetails['floodlights']?.toString().toLowerCase().contains('yes') ?? false,
+              'has_floodlights':
+                  sportDetails['floodlights']
+                      ?.toString()
+                      .toLowerCase()
+                      .contains('yes') ??
+                  false,
               'has_drinking_water': amenitiesConfig['drinking_water'] == true,
               'is_available': true,
               'price_per_hour': price,
@@ -347,13 +409,13 @@ class OwnerRepositoryImpl implements OwnerRepository {
       'business_name': businessName,
       'business_email': businessEmail,
       'owner_name': ownerName,
-      if (phone != null) 'phone': phone,
+      'phone': ?phone,
       'address': address,
       'latitude': latitude,
       'longitude': longitude,
       'pan_url': panUrl,
       'aadhar_url': aadharUrl,
-      if (businessRegUrl != null) 'business_reg_url': businessRegUrl,
+      'business_reg_url': ?businessRegUrl,
       'updated_at': DateTime.now().toIso8601String(),
     });
   }

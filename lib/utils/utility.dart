@@ -15,8 +15,11 @@ class Logger {
   static var logIcon = '✏️';
 
   ///used to show the log in the app.
-  static void log(
-      {var tag = 'indicator', var message = '', var logIcon = 'ℹ️️'}) {
+  static void log({
+    var tag = 'indicator',
+    var message = '',
+    var logIcon = 'ℹ️️',
+  }) {
     if (!kReleaseMode) {
       Logger.logIcon = logIcon;
       Logger.tag = tag;
@@ -25,12 +28,13 @@ class Logger {
       );
       dev.log(tag + '\t  ' + message);
       dev.log(
-          '------------------------------------------------------------------');
+        '------------------------------------------------------------------',
+      );
     }
   }
 }
 
-launchInBrowser(downloadUrl) async {
+Future<void> launchInBrowser(downloadUrl) async {
   Logger.log(message: downloadUrl);
   if (!await launchUrl(
     Uri.parse(downloadUrl),

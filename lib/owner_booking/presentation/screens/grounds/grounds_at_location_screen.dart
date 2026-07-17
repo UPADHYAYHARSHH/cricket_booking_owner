@@ -22,7 +22,8 @@ class GroundsAtLocationScreen extends StatefulWidget {
   });
 
   @override
-  State<GroundsAtLocationScreen> createState() => _GroundsAtLocationScreenState();
+  State<GroundsAtLocationScreen> createState() =>
+      _GroundsAtLocationScreenState();
 }
 
 class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
@@ -45,10 +46,8 @@ class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => GroundFormFlow(
-          locationId: widget.locationId,
-          groundData: ground,
-        ),
+        builder: (_) =>
+            GroundFormFlow(locationId: widget.locationId, groundData: ground),
       ),
     );
   }
@@ -64,10 +63,7 @@ class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                AppColors.primaryDarkGreen,
-                Color(0xFF0FA968),
-              ],
+              colors: [AppColors.primaryDarkGreen, Color(0xFF0FA968)],
             ),
           ),
           child: AppBar(
@@ -132,8 +128,9 @@ class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
                     ),
                     const SizedBox(height: AppSizes.xl),
                     ElevatedButton.icon(
-                      onPressed: () =>
-                          context.read<GroundCubit>().fetchGroundsForLocation(widget.locationId),
+                      onPressed: () => context
+                          .read<GroundCubit>()
+                          .fetchGroundsForLocation(widget.locationId),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primaryDarkGreen,
                         foregroundColor: AppColors.white,
@@ -142,7 +139,9 @@ class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
                           vertical: AppSizes.md,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.radiusFull,
+                          ),
                         ),
                       ),
                       icon: const Icon(Icons.refresh, size: 18),
@@ -166,12 +165,13 @@ class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
 
             return RefreshIndicator(
               color: AppColors.primaryDarkGreen,
-              onRefresh: () =>
-                  context.read<GroundCubit>().fetchGroundsForLocation(widget.locationId),
+              onRefresh: () => context
+                  .read<GroundCubit>()
+                  .fetchGroundsForLocation(widget.locationId),
               child: ListView.separated(
                 padding: const EdgeInsets.all(AppSizes.xl),
                 itemCount: state.grounds.length,
-                separatorBuilder: (_, __) => const SizedBox(height: AppSizes.lg),
+                separatorBuilder: (_, _) => const SizedBox(height: AppSizes.lg),
                 itemBuilder: (context, index) {
                   final ground = state.grounds[index] as Map<String, dynamic>;
                   return _StaggeredGroundCard(
@@ -179,9 +179,8 @@ class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
                     child: GroundCard(
                       ground: ground,
                       onEdit: () => _openEditFlow(ground),
-                      onAvailabilityChanged: (value) => context
-                          .read<GroundCubit>()
-                          .setGroundAvailability(
+                      onAvailabilityChanged: (value) =>
+                          context.read<GroundCubit>().setGroundAvailability(
                             ground['id'] as String,
                             value,
                             locationId: widget.locationId,

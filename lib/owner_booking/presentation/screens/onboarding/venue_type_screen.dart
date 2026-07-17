@@ -49,7 +49,7 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
               _selectedSports[key] = value as int;
             });
           }
-          
+
           final String? categoryRaw = data['venue_category'];
           if (categoryRaw != null && categoryRaw.isNotEmpty) {
             if (categoryRaw.startsWith('{')) {
@@ -144,7 +144,7 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
       );
       return;
     }
-    
+
     final Map<String, String> cleanedCategories = {};
     for (var key in _selectedSports.keys) {
       cleanedCategories[key] = _sportCategories[key] ?? 'Indoor';
@@ -162,7 +162,15 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
       if (!list.any((s) => s['id'] == sportId)) {
         list.add({
           'id': sportId,
-          'name': sportId.replaceAll('_', ' ').split(' ').map((str) => str.isNotEmpty ? '${str[0].toUpperCase()}${str.substring(1)}' : '').join(' '),
+          'name': sportId
+              .replaceAll('_', ' ')
+              .split(' ')
+              .map(
+                (str) => str.isNotEmpty
+                    ? '${str[0].toUpperCase()}${str.substring(1)}'
+                    : '',
+              )
+              .join(' '),
           'subtitle': 'Sport Configuration',
           'icon': Icons.sports,
         });
@@ -243,7 +251,13 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
               width: isSelected ? 2 : 1,
             ),
             boxShadow: isSelected
-                ? [BoxShadow(color: AppColors.primaryDarkGreen.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))]
+                ? [
+                    BoxShadow(
+                      color: AppColors.primaryDarkGreen.withValues(alpha: 0.04),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ]
                 : null,
           ),
           child: Column(
@@ -255,10 +269,14 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: isSelected ? AppColors.white : AppColors.slotAvailableBg.withValues(alpha: 0.5),
+                      color: isSelected
+                          ? AppColors.white
+                          : AppColors.slotAvailableBg.withValues(alpha: 0.5),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isSelected ? AppColors.primaryDarkGreen.withValues(alpha: 0.2) : Colors.transparent,
+                        color: isSelected
+                            ? AppColors.primaryDarkGreen.withValues(alpha: 0.2)
+                            : Colors.transparent,
                       ),
                     ),
                     child: Icon(
@@ -289,7 +307,7 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
                   ),
                   Switch(
                     value: isSelected,
-                    activeColor: AppColors.primaryDarkGreen,
+                    activeThumbColor: AppColors.primaryDarkGreen,
                     activeTrackColor: AppColors.slotAvailableBg,
                     inactiveThumbColor: AppColors.textSecondaryLight,
                     inactiveTrackColor: AppColors.borderLight,
@@ -297,13 +315,17 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
                   ),
                 ],
               ),
-              
+
               if (isSelected) ...[
                 const Padding(
                   padding: EdgeInsets.symmetric(vertical: 14),
-                  child: Divider(height: 1, thickness: 1, color: Color(0xFFE0ECE5)),
+                  child: Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: Color(0xFFE0ECE5),
+                  ),
                 ),
-                
+
                 // Config Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -321,28 +343,39 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
                               });
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
                               decoration: BoxDecoration(
-                                color: isSelectedCat ? AppColors.primaryDarkGreen : AppColors.white,
+                                color: isSelectedCat
+                                    ? AppColors.primaryDarkGreen
+                                    : AppColors.white,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelectedCat
                                       ? AppColors.primaryDarkGreen
-                                      : AppColors.primaryDarkGreen.withValues(alpha: 0.15),
+                                      : AppColors.primaryDarkGreen.withValues(
+                                          alpha: 0.15,
+                                        ),
                                 ),
                               ),
                               child: AppText(
                                 text: cat,
                                 size: 12,
-                                weight: isSelectedCat ? FontWeight.w700 : FontWeight.w500,
-                                color: isSelectedCat ? AppColors.white : AppColors.textSecondaryLight,
+                                weight: isSelectedCat
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: isSelectedCat
+                                    ? AppColors.white
+                                    : AppColors.textSecondaryLight,
                               ),
                             ),
                           ),
                         );
                       }).toList(),
                     ),
-                    
+
                     // Counter
                     _buildInlineCounter(sportId, count),
                   ],
@@ -381,7 +414,9 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
         decoration: BoxDecoration(
           color: AppColors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
+          border: Border.all(
+            color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
+          ),
         ),
         child: Icon(icon, size: 14, color: AppColors.primaryDarkGreen),
       ),

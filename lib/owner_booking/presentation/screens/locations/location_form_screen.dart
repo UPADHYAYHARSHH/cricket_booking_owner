@@ -17,36 +17,166 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location
 /// All amenity IDs paired with display labels and icons, grouped by section.
 const List<Map<String, dynamic>> _kAmenities = [
   // Basic
-  {'id': 'parking', 'label': 'Parking', 'group': 'Basic', 'icon': HugeIcons.strokeRoundedCarParking01},
-  {'id': 'washrooms', 'label': 'Washrooms', 'group': 'Basic', 'icon': HugeIcons.strokeRoundedToilet01},
-  {'id': 'changing_rooms', 'label': 'Changing Rooms', 'group': 'Basic', 'icon': HugeIcons.strokeRoundedLocker01},
-  {'id': 'drinking_water', 'label': 'Drinking Water', 'group': 'Basic', 'icon': HugeIcons.strokeRoundedDroplet},
-  {'id': 'waiting_area', 'label': 'Waiting / Seating Area', 'group': 'Basic', 'icon': HugeIcons.strokeRoundedSofa01},
+  {
+    'id': 'parking',
+    'label': 'Parking',
+    'group': 'Basic',
+    'icon': HugeIcons.strokeRoundedCarParking01,
+  },
+  {
+    'id': 'washrooms',
+    'label': 'Washrooms',
+    'group': 'Basic',
+    'icon': HugeIcons.strokeRoundedToilet01,
+  },
+  {
+    'id': 'changing_rooms',
+    'label': 'Changing Rooms',
+    'group': 'Basic',
+    'icon': HugeIcons.strokeRoundedLocker01,
+  },
+  {
+    'id': 'drinking_water',
+    'label': 'Drinking Water',
+    'group': 'Basic',
+    'icon': HugeIcons.strokeRoundedDroplet,
+  },
+  {
+    'id': 'waiting_area',
+    'label': 'Waiting / Seating Area',
+    'group': 'Basic',
+    'icon': HugeIcons.strokeRoundedSofa01,
+  },
   // Food
-  {'id': 'cafeteria', 'label': 'Cafeteria / Canteen', 'group': 'Food & Beverages', 'icon': HugeIcons.strokeRoundedCafe},
-  {'id': 'vending_machine', 'label': 'Vending Machine', 'group': 'Food & Beverages', 'icon': HugeIcons.strokeRoundedSoftDrink01},
-  {'id': 'water_dispenser', 'label': 'Water Dispenser', 'group': 'Food & Beverages', 'icon': HugeIcons.strokeRoundedWaterPump},
+  {
+    'id': 'cafeteria',
+    'label': 'Cafeteria / Canteen',
+    'group': 'Food & Beverages',
+    'icon': HugeIcons.strokeRoundedCafe,
+  },
+  {
+    'id': 'vending_machine',
+    'label': 'Vending Machine',
+    'group': 'Food & Beverages',
+    'icon': HugeIcons.strokeRoundedSoftDrink01,
+  },
+  {
+    'id': 'water_dispenser',
+    'label': 'Water Dispenser',
+    'group': 'Food & Beverages',
+    'icon': HugeIcons.strokeRoundedWaterPump,
+  },
   // Safety
-  {'id': 'cctv', 'label': 'CCTV Surveillance', 'group': 'Safety', 'icon': HugeIcons.strokeRoundedCctvCamera},
-  {'id': 'first_aid', 'label': 'First Aid Kit', 'group': 'Safety', 'icon': HugeIcons.strokeRoundedFirstAidKit},
-  {'id': 'fire_safety', 'label': 'Fire Safety Equipment', 'group': 'Safety', 'icon': HugeIcons.strokeRoundedFireExtinguisher},
-  {'id': 'security_guard', 'label': 'Security Guard', 'group': 'Safety', 'icon': HugeIcons.strokeRoundedUserShield01},
+  {
+    'id': 'cctv',
+    'label': 'CCTV Surveillance',
+    'group': 'Safety',
+    'icon': HugeIcons.strokeRoundedCctvCamera,
+  },
+  {
+    'id': 'first_aid',
+    'label': 'First Aid Kit',
+    'group': 'Safety',
+    'icon': HugeIcons.strokeRoundedFirstAidKit,
+  },
+  {
+    'id': 'fire_safety',
+    'label': 'Fire Safety Equipment',
+    'group': 'Safety',
+    'icon': HugeIcons.strokeRoundedFireExtinguisher,
+  },
+  {
+    'id': 'security_guard',
+    'label': 'Security Guard',
+    'group': 'Safety',
+    'icon': HugeIcons.strokeRoundedUserShield01,
+  },
   // Equipment
-  {'id': 'bat_rental', 'label': 'Bat Rental', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedCricketBat},
-  {'id': 'ball_provided', 'label': 'Ball Provided', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedBaseball},
-  {'id': 'batting_pads', 'label': 'Batting Pads', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedShield01},
-  {'id': 'helmet', 'label': 'Helmet Rental', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedCricketHelmet},
-  {'id': 'stumps_permanent', 'label': 'Permanent Stumps', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedUtilityPole},
-  {'id': 'football_rental', 'label': 'Football Rental', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedFootball},
-  {'id': 'goal_nets', 'label': 'Goal Nets', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedFootballPitch},
-  {'id': 'bibs', 'label': 'Bibs / Jerseys', 'group': 'Equipment', 'icon': HugeIcons.strokeRoundedTShirt},
+  {
+    'id': 'bat_rental',
+    'label': 'Bat Rental',
+    'group': 'Equipment',
+    'icon': HugeIcons.strokeRoundedCricketBat,
+  },
+  {
+    'id': 'ball_provided',
+    'label': 'Ball Provided',
+    'group': 'Equipment',
+    'icon': HugeIcons.strokeRoundedBaseball,
+  },
+  {
+    'id': 'batting_pads',
+    'label': 'Batting Pads',
+    'group': 'Equipment',
+    'icon': HugeIcons.strokeRoundedShield01,
+  },
+  {
+    'id': 'helmet',
+    'label': 'Helmet Rental',
+    'group': 'Equipment',
+    'icon': HugeIcons.strokeRoundedCricketHelmet,
+  },
+  {
+    'id': 'stumps_permanent',
+    'label': 'Permanent Stumps',
+    'group': 'Equipment',
+    'icon': HugeIcons.strokeRoundedUtilityPole,
+  },
+  {
+    'id': 'football_rental',
+    'label': 'Football Rental',
+    'group': 'Equipment',
+    'icon': HugeIcons.strokeRoundedFootball,
+  },
+  {
+    'id': 'goal_nets',
+    'label': 'Goal Nets',
+    'group': 'Equipment',
+    'icon': HugeIcons.strokeRoundedFootballPitch,
+  },
+  {
+    'id': 'bibs',
+    'label': 'Bibs / Jerseys',
+    'group': 'Equipment',
+    'icon': HugeIcons.strokeRoundedTShirt,
+  },
   // Tech & Services
-  {'id': 'wifi', 'label': 'WiFi', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedWifi01},
-  {'id': 'live_scoring', 'label': 'Live Scoring Support', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedAnalyticsUp},
-  {'id': 'coaching', 'label': 'Coaching Available', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedWhistle},
-  {'id': 'video_recording', 'label': 'Video Recording', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedCameraVideo},
-  {'id': 'score_display', 'label': 'LED Score Display', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedModernTv},
-  {'id': 'floodlights', 'label': 'Floodlights (LED)', 'group': 'Tech & Services', 'icon': HugeIcons.strokeRoundedSpotlight},
+  {
+    'id': 'wifi',
+    'label': 'WiFi',
+    'group': 'Tech & Services',
+    'icon': HugeIcons.strokeRoundedWifi01,
+  },
+  {
+    'id': 'live_scoring',
+    'label': 'Live Scoring Support',
+    'group': 'Tech & Services',
+    'icon': HugeIcons.strokeRoundedAnalyticsUp,
+  },
+  {
+    'id': 'coaching',
+    'label': 'Coaching Available',
+    'group': 'Tech & Services',
+    'icon': HugeIcons.strokeRoundedWhistle,
+  },
+  {
+    'id': 'video_recording',
+    'label': 'Video Recording',
+    'group': 'Tech & Services',
+    'icon': HugeIcons.strokeRoundedCameraVideo,
+  },
+  {
+    'id': 'score_display',
+    'label': 'LED Score Display',
+    'group': 'Tech & Services',
+    'icon': HugeIcons.strokeRoundedModernTv,
+  },
+  {
+    'id': 'floodlights',
+    'label': 'Floodlights (LED)',
+    'group': 'Tech & Services',
+    'icon': HugeIcons.strokeRoundedSpotlight,
+  },
 ];
 
 /// Single-screen form to add/edit a venue Location (address/city/GPS,
@@ -84,8 +214,12 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
   void initState() {
     super.initState();
     final data = widget.locationData;
-    _addressCtrl = TextEditingController(text: data?['address'] as String? ?? '');
-    _mapsCtrl = TextEditingController(text: data?['google_maps_link'] as String? ?? '');
+    _addressCtrl = TextEditingController(
+      text: data?['address'] as String? ?? '',
+    );
+    _mapsCtrl = TextEditingController(
+      text: data?['google_maps_link'] as String? ?? '',
+    );
     final lat = (data?['latitude'] as num?)?.toDouble() ?? 0.0;
     final lng = (data?['longitude'] as num?)?.toDouble() ?? 0.0;
     _latCtrl = TextEditingController(text: lat != 0.0 ? lat.toString() : '');
@@ -145,9 +279,11 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
           final city = e['name'] as String? ?? '';
           final state = e['admin1'] as String? ?? '';
           if (city.isEmpty || state.isEmpty) continue;
-          final dup = out.any((r) =>
-              r['city']!.toLowerCase() == city.toLowerCase() &&
-              r['state']!.toLowerCase() == state.toLowerCase());
+          final dup = out.any(
+            (r) =>
+                r['city']!.toLowerCase() == city.toLowerCase() &&
+                r['state']!.toLowerCase() == state.toLowerCase(),
+          );
           if (!dup) out.add({'city': city, 'state': state});
         }
         return out;
@@ -266,7 +402,9 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                   const SizedBox(width: AppSizes.md),
                   Expanded(
                     child: AppText(
-                      text: widget.isEdit ? 'Edit Location' : 'Add New Location',
+                      text: widget.isEdit
+                          ? 'Edit Location'
+                          : 'Add New Location',
                       size: 20,
                       weight: FontWeight.w700,
                       color: AppColors.white,
@@ -290,8 +428,9 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                   hint: 'Plot 42, Prahlad Nagar, Near ISCON Cross Roads',
                   maxLines: 2,
                   icon: Icons.location_on_outlined,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Address is required' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? 'Address is required'
+                      : null,
                 ),
                 const AppSizedBox(height: AppSizes.xxl),
                 _label('CITY *'),
@@ -312,8 +451,9 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                         _latCtrl,
                         hint: 'Latitude (e.g. 23.0225)',
                         icon: Icons.my_location,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                       ),
                     ),
                     const AppSizedBox(width: AppSizes.md),
@@ -322,8 +462,9 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                         _lngCtrl,
                         hint: 'Longitude (e.g. 72.5714)',
                         icon: Icons.explore_outlined,
-                        keyboardType:
-                            const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                       ),
                     ),
                   ],
@@ -367,11 +508,19 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
           decoration: InputDecoration(
             hintText: 'Type at least 3 letters to search…',
             hintStyle: TextStyle(
-                color: AppColors.textSecondaryLight.withValues(alpha: 0.4), fontSize: 13),
+              color: AppColors.textSecondaryLight.withValues(alpha: 0.4),
+              fontSize: 13,
+            ),
             filled: true,
             fillColor: AppColors.inputFillLight,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            prefixIcon: const Icon(Icons.search, color: AppColors.primaryDarkGreen),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            prefixIcon: const Icon(
+              Icons.search,
+              color: AppColors.primaryDarkGreen,
+            ),
             suffixIcon: _isSearching
                 ? const Padding(
                     padding: EdgeInsets.all(12),
@@ -379,30 +528,42 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AppColors.primaryDarkGreen),
+                        strokeWidth: 2,
+                        color: AppColors.primaryDarkGreen,
+                      ),
                     ),
                   )
                 : _searchCtrl.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear, color: AppColors.textSecondaryLight),
-                        onPressed: () => setState(() {
-                          _searchCtrl.clear();
-                          _cityValue = '';
-                          _suggestions = [];
-                        }),
-                      )
-                    : null,
+                ? IconButton(
+                    icon: const Icon(
+                      Icons.clear,
+                      color: AppColors.textSecondaryLight,
+                    ),
+                    onPressed: () => setState(() {
+                      _searchCtrl.clear();
+                      _cityValue = '';
+                      _suggestions = [];
+                    }),
+                  )
+                : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
+              borderSide: BorderSide(
+                color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
+              borderSide: BorderSide(
+                color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              borderSide: const BorderSide(color: AppColors.primaryDarkGreen, width: 2),
+              borderSide: const BorderSide(
+                color: AppColors.primaryDarkGreen,
+                width: 2,
+              ),
             ),
           ),
         ),
@@ -416,11 +577,14 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
               boxShadow: [
                 BoxShadow(
-                    color: AppColors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4))
+                  color: AppColors.black.withValues(alpha: 0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
               ],
-              border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.15)),
+              border: Border.all(
+                color: AppColors.primaryDarkGreen.withValues(alpha: 0.15),
+              ),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
@@ -428,20 +592,30 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 itemCount: _suggestions.length,
-                separatorBuilder: (_, __) =>
-                    Divider(height: 1, color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
+                separatorBuilder: (_, _) => Divider(
+                  height: 1,
+                  color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+                ),
                 itemBuilder: (context, i) {
                   final item = _suggestions[i];
                   return ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 4,
+                    ),
                     leading: Container(
                       padding: const EdgeInsets.all(AppSizes.xs),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+                        color: AppColors.primaryDarkGreen.withValues(
+                          alpha: 0.1,
+                        ),
                         borderRadius: BorderRadius.circular(AppSizes.radiusXs),
                       ),
-                      child: const Icon(Icons.location_on, color: AppColors.primaryDarkGreen, size: 18),
+                      child: const Icon(
+                        Icons.location_on,
+                        color: AppColors.primaryDarkGreen,
+                        size: 18,
+                      ),
                     ),
                     title: AppText(
                       text: '${item['city']}, ${item['state']}',
@@ -524,18 +698,28 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.lg, vertical: AppSizes.md),
+                        horizontal: AppSizes.lg,
+                        vertical: AppSizes.md,
+                      ),
                       decoration: BoxDecoration(
-                        color: isSel ? AppColors.inputFillLight : AppColors.white,
-                        borderRadius: BorderRadius.circular(AppSizes.radiusRound),
+                        color: isSel
+                            ? AppColors.inputFillLight
+                            : AppColors.white,
+                        borderRadius: BorderRadius.circular(
+                          AppSizes.radiusRound,
+                        ),
                         border: Border.all(
-                          color: isSel ? AppColors.primaryDarkGreen : AppColors.borderLight,
+                          color: isSel
+                              ? AppColors.primaryDarkGreen
+                              : AppColors.borderLight,
                           width: isSel ? 1.5 : 1,
                         ),
                         boxShadow: isSel
                             ? [
                                 BoxShadow(
-                                  color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+                                  color: AppColors.primaryDarkGreen.withValues(
+                                    alpha: 0.1,
+                                  ),
                                   blurRadius: 6,
                                   offset: const Offset(0, 2),
                                 ),
@@ -575,28 +759,28 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
   }
 
   Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: AppSizes.sm),
-        child: Row(
-          children: [
-            Container(
-              width: 3,
-              height: 14,
-              decoration: BoxDecoration(
-                color: AppColors.primaryDarkGreen,
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              ),
-            ),
-            const SizedBox(width: AppSizes.sm),
-            AppText(
-              text: text,
-              size: 12,
-              weight: FontWeight.w700,
-              color: AppColors.textSecondaryLight,
-              letterSpacing: 0.4,
-            ),
-          ],
+    padding: const EdgeInsets.only(bottom: AppSizes.sm),
+    child: Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            color: AppColors.primaryDarkGreen,
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          ),
         ),
-      );
+        const SizedBox(width: AppSizes.sm),
+        AppText(
+          text: text,
+          size: 12,
+          weight: FontWeight.w700,
+          color: AppColors.textSecondaryLight,
+          letterSpacing: 0.4,
+        ),
+      ],
+    ),
+  );
 
   Widget _field(
     TextEditingController ctrl, {
@@ -612,28 +796,47 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
       keyboardType: keyboardType,
       validator: validator,
       style: const TextStyle(
-          fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textPrimaryLight),
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimaryLight,
+      ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle:
-            TextStyle(color: AppColors.textSecondaryLight.withValues(alpha: 0.4), fontSize: 13),
+        hintStyle: TextStyle(
+          color: AppColors.textSecondaryLight.withValues(alpha: 0.4),
+          fontSize: 13,
+        ),
         filled: true,
         fillColor: AppColors.inputFillLight,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         prefixIcon: icon != null
-            ? Icon(icon, size: 20, color: AppColors.primaryDarkGreen.withValues(alpha: 0.6))
+            ? Icon(
+                icon,
+                size: 20,
+                color: AppColors.primaryDarkGreen.withValues(alpha: 0.6),
+              )
             : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
+          borderSide: BorderSide(
+            color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
+          borderSide: BorderSide(
+            color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(color: AppColors.primaryDarkGreen, width: 2),
+          borderSide: const BorderSide(
+            color: AppColors.primaryDarkGreen,
+            width: 2,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),

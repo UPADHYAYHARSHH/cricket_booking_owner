@@ -30,7 +30,7 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
   final Map<String, List<File>> _courtPhotos = {};
   final Map<String, List<String>> _courtPhotoUrls = {};
 
-  List<File> _amenityPhotosList = [];
+  final List<File> _amenityPhotosList = [];
   List<String> _amenityPhotoUrlsList = [];
 
   File? _videoFile;
@@ -151,7 +151,7 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
     if (userId == null) return null;
 
     final fileName =
-        "${userId}/$folder/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}";
+        "$userId/$folder/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}";
 
     try {
       await Supabase.instance.client.storage
