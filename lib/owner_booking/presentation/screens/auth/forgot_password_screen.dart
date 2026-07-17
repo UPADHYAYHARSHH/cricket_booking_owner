@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
+import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -77,12 +78,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           final isLoading = state is AuthLoading;
 
           return Scaffold(
-            backgroundColor: const Color(0xffECECEC),
+            backgroundColor: AppColors.bgLight,
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                icon: const Icon(Icons.arrow_back, color: AppColors.textPrimaryLight),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -99,13 +100,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           width: 120,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.green.shade700,
+                            color: AppColors.primaryDarkGreen,
                           ),
                           child: const Center(
                             child: Icon(
                               Icons.lock_reset,
                               size: 60,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           ),
                         ),
@@ -125,7 +126,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         const AppText(
                           text: "Enter your registered email to receive a recovery link",
                           size: 14,
-                          color: Colors.grey,
+                          color: AppColors.textSecondaryLight,
                           align: TextAlign.center,
                         ),
 
@@ -135,12 +136,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         Container(
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.surfaceLight,
                             borderRadius: BorderRadius.circular(18),
                             boxShadow: [
                               BoxShadow(
                                 blurRadius: 10,
-                                color: Colors.black.withOpacity(.05),
+                                color: AppColors.black.withValues(alpha: 0.05),
                               )
                             ],
                           ),
@@ -151,7 +152,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 text: "Email Address",
                                 size: 12,
                                 weight: FontWeight.w600,
-                                color: Colors.black54,
+                                color: AppColors.textSecondaryLight,
                               ),
 
                               const AppSizedBox(height: 6),
@@ -159,19 +160,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               TextField(
                                 controller: emailController,
                                 keyboardType: TextInputType.emailAddress,
-                                style: const TextStyle(color: Colors.black87),
+                                style: const TextStyle(color: AppColors.textPrimaryLight),
                                 decoration: InputDecoration(
                                   hintText: "e.g. rajesh@example.com",
                                   hintStyle: const TextStyle(color: Colors.black38),
                                   errorText: emailError,
-                                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.black45),
+                                  prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textSecondaryLight),
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
+                                    borderSide: const BorderSide(color: AppColors.borderLight),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
+                                    borderSide: const BorderSide(color: AppColors.borderLight),
                                   ),
                                 ),
                               ),

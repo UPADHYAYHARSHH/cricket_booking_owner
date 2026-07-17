@@ -6,6 +6,7 @@ import 'package:toastification/toastification.dart';
 import 'package:intl/intl.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/bookings_screen.dart';
@@ -17,26 +18,39 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = true;
   Map<String, dynamic>? _ownerDetails;
-  
+
   int _monthlyBookings = 0;
   double _monthlyRevenue = 0;
   String _occupancy = "0%";
 
   StreamSubscription<List<Map<String, dynamic>>>? _bookingsSubscription;
 
-  @override
-  void dispose() {
-    _bookingsSubscription?.cancel();
-    super.dispose();
-  }
+  late final AnimationController _fadeController;
+  late final Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOutCubic,
+    );
     _fetchProfileData();
+  }
+
+  @override
+  void dispose() {
+    _bookingsSubscription?.cancel();
+    _fadeController.dispose();
+    super.dispose();
   }
 
   void _confirmLogout(BuildContext context) {
@@ -58,7 +72,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             },
             child: const Text(
               "Log Out",
-              style: TextStyle(color: Color(0xFFE53935)),
+              style: TextStyle(color: AppColors.error),
             ),
           ),
         ],
@@ -71,24 +85,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (userId == null) return;
 
     try {
-      // 1. Fetch Owner Details
       final ownerRes = await Supabase.instance.client
           .from('owner_details')
           .select()
           .eq('id', userId)
           .maybeSingle();
 
-      // 2. Fetch Monthly Stats via Stream
       final groundsRes = await Supabase.instance.client
           .from('grounds')
           .select('id')
           .eq('owner_id', userId);
-          
-      final List<Object> groundIds = groundsRes.map((g) => g['id'] as Object).toList();
+
+      final List<Object> groundIds =
+          groundsRes.map((g) => g['id'] as Object).toList();
 
       if (groundIds.isNotEmpty) {
         final now = DateTime.now();
-        final startOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
+        final startOfMonth =
+            DateTime(now.year, now.month, 1).toIso8601String();
 
         _bookingsSubscription = Supabase.instance.client
             .from('bookings')
@@ -99,12 +113,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
               double revenue = 0;
               for (var booking in bookingsRes) {
                 final createdAt = booking['created_at'];
-                if (createdAt == null || createdAt.compareTo(startOfMonth) < 0) continue;
-                
-                if (booking['status'] != 'cancelled' && booking['status'] != 'declined') {
+                if (createdAt == null ||
+                    createdAt.compareTo(startOfMonth) < 0) continue;
+
+                if (booking['status'] != 'cancelled' &&
+                    booking['status'] != 'declined') {
                   bookingsCount++;
                   if (booking['amount'] != null) {
-                    revenue += double.parse(booking['amount'].toString());
+                    revenue +=
+                        double.parse(booking['amount'].toString());
                   }
                 }
               }
@@ -112,7 +129,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 setState(() {
                   _monthlyBookings = bookingsCount;
                   _monthlyRevenue = revenue;
-                  _occupancy = bookingsCount > 0 ? "87%" : "0%"; 
+                  _occupancy = bookingsCount > 0 ? "87%" : "0%";
                 });
               }
             });
@@ -123,6 +140,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _ownerDetails = ownerRes;
           _isLoading = false;
         });
+        _fadeController.forward();
       }
     } catch (e) {
       debugPrint("Error fetching profile: $e");
@@ -161,8 +179,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: AppColors.primaryDarkGreen,
-        body: Center(child: CircularProgressIndicator(color: Colors.white)),
+        backgroundColor: AppColors.bgLight,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryDarkGreen),
+        ),
       );
     }
 
@@ -170,20 +190,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final phone = _ownerDetails?['phone'] ?? "No Phone";
     final city = _ownerDetails?['business_city'] ?? "City";
     final venueName = _ownerDetails?['venue_name'] ?? "Venue Name";
-    
+
     final createdAtStr = _ownerDetails?['created_at'];
-    final memberSince = createdAtStr != null 
-        ? DateFormat('dd MMM yyyy').format(DateTime.parse(createdAtStr)) 
+    final memberSince = createdAtStr != null
+        ? DateFormat('dd MMM yyyy').format(DateTime.parse(createdAtStr))
         : "2024";
 
-    // Format Sports
-    final sportsConfig = _ownerDetails?['sports_config'] as Map<String, dynamic>? ?? {};
+    final sportsConfig =
+        _ownerDetails?['sports_config'] as Map<String, dynamic>? ?? {};
     final sportsList = sportsConfig.keys.map((k) {
-      return k.replaceAll('_', ' ').split(' ').map((w) => w[0].toUpperCase() + w.substring(1)).join(' ');
+      return k
+          .replaceAll('_', ' ')
+          .split(' ')
+          .map((w) => w[0].toUpperCase() + w.substring(1))
+          .join(' ');
     }).toList();
-    final sportsStr = sportsList.isNotEmpty ? sportsList.join(', ') : 'No sports configured';
+    final sportsStr =
+        sportsList.isNotEmpty ? sportsList.join(', ') : 'No sports configured';
 
-    // Count Active Courts
     int activeCourts = 0;
     sportsConfig.forEach((key, value) {
       if (value is Map && value['num_courts'] != null) {
@@ -192,125 +216,298 @@ class _ProfileScreenState extends State<ProfileScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: AppColors.bgLight,
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Header
+            // ── Gradient Header ──
             Container(
               width: double.infinity,
-              color: AppColors.primaryDarkGreen,
-              padding: const EdgeInsets.only(top: 60, bottom: 40),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primaryDarkGreen,
+                    Color(0xFF0A7A4E),
+                    AppColors.primaryLightGreen,
+                  ],
+                ),
+              ),
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 32,
+                bottom: 48,
+              ),
               child: Column(
                 children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: const Color(0xFF6BBD90), // Light green from mockup
-                    child: AppText(
-                      text: _getInitials(ownerName),
-                      size: 28,
-                      weight: FontWeight.bold,
-                      color: Colors.white,
+                  // Avatar with ring
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: AppColors.white.withValues(alpha: 0.4),
+                        width: 2.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.black.withValues(alpha: 0.15),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: CircleAvatar(
+                      radius: 42,
+                      backgroundColor: AppColors.white.withValues(alpha: 0.2),
+                      child: CircleAvatar(
+                        radius: 38,
+                        backgroundColor: AppColors.primaryLightGreen,
+                        child: AppText(
+                          text: _getInitials(ownerName),
+                          size: 28,
+                          weight: FontWeight.bold,
+                          color: AppColors.white,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   AppText(
                     text: ownerName,
                     size: 22,
-                    weight: FontWeight.bold,
-                    color: Colors.white,
+                    weight: FontWeight.w700,
+                    color: AppColors.white,
                   ),
-                  const SizedBox(height: 4),
-                  AppText(
-                    text: "$phone • $city",
-                    size: 14,
-                    color: Colors.white70,
-                  ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 6),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildBadge("⭐ Partner since $memberSince", const Color(0xFFF57C00)),
+                      Icon(Icons.phone_outlined,
+                          size: 14,
+                          color: AppColors.white.withValues(alpha: 0.7)),
+                      const SizedBox(width: 4),
+                      AppText(
+                        text: phone,
+                        size: 13,
+                        color: AppColors.white.withValues(alpha: 0.7),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Container(
+                          width: 3,
+                          height: 3,
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withValues(alpha: 0.5),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.location_on_outlined,
+                          size: 14,
+                          color: AppColors.white.withValues(alpha: 0.7)),
+                      const SizedBox(width: 4),
+                      AppText(
+                        text: city,
+                        size: 13,
+                        color: AppColors.white.withValues(alpha: 0.7),
+                      ),
                     ],
+                  ),
+                  const SizedBox(height: 14),
+                  // Member badge
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.15),
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.radiusFull),
+                      border: Border.all(
+                        color: AppColors.white.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star_rounded,
+                            size: 16, color: AppColors.goldenYellow),
+                        const SizedBox(width: 6),
+                        AppText(
+                          text: "Partner since $memberSince",
+                          size: 12,
+                          weight: FontWeight.w600,
+                          color: AppColors.white,
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
 
-            // Overlapping Card & Content
+            // ── Content overlapping header ──
             Transform.translate(
-              offset: const Offset(0, -20),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    // Venue Overview Card
-                    _buildVenueCard(venueName, sportsStr, activeCourts),
-                    const SizedBox(height: 16),
-                    
-                    // Quick Stats Row
-                    Row(
-                      children: [
-                        Expanded(child: _buildStatCard(_monthlyBookings.toString(), "Bookings this\nmonth")),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildStatCard(_formatRevenue(_monthlyRevenue), "Revenue")),
-                        const SizedBox(width: 12),
-                        Expanded(child: _buildStatCard(_occupancy, "Occupancy")),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
+              offset: const Offset(0, -24),
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.screenPaddingHorizontal),
+                  child: Column(
+                    children: [
+                      // Venue Card
+                      _buildVenueCard(venueName, sportsStr, activeCourts),
+                      const SizedBox(height: AppSizes.lg),
 
-                    // Account Settings
-                    _buildSettingsSection("Account Settings", [
-                      _SettingsItem("Edit Personal Info", onTap: _showComingSoon),
-                      _SettingsItem("Manage Staff / Managers", onTap: _showComingSoon),
-                      _SettingsItem("Bank & Payout Settings", onTap: _showComingSoon),
-                      _SettingsItem("Notification Preferences", onTap: _showComingSoon),
-                      _SettingsItem("Subscription & Plan", onTap: _showComingSoon),
-                      _SettingsItem("Privacy & Data", onTap: _showComingSoon, isLast: true),
-                    ]),
-                    const SizedBox(height: 24),
+                      // Stats Row
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.receipt_long_outlined,
+                              value: _monthlyBookings.toString(),
+                              label: "Bookings",
+                              subLabel: "this month",
+                            ),
+                          ),
+                          const SizedBox(width: AppSizes.md),
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.account_balance_wallet_outlined,
+                              value: _formatRevenue(_monthlyRevenue),
+                              label: "Revenue",
+                              subLabel: "this month",
+                            ),
+                          ),
+                          const SizedBox(width: AppSizes.md),
+                          Expanded(
+                            child: _buildStatCard(
+                              icon: Icons.pie_chart_outline,
+                              value: _occupancy,
+                              label: "Occupancy",
+                              subLabel: "rate",
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSizes.xxl),
 
-                    // Venue Settings
-                    _buildSettingsSection("Venue Settings", [
-                      _SettingsItem("All Bookings", onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingsScreen()))),
-                      _SettingsItem("Edit Venue Details", onTap: _showComingSoon),
-                      _SettingsItem("Manage Courts / Grounds", onTap: _showComingSoon),
-                      _SettingsItem("Update Amenities", onTap: () => Navigator.pushNamed(context, '/amenities-settings')),
-                      _SettingsItem("Adjust Pricing", onTap: _showComingSoon),
-                      _SettingsItem("Holiday / Closure Schedule", onTap: _showComingSoon),
-                      _SettingsItem("Booking Rules", onTap: _showComingSoon, isLast: true),
-                    ]),
-                    const SizedBox(height: 32),
+                      // Account Settings
+                      _buildSettingsSection("Account Settings", [
+                        _SettingsItem(
+                            icon: Icons.person_outline,
+                            title: "Edit Personal Info",
+                            onTap: _showComingSoon),
+                        _SettingsItem(
+                            icon: Icons.group_outlined,
+                            title: "Manage Staff / Managers",
+                            onTap: _showComingSoon),
+                        _SettingsItem(
+                            icon: Icons.account_balance_outlined,
+                            title: "Bank & Payout Settings",
+                            onTap: _showComingSoon),
+                        _SettingsItem(
+                            icon: Icons.notifications_outlined,
+                            title: "Notification Preferences",
+                            onTap: _showComingSoon),
+                        _SettingsItem(
+                            icon: Icons.card_membership_outlined,
+                            title: "Subscription & Plan",
+                            onTap: _showComingSoon),
+                        _SettingsItem(
+                            icon: Icons.lock_outline,
+                            title: "Privacy & Data",
+                            onTap: _showComingSoon,
+                            isLast: true),
+                      ]),
+                      const SizedBox(height: AppSizes.xxl),
 
-                    // Logout Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 54,
-                      child: OutlinedButton(
-                        onPressed: () => _confirmLogout(context),
-                        style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Color(0xFFFFA3A3), width: 1.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                      // Venue Settings
+                      _buildSettingsSection("Venue Settings", [
+                        _SettingsItem(
+                            icon: Icons.calendar_month_outlined,
+                            title: "All Bookings",
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const BookingsScreen()))),
+                        _SettingsItem(
+                            icon: Icons.edit_location_alt_outlined,
+                            title: "Edit Venue Details",
+                            onTap: _showComingSoon),
+                        _SettingsItem(
+                            icon: Icons.sports_tennis_outlined,
+                            title: "Manage Courts / Grounds",
+                            onTap: _showComingSoon),
+                        _SettingsItem(
+                            icon: Icons.sports_baseball_outlined,
+                            title: "Update Amenities",
+                            onTap: () => Navigator.pushNamed(
+                                context, '/amenities-settings')),
+                        _SettingsItem(
+                            icon: Icons.price_change_outlined,
+                            title: "Adjust Pricing",
+                            onTap: _showComingSoon),
+                        _SettingsItem(
+                            icon: Icons.event_busy_outlined,
+                            title: "Holiday / Closure Schedule",
+                            onTap: _showComingSoon),
+                        _SettingsItem(
+                            icon: Icons.rule_outlined,
+                            title: "Booking Rules",
+                            onTap: _showComingSoon,
+                            isLast: true),
+                      ]),
+                      const SizedBox(height: AppSizes.xxl),
+
+                      // Logout
+                      SizedBox(
+                        width: double.infinity,
+                        height: AppSizes.buttonHeightLg,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _confirmLogout(context),
+                          icon: const Icon(Icons.logout_rounded, size: 20),
+                          label: const AppText(
+                            text: "Log Out",
+                            color: AppColors.error,
+                            size: 16,
+                            weight: FontWeight.w600,
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(
+                                color: AppColors.error, width: 1.5),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppSizes.radiusMd),
+                            ),
                           ),
                         ),
-                        child: const AppText(
-                          text: "Log Out",
-                          color: Color(0xFFE53935),
-                          size: 16,
-                          weight: FontWeight.w600,
-                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    AppText(
-                      text: "CricBook Owner App v1.0.0 • Made for India IN",
-                      size: 12,
-                      color: Colors.grey.shade500,
-                    ),
-                    const SizedBox(height: 40),
-                  ],
+                      const SizedBox(height: AppSizes.lg),
+
+                      // Version
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.info_outline,
+                              size: 12,
+                              color: AppColors.textSecondaryLight
+                                  .withValues(alpha: 0.6)),
+                          const SizedBox(width: 4),
+                          AppText(
+                            text:
+                                "CricBook Owner App v1.0.0  •  Made for India IN",
+                            size: 12,
+                            color: AppColors.textSecondaryLight
+                                .withValues(alpha: 0.6),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSizes.xxxxl),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -320,142 +517,282 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildBadge(String text, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.2),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: AppText(text: text, size: 12, weight: FontWeight.w600, color: Colors.white),
-    );
-  }
-
+  // ── Venue Card ──
   Widget _buildVenueCard(String venueName, String sportsStr, int activeCourts) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
+            color: AppColors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(20),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const AppText(text: "Venue Overview", size: 16, weight: FontWeight.w700),
-              GestureDetector(
-                onTap: _showComingSoon,
-                child: const AppText(text: "Edit", size: 14, color: Colors.teal, weight: FontWeight.w600),
+          // Gradient header strip
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.xl, vertical: AppSizes.md),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primaryDarkGreen, AppColors.primaryLightGreen],
               ),
-            ],
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(AppSizes.radiusLg),
+                topRight: Radius.circular(AppSizes.radiusLg),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const AppText(
+                  text: "Venue Overview",
+                  size: 15,
+                  weight: FontWeight.w700,
+                  color: AppColors.white,
+                ),
+                GestureDetector(
+                  onTap: _showComingSoon,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.2),
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.radiusFull),
+                    ),
+                    child: const AppText(
+                      text: "Edit",
+                      size: 12,
+                      color: AppColors.white,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          _buildVenueRow("Venue", venueName),
-          _buildVenueRow("Sports", sportsStr),
-          _buildVenueRow("Courts", "$activeCourts active"),
-          _buildVenueRow("Status", "• Live", isStatus: true),
-          _buildVenueRow("Rating", "⭐ 4.7 (38 reviews)"),
+          // Details
+          Padding(
+            padding: const EdgeInsets.all(AppSizes.xl),
+            child: Column(
+              children: [
+                _buildVenueDetailRow(
+                    Icons.store_outlined, "Venue", venueName),
+                _buildVenueDetailRow(
+                    Icons.sports_outlined, "Sports", sportsStr),
+                _buildVenueDetailRow(
+                    Icons.grid_view_outlined, "Courts", "$activeCourts active"),
+                _buildStatusRow("Status", "Live", true),
+                _buildVenueDetailRow(
+                    Icons.star_outline, "Rating", "4.7 (38 reviews)"),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildVenueRow(String label, String value, {bool isStatus = false}) {
+  Widget _buildVenueDetailRow(IconData icon, String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: AppSizes.md),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          AppText(text: label, size: 14, color: Colors.grey.shade500),
-          if (isStatus)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.green.shade200),
-              ),
-              child: AppText(text: value, size: 12, weight: FontWeight.w600, color: Colors.green.shade700),
-            )
-          else
-            AppText(text: value, size: 14, weight: FontWeight.w600),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatCard(String value, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF2FAF5), // Light green tint from mockup
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          AppText(text: value, size: 22, weight: FontWeight.w800, color: AppColors.primaryDarkGreen),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.center,
-            child: AppText(text: label, size: 12, color: AppColors.primaryDarkGreen.withOpacity(0.7)),
+          Icon(icon, size: AppSizes.iconSm, color: AppColors.primaryDarkGreen),
+          const SizedBox(width: AppSizes.sm),
+          AppText(
+            text: label,
+            size: 13,
+            color: AppColors.textSecondaryLight,
+          ),
+          const Spacer(),
+          Flexible(
+            child: AppText(
+              text: value,
+              size: 13,
+              weight: FontWeight.w600,
+              align: TextAlign.end,
+            ),
           ),
         ],
       ),
     );
   }
 
+  Widget _buildStatusRow(String label, String value, bool isLive) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSizes.md),
+      child: Row(
+        children: [
+          Icon(Icons.circle,
+              size: 8,
+              color: isLive ? AppColors.statusConfirmed : AppColors.textSecondaryLight),
+          const SizedBox(width: AppSizes.sm),
+          AppText(
+            text: label,
+            size: 13,
+            color: AppColors.textSecondaryLight,
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.sm + 2, vertical: AppSizes.xxs),
+            decoration: BoxDecoration(
+              color: AppColors.statusConfirmedBg,
+              borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              border: Border.all(
+                color: AppColors.statusConfirmed.withValues(alpha: 0.3),
+              ),
+            ),
+            child: AppText(
+              text: value,
+              size: 11,
+              weight: FontWeight.w600,
+              color: AppColors.statusConfirmed,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Stat Card ──
+  Widget _buildStatCard({
+    required IconData icon,
+    required String value,
+    required String label,
+    required String subLabel,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          vertical: AppSizes.lg, horizontal: AppSizes.sm),
+      decoration: BoxDecoration(
+        color: AppColors.slotAvailableBg,
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        border: Border.all(
+          color: AppColors.primaryLightGreen.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 20, color: AppColors.primaryDarkGreen),
+          const SizedBox(height: AppSizes.sm),
+          AppText(
+            text: value,
+            size: 20,
+            weight: FontWeight.w800,
+            color: AppColors.primaryDarkGreen,
+          ),
+          const SizedBox(height: AppSizes.xs),
+          AppText(
+            text: label,
+            size: 11,
+            weight: FontWeight.w600,
+            color: AppColors.primaryDarkGreen,
+          ),
+          AppText(
+            text: subLabel,
+            size: 10,
+            color: AppColors.textSecondaryLight,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Settings Section ──
   Widget _buildSettingsSection(String title, List<_SettingsItem> items) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        border: Border.all(color: AppColors.borderLight),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(20),
-            child: AppText(text: title, size: 16, weight: FontWeight.w700),
+            padding: const EdgeInsets.fromLTRB(
+                AppSizes.xl, AppSizes.xl, AppSizes.xl, AppSizes.sm),
+            child: AppText(
+              text: title,
+              size: 14,
+              weight: FontWeight.w700,
+              color: AppColors.textSecondaryLight,
+            ),
           ),
           ...items.map((item) {
             return InkWell(
               onTap: item.onTap,
+              borderRadius: BorderRadius.vertical(
+                bottom: item.isLast
+                    ? const Radius.circular(AppSizes.radiusLg)
+                    : Radius.zero,
+              ),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                decoration: BoxDecoration(
-                  border: item.isLast ? null : Border(bottom: BorderSide(color: Colors.grey.shade100)),
-                ),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.xl, vertical: AppSizes.md + 2),
+                decoration: item.isLast
+                    ? null
+                    : const BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(color: AppColors.borderLight),
+                        ),
+                      ),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.slotAvailableBg,
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusSm),
+                      ),
+                      child: Icon(
+                        item.icon,
+                        size: AppSizes.iconSm,
+                        color: AppColors.primaryDarkGreen,
+                      ),
+                    ),
+                    const SizedBox(width: AppSizes.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          AppText(text: item.title, size: 14, weight: FontWeight.w500),
+                          AppText(
+                            text: item.title,
+                            size: 14,
+                            weight: FontWeight.w500,
+                          ),
                           if (item.subtitle != null) ...[
                             const SizedBox(height: 2),
                             AppText(
                               text: item.subtitle!,
                               size: 11,
-                              color: Colors.grey.shade500,
+                              color: AppColors.textSecondaryLight,
                             ),
                           ],
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, size: 20, color: Colors.grey.shade400),
+                    Icon(Icons.chevron_right,
+                        size: 20,
+                        color: AppColors.textSecondaryLight
+                            .withValues(alpha: 0.5)),
                   ],
                 ),
               ),
@@ -468,10 +805,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 }
 
 class _SettingsItem {
+  final IconData icon;
   final String title;
   final String? subtitle;
   final VoidCallback onTap;
   final bool isLast;
 
-  _SettingsItem(this.title, {this.subtitle, required this.onTap, this.isLast = false});
+  _SettingsItem({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    required this.onTap,
+    this.isLast = false,
+  });
 }

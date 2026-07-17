@@ -3,6 +3,7 @@ import 'package:toastification/toastification.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/firebase_options.dart';
 import 'package:turfpro_owner/common/services/app_config_service.dart';
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
@@ -75,12 +76,9 @@ class MyApp extends StatelessWidget {
         child: MaterialApp(
           title: 'TurfPro Owner',
           debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFFFF6B00),
-            ),
-            useMaterial3: true,
-          ),
+          theme: AppColors.getLightTheme(),
+          darkTheme: AppColors.getDarkTheme(),
+          themeMode: ThemeMode.light,
           initialRoute: '/splash',
           routes: {
             '/splash': (context) => const SplashScreen(),

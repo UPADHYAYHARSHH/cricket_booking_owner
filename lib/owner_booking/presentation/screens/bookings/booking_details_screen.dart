@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/fee_constants.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
@@ -15,31 +16,11 @@ class BookingDetailsScreen extends StatelessWidget {
   const BookingDetailsScreen({super.key, required this.booking});
 
   Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return const Color(0xFFF57C00);
-      case 'confirmed':
-      case 'completed':
-        return const Color(0xFF2E6A4F);
-      case 'cancelled':
-        return const Color(0xFFD32F2F);
-      default:
-        return Colors.grey.shade700;
-    }
+    return AppColors.bookingStatusColor(status);
   }
 
   Color _statusBgColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return const Color(0xFFFFF8E1);
-      case 'confirmed':
-      case 'completed':
-        return const Color(0xFFE8F5E9);
-      case 'cancelled':
-        return const Color(0xFFFFEBEE);
-      default:
-        return Colors.grey.shade200;
-    }
+    return AppColors.bookingStatusBgColor(status);
   }
 
   String _formatSportSlug(String slug) {
@@ -128,34 +109,57 @@ class BookingDetailsScreen extends StatelessWidget {
     final isOwnerBooking = booking['user_id'] == null;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: AppColors.bgLight,
       appBar: AppBar(
-        backgroundColor: AppColors.primaryDarkGreen,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const HugeIcon(
-            icon: HugeIcons.strokeRoundedArrowLeft01,
-            color: Colors.white,
+        leading: Container(
+          margin: const EdgeInsets.all(AppSizes.sm),
+          decoration: BoxDecoration(
+            color: AppColors.white.withValues(alpha: 0.2),
+            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
           ),
-          onPressed: () => Navigator.pop(context),
+          child: IconButton(
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedArrowLeft01,
+              color: AppColors.white,
+              size: 20,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
         ),
         title: AppText(
           text: isOwnerBooking ? "Blocked Slot Details" : "Booking Details",
           size: 16,
           weight: FontWeight.w600,
-          color: Colors.white,
+          color: AppColors.white,
         ),
         titleSpacing: 0,
       ),
+      extendBodyBehindAppBar: true,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Green header extension
+            // Green gradient header with status badge glow
             Container(
               width: double.infinity,
-              color: AppColors.primaryDarkGreen,
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primaryDarkGreen,
+                    Color(0xFF0FA968),
+                  ],
+                ),
+              ),
+              padding: EdgeInsets.fromLTRB(
+                AppSizes.xl,
+                MediaQuery.of(context).padding.top + 60,
+                AppSizes.xl,
+                AppSizes.xl,
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -168,10 +172,10 @@ class BookingDetailsScreen extends StatelessWidget {
                           text: "Booking #CB$displayId",
                           size: 20,
                           weight: FontWeight.bold,
-                          color: Colors.white,
+                          color: AppColors.white,
                         ),
                         if (bookedOnFormatted.isNotEmpty) ...[
-                          const SizedBox(height: 2),
+                          const SizedBox(height: AppSizes.xxs),
                           AppText(
                             text: "Booked on $bookedOnFormatted",
                             size: 11,
@@ -181,13 +185,23 @@ class BookingDetailsScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSizes.md),
                   Container(
                     margin: const EdgeInsets.only(top: 2),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14, vertical: 6),
                     decoration: BoxDecoration(
                       color: _statusBgColor(status),
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius:
+                          BorderRadius.circular(AppSizes.radiusFull),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _statusColor(status)
+                              .withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: AppText(
                       text: status[0].toUpperCase() + status.substring(1),
@@ -201,41 +215,56 @@ class BookingDetailsScreen extends StatelessWidget {
             ),
 
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+              padding: const EdgeInsets.fromLTRB(
+                  AppSizes.lg, AppSizes.lg, AppSizes.lg, AppSizes.xxxxl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Check-in banner
-                  _CheckInBanner(isCheckedIn: isCheckedIn, checkedInAt: checkedInFormatted),
-                  const SizedBox(height: 16),
+                  _CheckInBanner(
+                      isCheckedIn: isCheckedIn,
+                      checkedInAt: checkedInFormatted),
+                  const SizedBox(height: AppSizes.lg),
 
                   // Player card or Owner Block Reason
                   if (isOwnerBooking)
                     _SectionCard(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                            vertical: AppSizes.md),
                         child: Row(
                           children: [
-                            const CircleAvatar(
-                              radius: 26,
-                              backgroundColor: Colors.blue,
-                              child: Icon(Icons.lock, color: Colors.white),
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: AppColors.accentOrange,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              child: const Icon(Icons.lock,
+                                  color: AppColors.white, size: 24),
                             ),
-                            const SizedBox(width: 14),
+                            const SizedBox(width: AppSizes.lg),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                 children: [
                                   const AppText(
                                     text: "Booked by Owner",
                                     size: 15,
                                     weight: FontWeight.bold,
                                   ),
-                                  const SizedBox(height: 3),
+                                  const SizedBox(height: AppSizes.xxs),
                                   AppText(
                                     text: "Reason: ${booking['notes']?.toString().isNotEmpty == true ? booking['notes'] : 'No reason provided'}",
                                     size: 13,
-                                    color: Colors.grey.shade600,
+                                    color:
+                                        AppColors.textSecondaryLight,
                                   ),
                                 ],
                               ),
@@ -246,77 +275,118 @@ class BookingDetailsScreen extends StatelessWidget {
                     )
                   else
                     _SectionCard(
-                      child: Row(
-                        children: [
-                          CircleAvatar(
-                            radius: 26,
-                            backgroundColor: AppColors.primaryDarkGreen,
-                            backgroundImage:
-                                playerImage.isNotEmpty ? NetworkImage(playerImage) : null,
-                            child: playerImage.isEmpty
-                                ? AppText(
-                                    text: playerName.isNotEmpty
-                                        ? playerName[0].toUpperCase()
-                                        : 'P',
-                                    color: Colors.white,
-                                    size: 20,
-                                    weight: FontWeight.bold,
-                                  )
-                                : null,
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                AppText(
-                                  text: playerName,
-                                  size: 15,
-                                  weight: FontWeight.bold,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: AppSizes.md),
+                        child: Row(
+                          children: [
+                            // Avatar with ring border
+                            Container(
+                              width: 58,
+                              height: 58,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColors.primaryDarkGreen,
+                                  width: 2.5,
                                 ),
-                                if (memberSinceFormatted.isNotEmpty) ...[
-                                  const SizedBox(height: 3),
-                                  AppText(
-                                    text: "Member since $memberSinceFormatted",
-                                    size: 12,
-                                    color: Colors.grey.shade600,
-                                  ),
-                                ],
-                              ],
+                              ),
+                              child: CircleAvatar(
+                                radius: 25,
+                                backgroundColor:
+                                    AppColors.primaryDarkGreen,
+                                backgroundImage: playerImage.isNotEmpty
+                                    ? NetworkImage(playerImage)
+                                    : null,
+                                child: playerImage.isEmpty
+                                    ? AppText(
+                                        text: playerName.isNotEmpty
+                                            ? playerName[0]
+                                                .toUpperCase()
+                                            : 'P',
+                                        color: AppColors.white,
+                                        size: 20,
+                                        weight: FontWeight.bold,
+                                      )
+                                    : null,
+                              ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: AppSizes.lg),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
+                                children: [
+                                  AppText(
+                                    text: playerName,
+                                    size: 15,
+                                    weight: FontWeight.bold,
+                                  ),
+                                  if (memberSinceFormatted
+                                      .isNotEmpty) ...[
+                                    const SizedBox(height: AppSizes.xxs),
+                                    AppText(
+                                      text:
+                                          "Member since $memberSinceFormatted",
+                                      size: 12,
+                                      color:
+                                          AppColors.textSecondaryLight,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSizes.xl),
                   const _SectionLabel(title: "BOOKING DETAILS"),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSizes.sm),
 
                   _SectionCard(
                     child: Column(
                       children: [
-                        _DetailRow(label: "Court", value: groundName),
+                        _DetailRow(
+                          label: "Court",
+                          value: groundName,
+                          iconData: Icons.sports_tennis_rounded,
+                        ),
                         const _RowDivider(),
                         _DetailRow(
                           label: "Sport",
                           value: sportName,
-                          icon: sportIcon(rawSport.isNotEmpty ? rawSport : sportName),
+                          icon: sportIcon(rawSport.isNotEmpty
+                              ? rawSport
+                              : sportName),
                         ),
                         const _RowDivider(),
-                        _DetailRow(label: "Date", value: dateFormatted),
+                        _DetailRow(
+                          label: "Date",
+                          value: dateFormatted,
+                          iconData: Icons.calendar_today_rounded,
+                        ),
                         const _RowDivider(),
-                        _DetailRow(label: "Time", value: timeFormatted),
+                        _DetailRow(
+                          label: "Time",
+                          value: timeFormatted,
+                          iconData: Icons.access_time_rounded,
+                        ),
                         const _RowDivider(),
-                        _DetailRow(label: "Booking ID", value: "CB$displayId"),
+                        _DetailRow(
+                          label: "Booking ID",
+                          value: "CB$displayId",
+                          iconData: Icons.tag_rounded,
+                        ),
                       ],
                     ),
                   ),
 
                   if (!isOwnerBooking) ...[
-                    const SizedBox(height: 20),
+                    const SizedBox(height: AppSizes.xl),
                     const _SectionLabel(title: "PAYMENT SUMMARY"),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: AppSizes.sm),
 
                     _SectionCard(
                       child: Column(
@@ -337,7 +407,8 @@ class BookingDetailsScreen extends StatelessWidget {
                               label: kCommissionIsPercentage
                                   ? "Commission (${kCommissionRate.toStringAsFixed(kCommissionRate % 1 == 0 ? 0 : 1)}%)"
                                   : "Commission Fee",
-                              value: "– ₹${commissionFee.toStringAsFixed(0)}",
+                              value:
+                                  "– ₹${commissionFee.toStringAsFixed(0)}",
                               valueColor: AppColors.error,
                             ),
                           ],
@@ -345,29 +416,69 @@ class BookingDetailsScreen extends StatelessWidget {
                           _PaymentRow(
                             label: "Taxes & Charges",
                             value: "Included",
-                            valueColor: Colors.grey.shade500,
+                            valueColor: AppColors.textSecondaryLight,
                           ),
                           const _RowDivider(),
-                          // You earn row — highlighted
+                          // You earn — highlighted section
                           Container(
-                            margin: const EdgeInsets.only(top: 4, bottom: 2),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            margin: const EdgeInsets.only(
+                                top: AppSizes.sm, bottom: AppSizes.xxs),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSizes.lg,
+                                vertical: AppSizes.md),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE8F5E9),
-                              borderRadius: BorderRadius.circular(10),
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Color(0xFFE8F5E9),
+                                  Color(0xFFF1F8E9),
+                                ],
+                              ),
+                              borderRadius:
+                                  BorderRadius.circular(AppSizes.radiusMd),
+                              border: Border.all(
+                                color: AppColors.primaryDarkGreen
+                                    .withValues(alpha: 0.15),
+                                width: 1,
+                              ),
                             ),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
                               children: [
-                                const AppText(
-                                  text: "You Earn",
-                                  size: 14,
-                                  weight: FontWeight.bold,
-                                  color: AppColors.primaryDarkGreen,
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryDarkGreen
+                                            .withValues(alpha: 0.12),
+                                        borderRadius:
+                                            BorderRadius.circular(
+                                                AppSizes.radiusSm),
+                                      ),
+                                      child: const Icon(
+                                        Icons.account_balance_wallet_rounded,
+                                        size: 18,
+                                        color:
+                                            AppColors.primaryDarkGreen,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSizes.sm),
+                                    const AppText(
+                                      text: "You Earn",
+                                      size: 14,
+                                      weight: FontWeight.bold,
+                                      color:
+                                          AppColors.primaryDarkGreen,
+                                    ),
+                                  ],
                                 ),
                                 AppText(
-                                  text: "₹${groundRate.toStringAsFixed(0)}",
-                                  size: 18,
+                                  text:
+                                      "₹${groundRate.toStringAsFixed(0)}",
+                                  size: 20,
                                   weight: FontWeight.w800,
                                   color: AppColors.primaryDarkGreen,
                                 ),
@@ -375,12 +486,12 @@ class BookingDetailsScreen extends StatelessWidget {
                             ),
                           ),
                           if (paymentId.isNotEmpty) ...[
-                            const SizedBox(height: 4),
+                            const SizedBox(height: AppSizes.xs),
                             const _RowDivider(),
                             _PaymentRow(
                               label: "Payment Ref.",
                               value: paymentId,
-                              valueColor: Colors.grey.shade500,
+                              valueColor: AppColors.textSecondaryLight,
                             ),
                           ],
                         ],
@@ -389,13 +500,15 @@ class BookingDetailsScreen extends StatelessWidget {
                   ],
 
                   if (isOwnerBooking) ...[
-                    const SizedBox(height: 40),
+                    const SizedBox(height: AppSizes.xxxxl),
                     SizedBox(
                       width: double.infinity,
-                      height: 52,
+                      height: AppSizes.buttonHeightLg,
                       child: ElevatedButton(
                         onPressed: () {
-                          context.read<SlotCubit>().unbookOwnerSlot(booking['id'].toString());
+                          context
+                              .read<SlotCubit>()
+                              .unbookOwnerSlot(booking['id'].toString());
                           toastification.show(
                             context: context,
                             title: const Text("Slot Unblocked"),
@@ -405,18 +518,28 @@ class BookingDetailsScreen extends StatelessWidget {
                           Navigator.pop(context);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.blue.shade700,
+                          backgroundColor: AppColors.surfaceLight,
+                          foregroundColor: AppColors.accentOrange,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: Colors.blue.shade200, width: 1.5),
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusMd),
+                            side: const BorderSide(
+                                color: AppColors.accentOrange,
+                                width: 1.5),
                           ),
                           elevation: 0,
                         ),
-                        child: const AppText(
-                          text: "Unblock Slot",
-                          size: 16,
-                          weight: FontWeight.w700,
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.lock_open_rounded, size: 18),
+                            SizedBox(width: AppSizes.sm),
+                            AppText(
+                              text: "Unblock Slot",
+                              size: 16,
+                              weight: FontWeight.w700,
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -439,41 +562,62 @@ class _CheckInBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isCheckedIn ? AppColors.primaryDarkGreen : const Color(0xFFF57C00);
-    final bg = isCheckedIn ? const Color(0xFFE8F5E9) : const Color(0xFFFFF8E1);
-    final border = isCheckedIn ? const Color(0xFF81C784) : const Color(0xFFFFCA28);
+    final color = isCheckedIn
+        ? AppColors.primaryDarkGreen
+        : AppColors.statusPending;
+    final bg = isCheckedIn
+        ? AppColors.statusConfirmedBg
+        : AppColors.statusPendingBg;
+    final border = isCheckedIn
+        ? const Color(0xFF81C784)
+        : AppColors.statusPendingBorder;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.lg, vertical: AppSizes.md),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: border),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+        border: Border.all(color: border, width: 1),
       ),
       child: Row(
         children: [
-          Icon(
-            isCheckedIn ? Icons.check_circle_rounded : Icons.schedule_rounded,
-            color: color,
-            size: 20,
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            ),
+            child: Icon(
+              isCheckedIn
+                  ? Icons.check_circle_rounded
+                  : Icons.schedule_rounded,
+              color: color,
+              size: 18,
+            ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSizes.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppText(
-                  text: isCheckedIn ? "Checked In" : "Not Yet Checked In",
+                  text: isCheckedIn
+                      ? "Checked In"
+                      : "Not Yet Checked In",
                   size: 13,
                   weight: FontWeight.w700,
                   color: color,
                 ),
                 if (isCheckedIn && checkedInAt != null)
-                  AppText(
-                    text: checkedInAt!,
-                    size: 11,
-                    color: Colors.grey.shade600,
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSizes.xxs),
+                    child: AppText(
+                      text: checkedInAt!,
+                      size: 11,
+                      color: AppColors.textSecondaryLight,
+                    ),
                   ),
               ],
             ),
@@ -491,12 +635,23 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppText(
-      text: title,
-      size: 11,
-      weight: FontWeight.w700,
-      color: Colors.grey.shade500,
-      letterSpacing: 1.2,
+    return Row(
+      children: [
+        AppText(
+          text: title,
+          size: 11,
+          weight: FontWeight.w700,
+          color: AppColors.textSecondaryLight,
+          letterSpacing: 1.2,
+        ),
+        const SizedBox(width: AppSizes.sm),
+        Expanded(
+          child: Container(
+            height: 1,
+            color: AppColors.borderLight,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -510,17 +665,15 @@ class _SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.lg, vertical: AppSizes.sm),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        border: Border.all(
+          color: AppColors.borderLight,
+          width: 1,
+        ),
       ),
       child: child,
     );
@@ -531,35 +684,57 @@ class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
   final dynamic icon;
+  final IconData? iconData;
 
-  const _DetailRow({required this.label, required this.value, this.icon});
+  const _DetailRow({
+    required this.label,
+    required this.value,
+    this.icon,
+    this.iconData,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          // Icon + label
+          if (iconData != null) ...[
+            Icon(
+              iconData,
+              size: 16,
+              color: AppColors.primaryDarkGreen,
+            ),
+            const SizedBox(width: AppSizes.sm),
+          ] else if (icon != null) ...[
+            HugeIcon(
+              icon: icon,
+              size: 16,
+              color: AppColors.primaryDarkGreen,
+            ),
+            const SizedBox(width: AppSizes.sm),
+          ],
           Expanded(
             flex: 2,
-            child: AppText(text: label, size: 13, color: Colors.grey.shade500),
+            child: AppText(
+              text: label,
+              size: 13,
+              color: AppColors.textSecondaryLight,
+            ),
           ),
           Expanded(
             flex: 3,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                if (icon != null) ...[
-                  HugeIcon(icon: icon, size: 14, color: Colors.grey.shade700),
-                  const SizedBox(width: 5),
-                ],
                 Flexible(
                   child: AppText(
                     text: value,
                     size: 13,
                     weight: FontWeight.w600,
-                    color: Colors.grey.shade800,
+                    color: AppColors.textPrimaryLight,
                     align: TextAlign.right,
                   ),
                 ),
@@ -577,21 +752,26 @@ class _PaymentRow extends StatelessWidget {
   final String value;
   final Color? valueColor;
 
-  const _PaymentRow({required this.label, required this.value, this.valueColor});
+  const _PaymentRow(
+      {required this.label, required this.value, this.valueColor});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          AppText(text: label, size: 13, color: Colors.grey.shade500),
+          AppText(
+            text: label,
+            size: 13,
+            color: AppColors.textSecondaryLight,
+          ),
           AppText(
             text: value,
             size: 13,
             weight: FontWeight.w600,
-            color: valueColor ?? Colors.grey.shade800,
+            color: valueColor ?? AppColors.textPrimaryLight,
           ),
         ],
       ),
@@ -604,6 +784,10 @@ class _RowDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Divider(color: Colors.grey.shade100, height: 1, thickness: 1);
+    return Divider(
+      color: AppColors.borderLight,
+      height: 1,
+      thickness: 1,
+    );
   }
 }

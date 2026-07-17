@@ -4,9 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
-import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
-import 'package:turfpro_owner/owner_booking/domain/models/virtual_slot.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_state.dart';
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
@@ -40,7 +39,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.bgLight,
       body: SafeArea(
         child: BlocBuilder<SlotCubit, SlotState>(
           builder: (context, state) {
@@ -61,21 +60,21 @@ class _SlotsScreenState extends State<SlotsScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const SizedBox(height: 16),
+                                const SizedBox(height: AppSizes.lg),
                                 _buildGroundSelector(state),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: AppSizes.xxl),
                                 _buildDateSelector(state),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: AppSizes.xxl),
                                 _buildSlotHeader(context, state),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: AppSizes.lg),
                                 _buildLegend(),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: AppSizes.lg),
                                 _buildTimeFilters(),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: AppSizes.lg),
                                 _buildSlotGrid(context, state),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: AppSizes.xxl),
                                 _buildSummaryCard(state),
-                                const SizedBox(height: 24),
+                                const SizedBox(height: AppSizes.xxl),
                               ],
                             ),
                           ),
@@ -100,7 +99,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
             HugeIcon(
               icon: HugeIcons.strokeRoundedCricketBat,
               size: 64,
-              color: Colors.grey.shade300,
+              color: AppColors.borderLight,
             ),
             const SizedBox(height: 16),
             const AppText(
@@ -112,20 +111,20 @@ class _SlotsScreenState extends State<SlotsScreen> {
             AppText(
               text: "There are no grounds available for the selected location.",
               size: 14,
-              color: Colors.grey.shade600,
+              color: AppColors.textSecondaryLight,
               align: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryDarkGreen,
-                foregroundColor: Colors.white,
+                foregroundColor: AppColors.white,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                 ),
               ),
               icon: const Icon(Icons.add, size: 18),
@@ -133,7 +132,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
                 text: "Create Ground",
                 size: 14,
                 weight: FontWeight.w600,
-                color: Colors.white,
+                color: AppColors.white,
               ),
               onPressed: () => _navigateToCreateGround(context),
             ),
@@ -166,19 +165,56 @@ class _SlotsScreenState extends State<SlotsScreen> {
   Widget _buildHeader(String venueName) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: const BoxDecoration(color: AppColors.primaryDarkGreen),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.lg,
+        AppSizes.md,
+        AppSizes.lg,
+        AppSizes.lg,
+      ),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primaryDarkGreen,
+            Color(0xFF066B3E),
+          ],
+        ),
+      ),
+      child: Row(
         children: [
-          const AppText(
-            text: "Slot Management",
-            size: 24,
-            weight: FontWeight.bold,
-            color: Colors.white,
+          Container(
+            padding: const EdgeInsets.all(AppSizes.sm),
+            decoration: BoxDecoration(
+              color: AppColors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+            ),
+            child: const Icon(
+              Icons.view_timeline_rounded,
+              color: AppColors.white,
+              size: AppSizes.iconMd,
+            ),
           ),
-          const SizedBox(height: 4),
-          AppText(text: venueName, size: 14, color: Colors.white70),
+          const SizedBox(width: AppSizes.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const AppText(
+                  text: "Slot Management",
+                  size: 20,
+                  weight: FontWeight.bold,
+                  color: AppColors.white,
+                ),
+                const SizedBox(height: AppSizes.xxs),
+                AppText(
+                  text: venueName,
+                  size: 13,
+                  color: AppColors.white.withValues(alpha: 0.75),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -186,12 +222,12 @@ class _SlotsScreenState extends State<SlotsScreen> {
 
   Widget _buildGroundSelector(SlotLoaded state) {
     return SizedBox(
-      height: 44,
+      height: 48,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
         scrollDirection: Axis.horizontal,
         itemCount: state.grounds.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, __) => const SizedBox(width: AppSizes.md),
         itemBuilder: (context, index) {
           final ground = state.grounds[index];
           final isSelected = ground['id'] == state.selectedGroundId;
@@ -203,32 +239,43 @@ class _SlotsScreenState extends State<SlotsScreen> {
 
           return GestureDetector(
             onTap: () => context.read<SlotCubit>().selectGround(ground['id']),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primaryDarkGreen : Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                color: isSelected ? AppColors.primaryDarkGreen : AppColors.white,
+                borderRadius: BorderRadius.circular(AppSizes.radiusRound),
                 border: Border.all(
                   color: isSelected
                       ? AppColors.primaryDarkGreen
-                      : Colors.grey.shade300,
+                      : AppColors.borderLight,
+                  width: isSelected ? 1.5 : 1,
                 ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primaryDarkGreen.withValues(alpha: 0.25),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
               ),
               child: Row(
                 children: [
                   HugeIcon(
                     icon: icon,
                     color: isSelected
-                        ? Colors.orange.shade300
-                        : Colors.grey.shade600,
+                        ? AppColors.white
+                        : AppColors.accentOrange,
                     size: 18,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSizes.sm),
                   AppText(
                     text: "Court ${index + 1} — ${ground['name']}",
-                    color: isSelected ? Colors.white : Colors.grey.shade800,
-                    weight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                    size: 14,
+                    color: isSelected ? AppColors.white : AppColors.textPrimaryLight,
+                    weight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    size: 13,
                   ),
                 ],
               ),
@@ -256,16 +303,16 @@ class _SlotsScreenState extends State<SlotsScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (_dateScrollController.hasClients) {
           final screenWidth = MediaQuery.of(context).size.width;
-          const itemWidth = 52.0;
-          const separatorWidth = 16.0;
+          const itemWidth = 56.0;
+          const separatorWidth = 12.0;
           const totalItemWidth = itemWidth + separatorWidth;
-          
+
           final offset = (selectedIndex * totalItemWidth) - (screenWidth / 2) + (itemWidth / 2) + 16.0;
           final target = offset.clamp(
             _dateScrollController.position.minScrollExtent,
             _dateScrollController.position.maxScrollExtent,
           );
-          
+
           _dateScrollController.animateTo(
             target,
             duration: const Duration(milliseconds: 300),
@@ -276,54 +323,81 @@ class _SlotsScreenState extends State<SlotsScreen> {
     }
 
     return SizedBox(
-      height: 70,
+      height: 76,
       child: ListView.separated(
         controller: _dateScrollController,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
         scrollDirection: Axis.horizontal,
         itemCount: dates.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
           final date = dates[index];
           final isSelected = _isSameDay(date, state.selectedDate);
+          final isToday = _isSameDay(date, DateTime.now());
 
           return GestureDetector(
             onTap: () => context.read<SlotCubit>().selectDate(date),
-            child: Container(
-              width: 52,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 56,
               decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primaryDarkGreen
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
+                color: isSelected ? AppColors.primaryDarkGreen : AppColors.white,
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                border: Border.all(
+                  color: isSelected
+                      ? AppColors.primaryDarkGreen
+                      : AppColors.borderLight,
+                  width: isSelected ? 1.5 : 1,
+                ),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ]
+                    : null,
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   AppText(
                     text: DateFormat('EEE').format(date).toUpperCase(),
-                    size: 12,
-                    color: isSelected ? Colors.white70 : Colors.grey.shade500,
-                    weight: FontWeight.w500,
+                    size: 11,
+                    color: isSelected
+                        ? AppColors.white
+                        : AppColors.textSecondaryLight,
+                    weight: FontWeight.w600,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSizes.xs),
                   AppText(
                     text: "${date.day}",
                     size: 18,
-                    color: isSelected ? Colors.white : Colors.grey.shade800,
+                    color: isSelected ? AppColors.white : AppColors.textPrimaryLight,
                     weight: FontWeight.bold,
                   ),
-                  const SizedBox(height: 4),
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.orange.shade300
-                          : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
+                  const SizedBox(height: AppSizes.xs),
+                  if (isToday && !isSelected)
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: const BoxDecoration(
+                        color: AppColors.accentOrange,
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                  else if (isSelected)
+                    Container(
+                      width: 5,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.7),
+                        shape: BoxShape.circle,
+                      ),
+                    )
+                  else
+                    const SizedBox(height: 5),
                 ],
               ),
             ),
@@ -341,57 +415,88 @@ class _SlotsScreenState extends State<SlotsScreen> {
       (g) => g['id'] == state.selectedGroundId,
     );
     final courtName = groundIndex != -1 ? "COURT ${groundIndex + 1}" : "";
-    final dateStr = DateFormat(
-      'EEE, MMM d',
-    ).format(state.selectedDate).toUpperCase();
+    final dateStr = DateFormat('EEE, MMM d').format(state.selectedDate).toUpperCase();
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          AppText(
-            text: "$dateStr — $courtName",
-            size: 14,
-            color: AppColors.primaryDarkGreen,
-            weight: FontWeight.bold,
-            letterSpacing: 1.2,
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.lg,
+          vertical: AppSizes.sm,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.primaryDarkGreen.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          border: Border.all(
+            color: AppColors.primaryDarkGreen.withValues(alpha: 0.12),
           ),
-        ],
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.calendar_today_rounded,
+              size: 16,
+              color: AppColors.primaryDarkGreen,
+            ),
+            const SizedBox(width: AppSizes.sm),
+            AppText(
+              text: "$dateStr",
+              size: 13,
+              color: AppColors.primaryDarkGreen,
+              weight: FontWeight.w600,
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
+              width: 3,
+              height: 3,
+              decoration: const BoxDecoration(
+                color: AppColors.primaryDarkGreen,
+                shape: BoxShape.circle,
+              ),
+            ),
+            AppText(
+              text: courtName,
+              size: 13,
+              color: AppColors.primaryDarkGreen,
+              weight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildLegend() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
       child: Wrap(
-        spacing: 12,
-        runSpacing: 8,
+        spacing: 10,
+        runSpacing: AppSizes.sm,
         children: [
           _LegendChip(
             label: "Open",
-            color: Colors.green.shade100,
-            textColor: Colors.green.shade800,
-            iconColor: Colors.green.shade700,
+            bgColor: AppColors.slotAvailableBg,
+            textColor: AppColors.success,
+            dotColor: AppColors.slotAvailable,
           ),
           _LegendChip(
             label: "Booked",
-            color: Colors.grey.shade100,
-            textColor: Colors.grey.shade600,
-            iconColor: Colors.grey.shade500,
+            bgColor: AppColors.borderLight,
+            textColor: AppColors.textSecondaryLight,
+            dotColor: AppColors.slotBlocked,
           ),
           _LegendChip(
             label: "Owner Booked",
-            color: Colors.blue.shade50,
-            textColor: Colors.blue.shade700,
-            iconColor: Colors.blue.shade400,
+            bgColor: AppColors.statusConfirmedBg,
+            textColor: AppColors.statusConfirmed,
+            dotColor: AppColors.statusConfirmed,
           ),
           _LegendChip(
             label: "Peak",
-            color: Colors.orange.shade50,
-            textColor: Colors.orange.shade800,
-            iconColor: Colors.orange.shade600,
+            bgColor: AppColors.statusPendingBg,
+            textColor: AppColors.statusPending,
+            dotColor: AppColors.accentOrange,
             isPeak: true,
           ),
         ],
@@ -402,12 +507,12 @@ class _SlotsScreenState extends State<SlotsScreen> {
   Widget _buildTimeFilters() {
     final filters = ['All', 'Morning', 'Afternoon', 'Evening', 'Night'];
     return SizedBox(
-      height: 36,
+      height: 38,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
         scrollDirection: Axis.horizontal,
         itemCount: filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, __) => const SizedBox(width: 6),
         itemBuilder: (context, index) {
           final filter = filters[index];
           final isSelected = _selectedTimeFilter == filter;
@@ -417,21 +522,41 @@ class _SlotsScreenState extends State<SlotsScreen> {
                 _selectedTimeFilter = filter;
               });
             },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primaryDarkGreen : Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                color: isSelected ? AppColors.primaryDarkGreen : AppColors.white,
+                borderRadius: BorderRadius.circular(AppSizes.radiusRound),
                 border: Border.all(
-                  color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade300,
+                  color: isSelected
+                      ? AppColors.primaryDarkGreen
+                      : AppColors.borderLight,
+                  width: isSelected ? 1.5 : 1,
                 ),
               ),
-              child: AppText(
-                text: filter,
-                color: isSelected ? Colors.white : Colors.grey.shade700,
-                weight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                size: 13,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isSelected) ...[
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppColors.accentOrange,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  AppText(
+                    text: filter,
+                    color: isSelected ? AppColors.white : AppColors.textSecondaryLight,
+                    weight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                    size: 13,
+                  ),
+                ],
               ),
             ),
           );
@@ -442,7 +567,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
 
   Widget _buildSlotGrid(BuildContext context, SlotLoaded state) {
     List<VirtualSlot> filteredSlots = state.slots;
-    
+
     if (_selectedTimeFilter != 'All') {
       filteredSlots = state.slots.where((slot) {
         final hour = slot.startTime.hour;
@@ -467,22 +592,22 @@ class _SlotsScreenState extends State<SlotsScreen> {
         child: Center(
           child: AppText(
             text: "No slots available for $_selectedTimeFilter.",
-            color: Colors.grey,
+            color: AppColors.textSecondaryLight,
           ),
         ),
       );
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           childAspectRatio: 2.2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+          crossAxisSpacing: AppSizes.md,
+          mainAxisSpacing: AppSizes.md,
         ),
         itemCount: filteredSlots.length,
         itemBuilder: (context, index) {
@@ -534,7 +659,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
       context: context,
       barrierDismissible: true,
       barrierLabel: "Book Slot",
-      barrierColor: Colors.black.withOpacity(0.45),
+      barrierColor: AppColors.black.withValues(alpha: 0.45),
       transitionDuration: const Duration(milliseconds: 280),
       pageBuilder: (ctx, anim1, anim2) => const SizedBox.shrink(),
       transitionBuilder: (ctx, anim, secondaryAnim, child) {
@@ -548,11 +673,11 @@ class _SlotsScreenState extends State<SlotsScreen> {
               insetPadding: const EdgeInsets.symmetric(horizontal: 28),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusXxl),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryDarkGreen.withOpacity(0.25),
+                      color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
                       blurRadius: 30,
                       offset: const Offset(0, 12),
                     ),
@@ -564,50 +689,58 @@ class _SlotsScreenState extends State<SlotsScreen> {
                     // Gradient header
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.xl,
+                        AppSizes.xxl,
+                        AppSizes.xl,
+                        AppSizes.xl,
+                      ),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: isPeak
                               ? [
-                                  Colors.orange.shade500,
-                                  Colors.deepOrange.shade400,
+                                  AppColors.accentOrange,
+                                  AppColors.statusPending,
                                 ]
-                              : [Colors.blue.shade600, Colors.indigo.shade500],
+                              : [
+                                  AppColors.statusConfirmed,
+                                  AppColors.primaryDarkGreen,
+                                ],
                         ),
                         borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(24),
+                          top: Radius.circular(AppSizes.radiusXxl),
                         ),
                       ),
                       child: Column(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(AppSizes.lg),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
+                              color: AppColors.white.withValues(alpha: 0.18),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
                               Icons.event_available,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: 30,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSizes.md),
                           const Text(
                             "Book This Slot",
                             style: TextStyle(
-                              color: Colors.white,
+                              color: AppColors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppSizes.xs),
                           Text(
                             dateStr,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.85),
+                              color: AppColors.white.withValues(alpha: 0.85),
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -616,20 +749,26 @@ class _SlotsScreenState extends State<SlotsScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.xl,
+                        AppSizes.xl,
+                        AppSizes.xl,
+                        AppSizes.sm,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Time range card
                           Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(AppSizes.lg),
                             decoration: BoxDecoration(
-                              color: (isPeak ? Colors.orange : Colors.blue)
-                                  .shade50,
-                              borderRadius: BorderRadius.circular(14),
+                              color: isPeak
+                                  ? AppColors.statusPendingBg
+                                  : AppColors.statusConfirmedBg,
+                              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
                               border: Border.all(
-                                color: (isPeak ? Colors.orange : Colors.blue)
-                                    .shade100,
+                                color: isPeak
+                                    ? AppColors.statusPendingBorder
+                                    : AppColors.statusConfirmedBg,
                               ),
                             ),
                             child: Row(
@@ -637,46 +776,47 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                 Icon(
                                   Icons.access_time_filled_rounded,
                                   size: 20,
-                                  color: (isPeak ? Colors.orange : Colors.blue)
-                                      .shade600,
+                                  color: isPeak
+                                      ? AppColors.statusPending
+                                      : AppColors.statusConfirmed,
                                 ),
-                                const SizedBox(width: 10),
+                                const SizedBox(width: AppSizes.sm + 2),
                                 Expanded(
                                   child: Text(
                                     "$startStr – $endStr",
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
-                                      color:
-                                          (isPeak ? Colors.orange : Colors.blue)
-                                              .shade800,
+                                      color: isPeak
+                                          ? AppColors.statusPending
+                                          : AppColors.statusConfirmed,
                                     ),
                                   ),
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                    horizontal: AppSizes.sm + 2,
+                                    vertical: AppSizes.xs + 1,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
+                                    color: AppColors.white,
+                                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                                   ),
                                   child: Text(
                                     durationLabel,
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color:
-                                          (isPeak ? Colors.orange : Colors.blue)
-                                              .shade700,
+                                      color: isPeak
+                                          ? AppColors.statusPending
+                                          : AppColors.statusConfirmed,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSizes.md),
                           Row(
                             children: [
                               Expanded(
@@ -686,66 +826,65 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                       : Icons.event_seat_rounded,
                                   label: isPeak ? "Peak Slot" : "Regular Slot",
                                   color: isPeak
-                                      ? Colors.orange.shade700
-                                      : Colors.green.shade700,
+                                      ? AppColors.accentOrange
+                                      : AppColors.primaryDarkGreen,
                                   bgColor: isPeak
-                                      ? Colors.orange.shade50
-                                      : Colors.green.shade50,
+                                      ? AppColors.statusPendingBg
+                                      : AppColors.statusConfirmedBg,
                                 ),
                               ),
-                              const SizedBox(width: 10),
+                              const SizedBox(width: AppSizes.sm + 2),
                               Expanded(
                                 child: _InfoChip(
                                   icon: Icons.currency_rupee_rounded,
                                   label: "₹${slot.price}",
                                   color: AppColors.primaryDarkGreen,
-                                  bgColor: AppColors.primaryDarkGreen
-                                      .withOpacity(0.08),
+                                  bgColor: AppColors.statusConfirmedBg,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSizes.lg),
                           Text(
                             "This slot will be marked as Booked by Owner and won't be available for customer bookings.",
                             style: TextStyle(
                               fontSize: 12.5,
-                              color: Colors.grey.shade600,
+                              color: AppColors.textSecondaryLight,
                               height: 1.4,
                             ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSizes.lg),
                           TextField(
                             controller: reasonController,
                             decoration: InputDecoration(
                               hintText: "Optional note (e.g., Maintenance)",
-                              hintStyle: TextStyle(
+                              hintStyle: const TextStyle(
                                 fontSize: 13,
-                                color: Colors.grey.shade400,
+                                color: AppColors.borderLight,
                               ),
                               filled: true,
-                              fillColor: Colors.grey.shade50,
+                              fillColor: AppColors.bgLight,
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                                borderSide: const BorderSide(
+                                  color: AppColors.borderLight,
                                 ),
                               ),
                               enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: BorderSide(
-                                  color: Colors.grey.shade300,
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                                borderSide: const BorderSide(
+                                  color: AppColors.borderLight,
                                 ),
                               ),
                               focusedBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                                 borderSide: const BorderSide(
                                   color: AppColors.primaryDarkGreen,
                                 ),
                               ),
                               contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
+                                horizontal: AppSizes.lg,
+                                vertical: AppSizes.md,
                               ),
                             ),
                             maxLines: 2,
@@ -754,45 +893,50 @@ class _SlotsScreenState extends State<SlotsScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.xl,
+                        AppSizes.sm,
+                        AppSizes.xl,
+                        AppSizes.xl,
+                      ),
                       child: Row(
                         children: [
                           Expanded(
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
+                                  vertical: AppSizes.lg - 2,
                                 ),
-                                side: BorderSide(color: Colors.grey.shade300),
+                                side: const BorderSide(color: AppColors.borderLight),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                                 ),
                               ),
                               onPressed: () => Navigator.of(ctx).pop(),
-                              child: Text(
+                              child: const Text(
                                 "Cancel",
                                 style: TextStyle(
-                                  color: Colors.grey.shade700,
+                                  color: AppColors.textSecondaryLight,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppSizes.md),
                           Expanded(
                             flex: 2,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
+                                  vertical: AppSizes.lg - 2,
                                 ),
                                 backgroundColor: isPeak
-                                    ? Colors.orange.shade600
-                                    : Colors.blue.shade600,
-                                foregroundColor: Colors.white,
+                                    ? AppColors.accentOrange
+                                    : AppColors.primaryDarkGreen,
+                                foregroundColor: AppColors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                                 ),
                               ),
                               onPressed: () {
@@ -847,7 +991,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
       context: context,
       barrierDismissible: true,
       barrierLabel: "Unblock Slot",
-      barrierColor: Colors.black.withOpacity(0.45),
+      barrierColor: AppColors.black.withValues(alpha: 0.45),
       transitionDuration: const Duration(milliseconds: 280),
       pageBuilder: (ctx, anim1, anim2) => const SizedBox.shrink(),
       transitionBuilder: (ctx, anim, secondaryAnim, child) {
@@ -861,11 +1005,11 @@ class _SlotsScreenState extends State<SlotsScreen> {
               insetPadding: const EdgeInsets.symmetric(horizontal: 28),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusXxl),
                   boxShadow: [
                     BoxShadow(
-                      color: AppColors.primaryDarkGreen.withOpacity(0.25),
+                      color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
                       blurRadius: 30,
                       offset: const Offset(0, 12),
                     ),
@@ -874,51 +1018,55 @@ class _SlotsScreenState extends State<SlotsScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Gradient header
                     Container(
                       width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
-                      decoration: BoxDecoration(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.xl,
+                        AppSizes.xxl,
+                        AppSizes.xl,
+                        AppSizes.xl,
+                      ),
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                           colors: [
-                            Colors.blueGrey.shade600,
-                            Colors.blueGrey.shade400,
+                            AppColors.textSecondaryLight,
+                            Color(0xFF78909C),
                           ],
                         ),
-                        borderRadius: const BorderRadius.vertical(
-                          top: Radius.circular(24),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(AppSizes.radiusXxl),
                         ),
                       ),
                       child: Column(
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(AppSizes.lg),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.18),
+                              color: AppColors.white.withValues(alpha: 0.18),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
                               Icons.lock_open_rounded,
-                              color: Colors.white,
+                              color: AppColors.white,
                               size: 30,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: AppSizes.md),
                           const Text(
                             "Unblock This Slot",
                             style: TextStyle(
-                              color: Colors.white,
+                              color: AppColors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: AppSizes.xs),
                           Text(
                             dateStr,
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.85),
+                              color: AppColors.white.withValues(alpha: 0.85),
                               fontSize: 12,
                               fontWeight: FontWeight.w500,
                             ),
@@ -927,78 +1075,93 @@ class _SlotsScreenState extends State<SlotsScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.xl,
+                        AppSizes.xl,
+                        AppSizes.xl,
+                        AppSizes.sm,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Time range card
                           Container(
-                            padding: const EdgeInsets.all(14),
+                            padding: const EdgeInsets.all(AppSizes.lg),
                             decoration: BoxDecoration(
-                              color: Colors.blueGrey.shade50,
-                              borderRadius: BorderRadius.circular(14),
-                              border: Border.all(
-                                color: Colors.blueGrey.shade100,
-                              ),
+                              color: AppColors.bgLight,
+                              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                              border: Border.all(color: AppColors.borderLight),
                             ),
                             child: Row(
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.access_time_filled_rounded,
                                   size: 20,
-                                  color: Colors.blueGrey.shade600,
+                                  color: AppColors.textSecondaryLight,
                                 ),
-                                const SizedBox(width: 10),
+                                const SizedBox(width: AppSizes.sm + 2),
                                 Expanded(
                                   child: Text(
                                     "$startStr – $endStr",
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 16,
-                                      color: Colors.blueGrey.shade800,
+                                      color: AppColors.textPrimaryLight,
                                     ),
                                   ),
                                 ),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 4,
+                                    horizontal: AppSizes.sm + 2,
+                                    vertical: AppSizes.xs + 1,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
+                                    color: AppColors.white,
+                                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                                   ),
-                                  child: Text(
-                                    durationLabel,
+                                  child: const Text(
+                                    "",
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w600,
-                                      color: Colors.blueGrey.shade700,
+                                      color: AppColors.textSecondaryLight,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSizes.sm),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSizes.sm + 2,
+                                    vertical: AppSizes.xs + 1,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.white,
+                                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                                  ),
+                                  child: Text(
+                                    durationLabel,
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.textSecondaryLight,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _InfoChip(
-                                  icon: Icons.info_outline_rounded,
-                                  label: "Owner Booked",
-                                  color: Colors.blueGrey.shade700,
-                                  bgColor: Colors.blueGrey.shade50,
-                                ),
-                              ),
-                            ],
+                          const SizedBox(height: AppSizes.md),
+                          _InfoChip(
+                            icon: Icons.info_outline_rounded,
+                            label: "Owner Booked",
+                            color: AppColors.textSecondaryLight,
+                            bgColor: AppColors.bgLight,
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: AppSizes.lg),
                           Text(
                             "Reason: ${slot.blockReason ?? 'Booked by owner'}\n\nMake this slot available for booking again?",
                             style: TextStyle(
                               fontSize: 12.5,
-                              color: Colors.grey.shade600,
+                              color: AppColors.textSecondaryLight,
                               height: 1.4,
                             ),
                           ),
@@ -1006,43 +1169,48 @@ class _SlotsScreenState extends State<SlotsScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.xl,
+                        AppSizes.sm,
+                        AppSizes.xl,
+                        AppSizes.xl,
+                      ),
                       child: Row(
                         children: [
                           Expanded(
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
+                                  vertical: AppSizes.lg - 2,
                                 ),
-                                side: BorderSide(color: Colors.grey.shade300),
+                                side: const BorderSide(color: AppColors.borderLight),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                                 ),
                               ),
                               onPressed: () => Navigator.of(ctx).pop(),
-                              child: Text(
+                              child: const Text(
                                 "Cancel",
                                 style: TextStyle(
-                                  color: Colors.grey.shade700,
+                                  color: AppColors.textSecondaryLight,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: AppSizes.md),
                           Expanded(
                             flex: 2,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
+                                  vertical: AppSizes.lg - 2,
                                 ),
                                 backgroundColor: AppColors.primaryDarkGreen,
-                                foregroundColor: Colors.white,
+                                foregroundColor: AppColors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                                 ),
                               ),
                               onPressed: () {
@@ -1092,7 +1260,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (_) => Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSizes.xxl),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1101,9 +1269,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
               child: Container(
                 width: 36,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
+                margin: const EdgeInsets.only(bottom: AppSizes.xl),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppColors.borderLight,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1111,17 +1279,17 @@ class _SlotsScreenState extends State<SlotsScreen> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(AppSizes.sm + 2),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(10),
+                    color: AppColors.bgLight,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.event_available,
-                    color: Colors.grey.shade600,
+                    color: AppColors.primaryDarkGreen,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: AppSizes.md),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1135,7 +1303,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
                     Text(
                       "Booked Slot",
                       style: TextStyle(
-                        color: Colors.grey.shade500,
+                        color: AppColors.textSecondaryLight,
                         fontSize: 13,
                       ),
                     ),
@@ -1143,29 +1311,35 @@ class _SlotsScreenState extends State<SlotsScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: AppSizes.xl),
             _InfoRow(
               label: "Player",
               value: slot.bookedPlayerName ?? 'Unknown',
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSizes.sm + 2),
             _InfoRow(label: "Amount", value: "₹${slot.price}"),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppSizes.sm + 2),
             _InfoRow(
               label: "Booking ID",
               value: slot.bookingId?.substring(0, 8) ?? '—',
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSizes.sm),
             Container(
-              margin: const EdgeInsets.only(top: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              margin: const EdgeInsets.only(top: AppSizes.sm + 2),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.lg,
+                vertical: AppSizes.sm,
+              ),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.bgLight,
+                borderRadius: BorderRadius.circular(AppSizes.radiusSm),
               ),
               child: Text(
                 "This slot is booked and cannot be blocked.",
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.textSecondaryLight,
+                ),
               ),
             ),
           ],
@@ -1176,51 +1350,48 @@ class _SlotsScreenState extends State<SlotsScreen> {
 
   Widget _buildSummaryCard(SlotLoaded state) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+      padding: const EdgeInsets.all(AppSizes.lg),
       decoration: BoxDecoration(
-        color: Colors.green.shade50.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.shade100),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            AppColors.primaryDarkGreen.withValues(alpha: 0.08),
+            AppColors.primaryDarkGreen.withValues(alpha: 0.03),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        border: Border.all(
+          color: AppColors.primaryDarkGreen.withValues(alpha: 0.12),
+        ),
       ),
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              AppText(text: "Booked today", color: Colors.grey.shade600),
-              AppText(
-                text: "${state.bookedCount} / ${state.totalSlots} slots",
+              _SummaryStat(
+                label: "Booked Today",
+                value: "${state.bookedCount}/${state.totalSlots}",
+                subLabel: "slots",
+                icon: Icons.event_seat_rounded,
                 color: AppColors.primaryDarkGreen,
-                weight: FontWeight.bold,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AppText(text: "Blocked slots", color: Colors.grey.shade600),
-              AppText(
-                text: "${state.blockedCount} slots",
-                color: Colors.blue.shade700,
-                weight: FontWeight.bold,
+              const SizedBox(width: AppSizes.lg),
+              _SummaryStat(
+                label: "Blocked",
+                value: "${state.blockedCount}",
+                subLabel: "slots",
+                icon: Icons.lock_rounded,
+                color: AppColors.textSecondaryLight,
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              AppText(
-                text: "Today's revenue (confirmed)",
-                color: Colors.grey.shade600,
-              ),
-              AppText(
-                text: "₹${state.todayRevenue}",
-                color: AppColors.primaryDarkGreen,
-                weight: FontWeight.bold,
-                size: 16,
+              const SizedBox(width: AppSizes.lg),
+              _SummaryStat(
+                label: "Revenue",
+                value: "₹${state.todayRevenue}",
+                subLabel: "confirmed",
+                icon: Icons.account_balance_wallet_rounded,
+                color: AppColors.success,
               ),
             ],
           ),
@@ -1234,26 +1405,32 @@ class _SlotsScreenState extends State<SlotsScreen> {
 
 class _LegendChip extends StatelessWidget {
   final String label;
-  final Color color;
+  final Color bgColor;
   final Color textColor;
-  final Color iconColor;
+  final Color dotColor;
   final bool isPeak;
 
   const _LegendChip({
     required this.label,
-    required this.color,
+    required this.bgColor,
     required this.textColor,
-    required this.iconColor,
+    required this.dotColor,
     this.isPeak = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.xs + 1,
+      ),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+        border: Border.all(
+          color: textColor.withValues(alpha: 0.15),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1262,15 +1439,72 @@ class _LegendChip extends StatelessWidget {
             HugeIcon(
               icon: HugeIcons.strokeRoundedEnergy,
               size: 12,
-              color: iconColor,
+              color: dotColor,
             )
           else
-            Container(width: 6, height: 6, color: iconColor),
-          const SizedBox(width: 6),
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: dotColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+          const SizedBox(width: AppSizes.sm - 2),
           AppText(
             text: label,
-            size: 12,
+            size: 11,
             color: textColor,
+            weight: FontWeight.w600,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Summary Stat ───────────────────────────────────────────────────────────
+
+class _SummaryStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final String subLabel;
+  final IconData icon;
+  final Color color;
+
+  const _SummaryStat({
+    required this.label,
+    required this.value,
+    required this.subLabel,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSizes.sm),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: AppSizes.iconSm, color: color),
+          ),
+          const SizedBox(height: AppSizes.sm - 2),
+          AppText(
+            text: value,
+            size: 16,
+            color: color,
+            weight: FontWeight.bold,
+          ),
+          const SizedBox(height: AppSizes.xxs),
+          AppText(
+            text: label,
+            size: 10,
+            color: AppColors.textSecondaryLight,
             weight: FontWeight.w500,
           ),
         ],
@@ -1293,144 +1527,328 @@ class _SlotCard extends StatelessWidget {
     final timeRange =
         "${timeFormat.format(slot.startTime)} - ${timeFormat.format(slot.endTime)}";
 
-    Color bgColor;
-    Color borderColor;
-    Widget content;
-
     switch (slot.status) {
       case SlotStatus.open:
-        bgColor = Colors.green.shade50;
-        borderColor = Colors.green.shade300;
-        content = Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AppText(
-              text: timeRange,
-              size: 12,
-              color: AppColors.primaryDarkGreen,
-              weight: FontWeight.w600,
-            ),
-            const SizedBox(height: 4),
-            AppText(
-              text: "Open • ₹${slot.price}",
-              size: 11,
-              color: Colors.green.shade700,
-            ),
-          ],
-        );
-        break;
-
+        return _buildOpenSlot(timeRange);
       case SlotStatus.booked:
-        bgColor = Colors.grey.shade100;
-        borderColor = Colors.grey.shade200;
-        content = Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AppText(
-              text: timeRange,
-              size: 12,
-              color: Colors.grey.shade500,
-              weight: FontWeight.w600,
-            ),
-            const SizedBox(height: 2),
-            AppText(
-              text: "${slot.bookedPlayerName ?? 'Booked'} • ₹${slot.price}",
-              size: 11,
-              color: Colors.grey.shade500,
-            ),
-            const SizedBox(height: 2),
-            AppText(
-              text: "${slot.bookedPlayersCount ?? 0} players",
-              size: 10,
-              color: Colors.grey.shade400,
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AppText(text: "Details ", size: 10, color: Colors.blue.shade600, weight: FontWeight.w700),
-                Icon(Icons.arrow_forward_ios, size: 8, color: Colors.blue.shade600),
-              ]
-            ),
-          ],
-        );
-        break;
-
+        return _buildBookedSlot(timeRange);
       case SlotStatus.blocked:
       case SlotStatus.maintenance:
-        bgColor = Colors.blue.shade50;
-        borderColor = Colors.blue.shade200;
-        content = Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            AppText(
-              text: timeRange,
-              size: 12,
-              color: Colors.blue.shade700,
-              weight: FontWeight.w600,
-            ),
-            const SizedBox(height: 2),
-            AppText(
-              text: "Booked by Owner",
-              size: 11,
-              color: Colors.blue.shade600,
-            ),
-            const SizedBox(height: 2),
-            AppText(
-              text: slot.blockReason ?? "—",
-              size: 9,
-              color: Colors.blue.shade300,
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AppText(text: "Details ", size: 10, color: Colors.blue.shade600, weight: FontWeight.w700),
-                Icon(Icons.arrow_forward_ios, size: 8, color: Colors.blue.shade600),
-              ]
-            ),
-          ],
-        );
-        break;
-
+        return _buildBlockedSlot(timeRange);
       case SlotStatus.peak:
-        bgColor = Colors.orange.shade50;
-        borderColor = Colors.orange.shade300;
-        content = Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            AppText(
-              text: timeRange,
-              size: 12,
-              color: Colors.orange.shade800,
-              weight: FontWeight.w600,
-            ),
-            const SizedBox(height: 4),
-            AppText(
-              text: "Peak • ₹${slot.price}",
-              size: 11,
-              color: Colors.orange.shade800,
-            ),
-          ],
-        );
-        break;
+        return _buildPeakSlot(timeRange);
     }
+  }
 
-    final isInteractive = true;
-
+  Widget _buildOpenSlot(String timeRange) {
     return GestureDetector(
-      onTap: isInteractive ? onTap : null,
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(8),
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          border: Border.all(color: AppColors.borderLight),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.black.withValues(alpha: 0.04),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppColors.slotAvailable,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppSizes.radiusSm),
+                  bottomLeft: Radius.circular(AppSizes.radiusSm),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.md,
+                  vertical: AppSizes.sm - 2,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText(
+                      text: timeRange,
+                      size: 12,
+                      color: AppColors.textPrimaryLight,
+                      weight: FontWeight.w600,
+                    ),
+                    const SizedBox(height: 2),
+                    AppText(
+                      text: "Open • ₹${slot.price}",
+                      size: 11,
+                      color: AppColors.success,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBookedSlot(String timeRange) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.bgLight,
+          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          border: Border.all(color: AppColors.borderLight),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppColors.slotBlocked,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppSizes.radiusSm),
+                  bottomLeft: Radius.circular(AppSizes.radiusSm),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.md,
+                  vertical: AppSizes.sm - 2,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText(
+                      text: timeRange,
+                      size: 12,
+                      color: AppColors.textSecondaryLight,
+                      weight: FontWeight.w600,
+                    ),
+                    const SizedBox(height: 2),
+                    AppText(
+                      text: "${slot.bookedPlayerName ?? 'Booked'} • ₹${slot.price}",
+                      size: 11,
+                      color: AppColors.textSecondaryLight,
+                    ),
+                    const SizedBox(height: 2),
+                    AppText(
+                      text: "${slot.bookedPlayersCount ?? 0} players",
+                      size: 10,
+                      color: AppColors.borderLight,
+                    ),
+                    const SizedBox(height: AppSizes.xs - 1),
+                    Row(
+                      children: [
+                        AppText(
+                          text: "Details",
+                          size: 10,
+                          color: AppColors.statusConfirmed,
+                          weight: FontWeight.w700,
+                        ),
+                        const SizedBox(width: 2),
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 8,
+                          color: AppColors.statusConfirmed,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlockedSlot(String timeRange) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.statusConfirmedBg,
+          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
           border: Border.all(
-            color: borderColor,
-            width: slot.status == SlotStatus.peak ? 1.5 : 1,
+            color: AppColors.statusConfirmed.withValues(alpha: 0.2),
           ),
         ),
-        child: content,
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppColors.statusConfirmed,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppSizes.radiusSm),
+                  bottomLeft: Radius.circular(AppSizes.radiusSm),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.md,
+                  vertical: AppSizes.sm - 2,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppText(
+                            text: timeRange,
+                            size: 12,
+                            color: AppColors.statusConfirmed,
+                            weight: FontWeight.w600,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.statusConfirmed,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                          ),
+                          child: const AppText(
+                            text: "Owner",
+                            size: 8,
+                            color: AppColors.white,
+                            weight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    AppText(
+                      text: "Booked by Owner",
+                      size: 11,
+                      color: AppColors.statusConfirmed,
+                    ),
+                    const SizedBox(height: 2),
+                    AppText(
+                      text: slot.blockReason ?? "—",
+                      size: 9,
+                      color: AppColors.statusConfirmed.withValues(alpha: 0.6),
+                    ),
+                    const SizedBox(height: AppSizes.xs - 1),
+                    Row(
+                      children: [
+                        AppText(
+                          text: "Details",
+                          size: 10,
+                          color: AppColors.statusConfirmed,
+                          weight: FontWeight.w700,
+                        ),
+                        const SizedBox(width: 2),
+                        const Icon(
+                          Icons.arrow_forward_ios,
+                          size: 8,
+                          color: AppColors.statusConfirmed,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPeakSlot(String timeRange) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.white,
+          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+          border: Border.all(
+            color: AppColors.accentOrange.withValues(alpha: 0.3),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.accentOrange.withValues(alpha: 0.08),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: double.infinity,
+              decoration: const BoxDecoration(
+                color: AppColors.accentOrange,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppSizes.radiusSm),
+                  bottomLeft: Radius.circular(AppSizes.radiusSm),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.md,
+                  vertical: AppSizes.sm - 2,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.bolt_rounded,
+                          size: 12,
+                          color: AppColors.accentOrange,
+                        ),
+                        const SizedBox(width: 3),
+                        AppText(
+                          text: timeRange,
+                          size: 12,
+                          color: AppColors.statusPending,
+                          weight: FontWeight.w600,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    AppText(
+                      text: "Peak • ₹${slot.price}",
+                      size: 11,
+                      color: AppColors.accentOrange,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1451,7 +1869,10 @@ class _InfoRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
+          style: const TextStyle(
+            color: AppColors.textSecondaryLight,
+            fontSize: 13,
+          ),
         ),
         Text(
           value,
@@ -1478,16 +1899,19 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSizes.md,
+        vertical: AppSizes.sm + 2,
+      ),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 6),
+          Icon(icon, size: AppSizes.iconSm, color: color),
+          const SizedBox(width: AppSizes.sm - 2),
           Flexible(
             child: Text(
               label,
@@ -1515,87 +1939,86 @@ class _SlotsSkeleton extends StatelessWidget {
     return Column(
       children: [
         Container(
-          height: 100,
-          color: AppColors.primaryDarkGreen,
+          height: 80,
           width: double.infinity,
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primaryDarkGreen,
+                Color(0xFF066B3E),
+              ],
+            ),
+          ),
         ),
         Expanded(
           child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 16),
+                const SizedBox(height: AppSizes.lg),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
                   child: Shimmer.fromColors(
-                    baseColor: Colors.grey.shade300,
-                    highlightColor: Colors.grey.shade100,
+                    baseColor: AppColors.borderLight,
+                    highlightColor: AppColors.bgLight,
                     child: Row(
-                      children: [
-                        Container(
-                          width: 120,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          width: 120,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Shimmer.fromColors(
-                    baseColor: Colors.grey.shade300,
-                    highlightColor: Colors.grey.shade100,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(
-                        7,
+                        2,
                         (_) => Container(
-                          width: 40,
-                          height: 60,
+                          width: 120,
+                          height: 48,
+                          margin: const EdgeInsets.only(right: AppSizes.md),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusRound),
                           ),
                         ),
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSizes.xxl),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
                   child: Shimmer.fromColors(
-                    baseColor: Colors.grey.shade300,
-                    highlightColor: Colors.grey.shade100,
+                    baseColor: AppColors.borderLight,
+                    highlightColor: AppColors.bgLight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(
+                        7,
+                        (_) => Container(
+                          width: 56,
+                          height: 70,
+                          decoration: BoxDecoration(
+                            color: AppColors.white,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.xxl),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+                  child: Shimmer.fromColors(
+                    baseColor: AppColors.borderLight,
+                    highlightColor: AppColors.bgLight,
                     child: GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 2.2,
-                            crossAxisSpacing: 12,
-                            mainAxisSpacing: 12,
-                          ),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 2.2,
+                        crossAxisSpacing: AppSizes.md,
+                        mainAxisSpacing: AppSizes.md,
+                      ),
                       itemCount: 8,
                       itemBuilder: (_, __) => Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                         ),
                       ),
                     ),

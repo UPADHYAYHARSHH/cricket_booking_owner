@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
-import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_layout.dart';
@@ -100,34 +100,54 @@ class _Step4ScheduleState extends State<Step4Schedule> {
         children: [
           _sectionHeader('OPERATING DAYS'),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AppSizes.sm,
+            runSpacing: AppSizes.sm,
             children: _kDays.map((day) {
               final sel = _selectedDays.contains(day);
               return GestureDetector(
                 onTap: () => setState(() =>
                     sel ? _selectedDays.remove(day) : _selectedDays.add(day)),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.lg,
+                    vertical: AppSizes.md,
+                  ),
                   decoration: BoxDecoration(
-                    color: sel ? AppColors.primaryDarkGreen : Colors.white,
-                    borderRadius: BorderRadius.circular(10),
+                    gradient: sel
+                        ? const LinearGradient(
+                            colors: [
+                              AppColors.primaryDarkGreen,
+                              Color(0xFF066B3E),
+                            ],
+                          )
+                        : null,
+                    color: sel ? null : AppColors.white,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                     border: Border.all(
-                        color: sel
-                            ? AppColors.primaryDarkGreen
-                            : Colors.grey.shade300),
+                      color: sel ? AppColors.primaryDarkGreen : AppColors.borderLight,
+                    ),
+                    boxShadow: sel
+                        ? [
+                            BoxShadow(
+                              color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
                   ),
                   child: AppText(
                     text: day,
                     size: 14,
                     weight: FontWeight.w700,
-                    color: sel ? Colors.white : AppColors.textPrimaryLight,
+                    color: sel ? AppColors.white : AppColors.textPrimaryLight,
                   ),
                 ),
               );
             }).toList(),
           ),
-          const AppSizedBox(height: 28),
+          const SizedBox(height: AppSizes.xxl + AppSizes.sm),
           _sectionHeader('OPERATING HOURS'),
           Row(
             children: [
@@ -138,7 +158,7 @@ class _Step4ScheduleState extends State<Step4Schedule> {
                   onTap: () => _pickTime(_openTime, (t) => setState(() => _openTime = t)),
                 ),
               ),
-              const AppSizedBox(width: 14),
+              const SizedBox(width: AppSizes.md),
               Expanded(
                 child: _timeTile(
                   label: 'CLOSING TIME',
@@ -148,61 +168,37 @@ class _Step4ScheduleState extends State<Step4Schedule> {
               ),
             ],
           ),
-          const AppSizedBox(height: 8),
+          const SizedBox(height: AppSizes.sm),
           Builder(builder: (_) {
             final hrs = _closeTime.hour - _openTime.hour;
             if (hrs <= 0) return const SizedBox.shrink();
-            return AppText(
-              text: '${hrs}h window → ${_formatTD(_openTime)} to ${_formatTD(_closeTime)}',
-              size: 12,
-              color: AppColors.primaryDarkGreen,
-              weight: FontWeight.w600,
+            return Row(
+              children: [
+                Icon(Icons.schedule, size: 14, color: AppColors.primaryDarkGreen.withValues(alpha: 0.7)),
+                const SizedBox(width: AppSizes.xs),
+                AppText(
+                  text: '${hrs}h window \u2192 ${_formatTD(_openTime)} to ${_formatTD(_closeTime)}',
+                  size: 12,
+                  color: AppColors.primaryDarkGreen,
+                  weight: FontWeight.w600,
+                ),
+              ],
             );
           }),
-          const AppSizedBox(height: 28),
-          _label('SLOT DURATION *'),
-          _chips(_kDurations, _slotDuration,
-              (v) => setState(() => _slotDuration = v)),
-          const AppSizedBox(height: 6),
-          const AppText(
-            text: 'Players can book multiple consecutive slots',
-            size: 11,
-            color: AppColors.textSecondaryLight,
-          ),
-          const AppSizedBox(height: 28),
-          _label('ADVANCE BOOKING LIMIT'),
-          _chips(_kAdvance, _advanceLimit,
-              (v) => setState(() => _advanceLimit = v)),
-          const AppSizedBox(height: 6),
-          const AppText(
-            text: 'How far in advance players can book a slot',
-            size: 11,
-            color: AppColors.textSecondaryLight,
-          ),
+          const SizedBox(height: AppSizes.xxl + AppSizes.sm),
+          _sectionHeader('SLOT DURATION *'),
+          _chips(_kDurations, _slotDuration, (v) => setState(() => _slotDuration = v)),
+          const SizedBox(height: AppSizes.sm),
+          _helperText('Players can book multiple consecutive slots'),
+          const SizedBox(height: AppSizes.xxl + AppSizes.sm),
+          _sectionHeader('ADVANCE BOOKING LIMIT'),
+          _chips(_kAdvance, _advanceLimit, (v) => setState(() => _advanceLimit = v)),
+          const SizedBox(height: AppSizes.sm),
+          _helperText('How far in advance players can book a slot'),
           if (widget.isEdit) ...[
-            const AppSizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFF3E0),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.accentOrange.withOpacity(0.4)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.info_outline, size: 16, color: AppColors.accentOrange),
-                  const AppSizedBox(width: 8),
-                  const Expanded(
-                    child: AppText(
-                      text:
-                          'Changing operating hours will regenerate future available slots. Already-booked slots are not affected.',
-                      size: 12,
-                      color: Color(0xFF795548),
-                    ),
-                  ),
-                ],
-              ),
+            const SizedBox(height: AppSizes.xl),
+            _warningBanner(
+              'Changing operating hours will regenerate future available slots. Already-booked slots are not affected.',
             ),
           ],
         ],
@@ -211,46 +207,88 @@ class _Step4ScheduleState extends State<Step4Schedule> {
   }
 
   Widget _sectionHeader(String t) => Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: AppText(
-          text: t,
-          size: 13,
-          weight: FontWeight.w800,
-          color: AppColors.textSecondaryLight.withOpacity(0.8),
-          letterSpacing: 0.5,
+        padding: const EdgeInsets.only(bottom: AppSizes.md),
+        child: Row(
+          children: [
+            Container(
+              width: 3,
+              height: 14,
+              decoration: BoxDecoration(
+                color: AppColors.primaryDarkGreen,
+                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              ),
+            ),
+            const SizedBox(width: AppSizes.sm),
+            AppText(
+              text: t,
+              size: 13,
+              weight: FontWeight.w800,
+              color: AppColors.textSecondaryLight,
+              letterSpacing: 0.5,
+            ),
+          ],
         ),
       );
 
-  Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: AppText(
-          text: text,
-          size: 12,
-          weight: FontWeight.w700,
-          color: AppColors.textSecondaryLight,
-        ),
+  Widget _helperText(String text) => Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline,
+            size: 12,
+            color: AppColors.primaryDarkGreen.withValues(alpha: 0.5),
+          ),
+          const SizedBox(width: AppSizes.xs),
+          Expanded(
+            child: AppText(
+              text: text,
+              size: 11,
+              color: AppColors.textSecondaryLight.withValues(alpha: 0.7),
+            ),
+          ),
+        ],
       );
 
   Widget _timeTile({required String label, required String value, required VoidCallback onTap}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _label(label),
+        _sectionHeader(label),
         GestureDetector(
           onTap: onTap,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.lg,
+              vertical: AppSizes.lg,
+            ),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0F9F4).withOpacity(0.6),
-              borderRadius: BorderRadius.circular(12),
-              border:
-                  Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.15)),
+              color: AppColors.white,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              border: Border.all(color: AppColors.borderLight),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.black.withValues(alpha: 0.03),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 AppText(text: value, size: 16, weight: FontWeight.w700),
-                const Icon(Icons.access_time, size: 20, color: AppColors.primaryDarkGreen),
+                Container(
+                  padding: const EdgeInsets.all(AppSizes.xs),
+                  decoration: BoxDecoration(
+                    color: AppColors.slotAvailableBg,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                  ),
+                  child: const Icon(
+                    Icons.access_time_rounded,
+                    size: AppSizes.iconSm,
+                    color: AppColors.primaryDarkGreen,
+                  ),
+                ),
               ],
             ),
           ),
@@ -261,19 +299,31 @@ class _Step4ScheduleState extends State<Step4Schedule> {
 
   Widget _chips(List<String> options, String selected, ValueChanged<String> onSelect) {
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: AppSizes.sm,
+      runSpacing: AppSizes.sm,
       children: options.map((opt) {
         final isSel = selected == opt;
         return GestureDetector(
           onTap: () => onSelect(opt),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSizes.lg,
+              vertical: AppSizes.md,
+            ),
             decoration: BoxDecoration(
-              color: isSel ? const Color(0xFFF0F9F4) : Colors.white,
-              borderRadius: BorderRadius.circular(25),
+              gradient: isSel
+                  ? const LinearGradient(
+                      colors: [
+                        AppColors.primaryDarkGreen,
+                        Color(0xFF066B3E),
+                      ],
+                    )
+                  : null,
+              color: isSel ? null : AppColors.white,
+              borderRadius: BorderRadius.circular(AppSizes.radiusRound),
               border: Border.all(
-                color: isSel ? AppColors.primaryDarkGreen : Colors.grey.shade200,
+                color: isSel ? AppColors.primaryDarkGreen : AppColors.borderLight,
                 width: isSel ? 1.5 : 1,
               ),
             ),
@@ -281,11 +331,40 @@ class _Step4ScheduleState extends State<Step4Schedule> {
               text: opt,
               size: 13,
               weight: isSel ? FontWeight.w700 : FontWeight.w500,
-              color: isSel ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+              color: isSel ? AppColors.white : AppColors.textSecondaryLight,
             ),
           ),
         );
       }).toList(),
     );
   }
+
+  Widget _warningBanner(String text) => Container(
+        padding: const EdgeInsets.all(AppSizes.lg),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFF3E0),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          border: Border.all(
+            color: AppColors.accentOrange.withValues(alpha: 0.4),
+          ),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Icon(
+              Icons.info_outline,
+              size: 16,
+              color: AppColors.accentOrange,
+            ),
+            const SizedBox(width: AppSizes.sm),
+            Expanded(
+              child: AppText(
+                text: text,
+                size: 12,
+                color: const Color(0xFF795548),
+              ),
+            ),
+          ],
+        ),
+      );
 }

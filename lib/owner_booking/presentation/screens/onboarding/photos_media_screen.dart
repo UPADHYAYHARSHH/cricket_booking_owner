@@ -29,7 +29,7 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
 
   final Map<String, List<File>> _courtPhotos = {};
   final Map<String, List<String>> _courtPhotoUrls = {};
-  
+
   List<File> _amenityPhotosList = [];
   List<String> _amenityPhotoUrlsList = [];
 
@@ -122,7 +122,11 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
     }
   }
 
-  Future<void> _pickImage(String type, {String? key, bool isCover = false}) async {
+  Future<void> _pickImage(
+    String type, {
+    String? key,
+    bool isCover = false,
+  }) async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image == null) return;
 
@@ -146,8 +150,9 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
     final userId = currentUserId;
     if (userId == null) return null;
 
-    final fileName = "${userId}/$folder/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}";
-    
+    final fileName =
+        "${userId}/$folder/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}";
+
     try {
       await Supabase.instance.client.storage
           .from('venue_media')
@@ -164,7 +169,11 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
 
   void _onSave() async {
     if (_coverPhoto == null && _coverPhotoUrl == null) {
-      toastification.show(context: context, type: ToastificationType.warning, title: const Text("Please upload a cover photo"));
+      toastification.show(
+        context: context,
+        type: ToastificationType.warning,
+        title: const Text("Please upload a cover photo"),
+      );
       return;
     }
 
@@ -176,7 +185,9 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
         finalCoverUrl = await _uploadFile(_coverPhoto!, 'cover');
       }
 
-      final Map<String, List<String>> finalCourtMedia = Map.from(_courtPhotoUrls);
+      final Map<String, List<String>> finalCourtMedia = Map.from(
+        _courtPhotoUrls,
+      );
       for (var entry in _courtPhotos.entries) {
         final List<String> urls = finalCourtMedia[entry.key] ?? [];
         for (var file in entry.value) {
@@ -210,7 +221,11 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
 
       context.read<AuthCubit>().saveMediaConfig(mediaConfig: config);
     } catch (e) {
-      toastification.show(context: context, type: ToastificationType.error, title: Text("Save failed: $e"));
+      toastification.show(
+        context: context,
+        type: ToastificationType.error,
+        title: Text("Save failed: $e"),
+      );
     } finally {
       setState(() => _isUploading = false);
     }
@@ -233,10 +248,10 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
         children: [
           _buildPromoBanner(),
           const AppSizedBox(height: 32),
-          
+
           _buildSectionHeader("COVER PHOTO *"),
           _buildCoverPicker(),
-          
+
           const AppSizedBox(height: 32),
           _buildSectionHeader("COURT / GROUND PHOTOS *"),
           ..._courtNames.map((name) => _buildMediaCategory(name, name)),
@@ -255,7 +270,9 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF9E6),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFBC02D).withOpacity(0.3)),
+        border: Border.all(
+          color: const Color(0xFFFBC02D).withValues(alpha: 0.3),
+        ),
       ),
       child: Row(
         children: [
@@ -264,13 +281,32 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
           Expanded(
             child: RichText(
               text: const TextSpan(
-                style: TextStyle(color: Color(0xFFF57F17), fontSize: 13, height: 1.4),
+                style: TextStyle(
+                  color: Color(0xFFF57F17),
+                  fontSize: 13,
+                  height: 1.4,
+                ),
                 children: [
-                  TextSpan(text: "Venues with ", style: TextStyle(fontWeight: FontWeight.w500)),
-                  TextSpan(text: "8+ high-quality photos", style: TextStyle(fontWeight: FontWeight.w800)),
-                  TextSpan(text: " get ", style: TextStyle(fontWeight: FontWeight.w500)),
-                  TextSpan(text: "3x more bookings", style: TextStyle(fontWeight: FontWeight.w800)),
-                  TextSpan(text: ". Add exterior, courts, amenities & facilities.", style: TextStyle(fontWeight: FontWeight.w500)),
+                  TextSpan(
+                    text: "Venues with ",
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  TextSpan(
+                    text: "8+ high-quality photos",
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  TextSpan(
+                    text: " get ",
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                  TextSpan(
+                    text: "3x more bookings",
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  TextSpan(
+                    text: ". Add exterior, courts, amenities & facilities.",
+                    style: TextStyle(fontWeight: FontWeight.w500),
+                  ),
                 ],
               ),
             ),
@@ -283,12 +319,26 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
   Widget _buildSectionHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: AppText(text: title, size: 13, weight: FontWeight.w800, color: AppColors.textSecondaryLight.withOpacity(0.8), letterSpacing: 0.5),
+      child: AppText(
+        text: title,
+        size: 13,
+        weight: FontWeight.w800,
+        color: AppColors.textSecondaryLight.withValues(alpha: 0.8),
+        letterSpacing: 0.5,
+      ),
     );
   }
 
   Widget _buildLabel(String label) {
-    return Padding(padding: const EdgeInsets.only(bottom: 8), child: AppText(text: label, size: 12, weight: FontWeight.w700, color: AppColors.textSecondaryLight));
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AppText(
+        text: label,
+        size: 12,
+        weight: FontWeight.w700,
+        color: AppColors.textSecondaryLight,
+      ),
+    );
   }
 
   Widget _buildCoverPicker() {
@@ -298,26 +348,57 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
         height: 180,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: const Color(0xFFF0F9F4),
+          color: AppColors.slotAvailableBg,
           borderRadius: BorderRadius.circular(16),
           image: (_coverPhoto != null || _coverPhotoUrl != null)
-            ? DecorationImage(
-                image: _coverPhoto != null ? FileImage(_coverPhoto!) : NetworkImage(_coverPhotoUrl!) as ImageProvider,
-                fit: BoxFit.cover,
-              )
-            : null,
+              ? DecorationImage(
+                  image: _coverPhoto != null
+                      ? FileImage(_coverPhoto!)
+                      : NetworkImage(_coverPhotoUrl!) as ImageProvider,
+                  fit: BoxFit.cover,
+                )
+              : null,
         ),
         child: Stack(
           children: [
             if (_coverPhoto == null && _coverPhotoUrl == null)
-              const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.add_a_photo_outlined, size: 40, color: AppColors.primaryDarkGreen), AppSizedBox(height: 8), AppText(text: "Add Main Cover", size: 14, weight: FontWeight.w600, color: AppColors.primaryDarkGreen)])),
+              const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.add_a_photo_outlined,
+                      size: 40,
+                      color: AppColors.primaryDarkGreen,
+                    ),
+                    AppSizedBox(height: 8),
+                    AppText(
+                      text: "Add Main Cover",
+                      size: 14,
+                      weight: FontWeight.w600,
+                      color: AppColors.primaryDarkGreen,
+                    ),
+                  ],
+                ),
+              ),
             PositionBag(
               top: 12,
               right: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)),
-                child: const AppText(text: "Change", size: 11, color: Colors.white, weight: FontWeight.w600),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.black.withValues(alpha: 0.54),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const AppText(
+                  text: "Change",
+                  size: 11,
+                  color: AppColors.white,
+                  weight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -351,7 +432,10 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   image: DecorationImage(
-                    image: isExisting ? NetworkImage(urls[index]) : FileImage(files[index - urls.length]) as ImageProvider,
+                    image: isExisting
+                        ? NetworkImage(urls[index])
+                        : FileImage(files[index - urls.length])
+                              as ImageProvider,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -370,9 +454,12 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
       child: Container(
         width: 100,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.2), style: BorderStyle.solid),
+          border: Border.all(
+            color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
+            style: BorderStyle.solid,
+          ),
         ),
         child: const Icon(Icons.add, color: AppColors.primaryDarkGreen),
       ),
@@ -408,16 +495,29 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
                   child: Container(
                     width: 120,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.white,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+                      border: Border.all(
+                        color: AppColors.primaryDarkGreen.withValues(
+                          alpha: 0.2,
+                        ),
+                      ),
                     ),
                     child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_a_photo_outlined, color: AppColors.primaryDarkGreen, size: 28),
+                        Icon(
+                          Icons.add_a_photo_outlined,
+                          color: AppColors.primaryDarkGreen,
+                          size: 28,
+                        ),
                         AppSizedBox(height: 8),
-                        AppText(text: "Add Photos", size: 12, weight: FontWeight.w700, color: AppColors.primaryDarkGreen),
+                        AppText(
+                          text: "Add Photos",
+                          size: 12,
+                          weight: FontWeight.w700,
+                          color: AppColors.primaryDarkGreen,
+                        ),
                       ],
                     ),
                   ),
@@ -432,9 +532,13 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
                       image: DecorationImage(
-                        image: isExisting 
-                          ? NetworkImage(_amenityPhotoUrlsList[index]) 
-                          : FileImage(_amenityPhotosList[index - _amenityPhotoUrlsList.length]) as ImageProvider,
+                        image: isExisting
+                            ? NetworkImage(_amenityPhotoUrlsList[index])
+                            : FileImage(
+                                    _amenityPhotosList[index -
+                                        _amenityPhotoUrlsList.length],
+                                  )
+                                  as ImageProvider,
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -448,17 +552,23 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
                           if (isExisting) {
                             _amenityPhotoUrlsList.removeAt(index);
                           } else {
-                            _amenityPhotosList.removeAt(index - _amenityPhotoUrlsList.length);
+                            _amenityPhotosList.removeAt(
+                              index - _amenityPhotoUrlsList.length,
+                            );
                           }
                         });
                       },
                       child: Container(
                         padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.black54,
+                        decoration: BoxDecoration(
+                          color: AppColors.black.withValues(alpha: 0.54),
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.close, color: Colors.white, size: 14),
+                        child: const Icon(
+                          Icons.close,
+                          color: AppColors.white,
+                          size: 14,
+                        ),
                       ),
                     ),
                   ),
@@ -475,7 +585,22 @@ class _PhotosMediaScreenState extends State<PhotosMediaScreen> {
 class PositionBag extends StatelessWidget {
   final double? top, bottom, left, right;
   final Widget child;
-  const PositionBag({super.key, this.top, this.bottom, this.left, this.right, required this.child});
+  const PositionBag({
+    super.key,
+    this.top,
+    this.bottom,
+    this.left,
+    this.right,
+    required this.child,
+  });
   @override
-  Widget build(BuildContext context) { return Positioned(top: top, bottom: bottom, left: left, right: right, child: child); }
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: top,
+      bottom: bottom,
+      left: left,
+      right: right,
+      child: child,
+    );
+  }
 }

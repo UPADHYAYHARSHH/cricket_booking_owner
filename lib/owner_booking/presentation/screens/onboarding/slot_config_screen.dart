@@ -200,9 +200,9 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF0F9F4).withOpacity(0.5),
+                    color: AppColors.slotAvailableBg.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+                    border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,7 +256,7 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
         text: title,
         size: 13,
         weight: FontWeight.w800,
-        color: AppColors.textSecondaryLight.withOpacity(0.8),
+        color: AppColors.textSecondaryLight.withValues(alpha: 0.8),
         letterSpacing: 0.5,
       ),
     );
@@ -293,15 +293,15 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? AppColors.primaryDarkGreen : Colors.white,
+              color: isSelected ? AppColors.primaryDarkGreen : AppColors.white,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade300),
+              border: Border.all(color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight),
             ),
             child: AppText(
               text: day,
               size: 14,
               weight: FontWeight.w700,
-              color: isSelected ? Colors.white : AppColors.textPrimaryLight,
+              color: isSelected ? AppColors.white : AppColors.textPrimaryLight,
             ),
           ),
         );
@@ -319,9 +319,9 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFFF0F9F4).withOpacity(0.5),
+              color: AppColors.slotAvailableBg.withValues(alpha: 0.5),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.15)),
+              border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.15)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -349,9 +349,9 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(color: AppColors.borderLight),
                   ),
                   alignment: Alignment.center,
                   child: AppText(text: _formatTime(startTime), size: 15, weight: FontWeight.w600),
@@ -365,9 +365,9 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.shade200),
+                    border: Border.all(color: AppColors.borderLight),
                   ),
                   alignment: Alignment.center,
                   child: AppText(text: _formatTime(endTime), size: 15, weight: FontWeight.w600),
@@ -391,10 +391,10 @@ class _SlotConfigScreenState extends State<SlotConfigScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
+              color: isSelected ? AppColors.slotAvailableBg : AppColors.white,
               borderRadius: BorderRadius.circular(25),
               border: Border.all(
-                color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade200,
+                color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight,
                 width: isSelected ? 1.5 : 1,
               ),
             ),

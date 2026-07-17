@@ -122,7 +122,7 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F9F4),
+        color: AppColors.slotAvailableBg,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -131,7 +131,7 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
           const AppSizedBox(height: 16),
           const AppText(text: "You're almost live on CricBook!", size: 18, weight: FontWeight.w800, color: AppColors.primaryDarkGreen),
           const AppSizedBox(height: 4),
-          AppText(text: "Review takes 24–48 hours after submission", size: 14, color: AppColors.primaryDarkGreen.withOpacity(0.6)),
+          AppText(text: "Review takes 24–48 hours after submission", size: 14, color: AppColors.primaryDarkGreen.withValues(alpha: 0.6)),
         ],
       ),
     );
@@ -143,7 +143,7 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            AppText(text: title, size: 13, weight: FontWeight.w800, color: AppColors.primaryDarkGreen.withOpacity(0.8), letterSpacing: 0.5),
+            AppText(text: title, size: 13, weight: FontWeight.w800, color: AppColors.primaryDarkGreen.withValues(alpha: 0.8), letterSpacing: 0.5),
             GestureDetector(
               onTap: () => _editStep(step),
               child: const AppText(text: "Edit", size: 12, weight: FontWeight.w700, color: AppColors.primaryDarkGreen),
@@ -151,7 +151,7 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
           ],
         ),
         const AppSizedBox(height: 8),
-        Divider(color: AppColors.primaryDarkGreen.withOpacity(0.1), thickness: 1),
+        Divider(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1), thickness: 1),
         const AppSizedBox(height: 12),
       ],
     );
@@ -180,7 +180,7 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: isDone ? const Color(0xFFF0F9F4) : const Color(0xFFFFF4E6),
+              color: isDone ? AppColors.slotAvailableBg : const Color(0xFFFFF4E6),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -207,9 +207,9 @@ class _ReviewSubmitScreenState extends State<ReviewSubmitScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F9F4),
+        color: AppColors.slotAvailableBg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+        border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
       ),
       child: RichText(
         text: const TextSpan(

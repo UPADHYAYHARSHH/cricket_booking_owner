@@ -8,6 +8,7 @@ import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -114,40 +115,109 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.primaryDarkGreen),
-          onPressed: _skip,
-        ),
-        title: const AppText(text: 'Venue Documents', size: 18, weight: FontWeight.w700),
-        centerTitle: true,
-        actions: [
-          TextButton(
-            onPressed: _isSaving ? null : _skip,
-            child: const AppText(text: 'Skip', size: 14, weight: FontWeight.w600, color: Colors.grey),
+      backgroundColor: AppColors.bgLight,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(100),
+        child: Container(
+          padding: EdgeInsets.only(
+            top: MediaQuery.of(context).padding.top,
+            left: AppSizes.lg,
+            right: AppSizes.lg,
+            bottom: AppSizes.lg,
           ),
-        ],
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF0B8457), Color(0xFF065B3C)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: SafeArea(
+            bottom: false,
+            child: Row(
+              children: [
+                GestureDetector(
+                  onTap: _skip,
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSizes.sm),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back_ios_new_rounded,
+                      color: AppColors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSizes.md),
+                const Expanded(
+                  child: AppText(
+                    text: 'Venue Documents',
+                    size: 20,
+                    weight: FontWeight.w700,
+                    color: AppColors.white,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _isSaving ? null : _skip,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSizes.lg,
+                      vertical: AppSizes.sm,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                    ),
+                    child: const AppText(
+                      text: 'Skip',
+                      size: 13,
+                      weight: FontWeight.w600,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSizes.xxl),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Info banner
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSizes.lg),
               decoration: BoxDecoration(
-                color: const Color(0xFFF0F7FF),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.blue.withOpacity(0.1)),
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFF0F7FF),
+                    const Color(0xFFF0F7FF).withValues(alpha: 0.5),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                border: Border.all(
+                  color: Colors.blue.withValues(alpha: 0.15),
+                ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.lock_outline, size: 20, color: Colors.blue),
-                  const AppSizedBox(width: 12),
+                  Container(
+                    padding: const EdgeInsets.all(AppSizes.sm),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                    ),
+                    child: const Icon(Icons.lock_outline, size: 18, color: Colors.blue),
+                  ),
+                  const AppSizedBox(width: AppSizes.md),
                   Expanded(
                     child: AppText(
                       text:
@@ -160,14 +230,16 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
                 ],
               ),
             ),
-            const AppSizedBox(height: 28),
+            const AppSizedBox(height: AppSizes.xxl + 4),
+            // Property status
             _label('PROPERTY STATUS'),
             _chips(
               options: const ['Owned Property', 'Lease / Rent Agreement', 'Society Permission'],
               selected: _propertyStatus,
               onSelected: (v) => setState(() => _propertyStatus = v),
             ),
-            const AppSizedBox(height: 24),
+            const AppSizedBox(height: AppSizes.xxl),
+            // Upload fields
             _uploadField(
               label: 'PROPERTY DOCUMENT',
               hint: 'Ownership deed / Lease agreement • PDF, JPG or PNG',
@@ -175,7 +247,7 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
               existingUrl: _propertyUrl,
               onTap: () => _pickFile(false),
             ),
-            const AppSizedBox(height: 16),
+            const AppSizedBox(height: AppSizes.lg),
             _uploadField(
               label: 'LOCAL BODY / MUNICIPAL NOC (OPTIONAL)',
               hint: 'NOC from municipal corporation or panchayat',
@@ -183,8 +255,13 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
               existingUrl: _nocUrl,
               onTap: () => _pickFile(true),
             ),
-            const AppSizedBox(height: 40),
-            AppButton(title: 'Save Documents', isLoading: _isSaving, onTap: _save),
+            const AppSizedBox(height: AppSizes.xxxxl),
+            AppButton(
+              title: 'Save Documents',
+              isLoading: _isSaving,
+              onTap: _save,
+              backgroundColor: AppColors.primaryDarkGreen,
+            ),
           ],
         ),
       ),
@@ -192,13 +269,26 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
   }
 
   Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: AppText(
-          text: text,
-          size: 12,
-          weight: FontWeight.w700,
-          color: AppColors.textSecondaryLight,
-          letterSpacing: 0.4,
+        padding: const EdgeInsets.only(bottom: AppSizes.md),
+        child: Row(
+          children: [
+            Container(
+              width: 3,
+              height: 14,
+              decoration: BoxDecoration(
+                color: AppColors.primaryDarkGreen,
+                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              ),
+            ),
+            const SizedBox(width: AppSizes.sm),
+            AppText(
+              text: text,
+              size: 12,
+              weight: FontWeight.w700,
+              color: AppColors.textSecondaryLight,
+              letterSpacing: 0.4,
+            ),
+          ],
         ),
       );
 
@@ -208,27 +298,54 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
     required ValueChanged<String> onSelected,
   }) {
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: AppSizes.sm + 2,
+      runSpacing: AppSizes.sm + 2,
       children: options.map((option) {
         final isSelected = selected == option;
         return GestureDetector(
           onTap: () => onSelected(option),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.lg, vertical: AppSizes.md),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
-              borderRadius: BorderRadius.circular(25),
+              color: isSelected ? AppColors.inputFillLight : AppColors.white,
+              borderRadius: BorderRadius.circular(AppSizes.radiusRound),
               border: Border.all(
-                color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade200,
+                color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight,
                 width: isSelected ? 1.5 : 1,
               ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : [],
             ),
-            child: AppText(
-              text: option,
-              size: 13,
-              weight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isSelected) ...[
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primaryDarkGreen,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: AppSizes.sm),
+                ],
+                AppText(
+                  text: option,
+                  size: 13,
+                  weight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+                ),
+              ],
             ),
           ),
         );
@@ -250,54 +367,104 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
         _label(label),
         GestureDetector(
           onTap: onTap,
-          child: Container(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+            padding: const EdgeInsets.symmetric(
+                vertical: AppSizes.xxl, horizontal: AppSizes.lg),
             decoration: BoxDecoration(
-              color: isUploaded ? const Color(0xFFF0F9F4).withOpacity(0.5) : Colors.white,
-              borderRadius: BorderRadius.circular(16),
+              gradient: isUploaded
+                  ? LinearGradient(
+                      colors: [
+                        AppColors.inputFillLight,
+                        AppColors.inputFillLight.withValues(alpha: 0.5),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : null,
+              color: isUploaded ? null : AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
               border: Border.all(
                 color: isUploaded
-                    ? AppColors.primaryDarkGreen.withOpacity(0.3)
-                    : AppColors.primaryDarkGreen.withOpacity(0.2),
+                    ? AppColors.primaryDarkGreen.withValues(alpha: 0.3)
+                    : AppColors.primaryDarkGreen.withValues(alpha: 0.15),
+                width: isUploaded ? 1.5 : 1,
               ),
             ),
             child: isUploaded
                 ? Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(AppSizes.sm),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryDarkGreen,
-                          borderRadius: BorderRadius.circular(8),
+                          gradient: const LinearGradient(
+                            colors: [AppColors.primaryDarkGreen, Color(0xFF065B3C)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                         ),
-                        child: const Icon(Icons.description, color: Colors.white, size: 24),
+                        child: const Icon(Icons.description, color: AppColors.white, size: 22),
                       ),
-                      const AppSizedBox(width: 12),
+                      const AppSizedBox(width: AppSizes.md),
                       Expanded(
-                        child: AppText(
-                          text: file != null ? path.basename(file.path) : 'Document uploaded',
-                          size: 14,
-                          weight: FontWeight.w600,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AppText(
+                              text: file != null ? path.basename(file.path) : 'Document uploaded',
+                              size: 14,
+                              weight: FontWeight.w600,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            AppText(
+                              text: 'Ready to upload',
+                              size: 11,
+                              color: AppColors.textSecondaryLight,
+                            ),
+                          ],
                         ),
                       ),
-                      const Icon(Icons.check_circle, color: AppColors.primaryDarkGreen, size: 20),
+                      Container(
+                        padding: const EdgeInsets.all(AppSizes.xs),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_circle,
+                          color: AppColors.primaryDarkGreen,
+                          size: 18,
+                        ),
+                      ),
                     ],
                   )
                 : Column(
                     children: [
-                      const Icon(Icons.upload_file_outlined, size: 36, color: AppColors.primaryDarkGreen),
-                      const AppSizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(AppSizes.md),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryDarkGreen.withValues(alpha: 0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.upload_file_outlined,
+                          size: 28,
+                          color: AppColors.primaryDarkGreen,
+                        ),
+                      ),
+                      const AppSizedBox(height: AppSizes.md),
                       const AppText(
                         text: 'Upload document',
                         size: 14,
                         weight: FontWeight.w700,
                         color: AppColors.primaryDarkGreen,
                       ),
-                      const AppSizedBox(height: 4),
-                      AppText(text: hint, size: 12, color: Colors.grey),
+                      const AppSizedBox(height: AppSizes.xs),
+                      AppText(text: hint, size: 12, color: AppColors.textSecondaryLight),
                     ],
                   ),
           ),

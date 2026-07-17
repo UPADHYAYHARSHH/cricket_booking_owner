@@ -137,7 +137,7 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
             ),
           if (_status != _ScanStatus.scanning)
             Container(
-              color: const Color(0xFFF5F6FA),
+              color: AppColors.bgLight,
               child: Center(child: _resultCard()),
             ),
         ],
@@ -219,10 +219,10 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 16),
+            BoxShadow(color: AppColors.black.withValues(alpha: 0.08), blurRadius: 16),
           ],
         ),
         child: Column(

@@ -297,7 +297,7 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
       decoration: BoxDecoration(
         color: const Color(0xFFF0F7FF),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue.withOpacity(0.1)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,7 +324,7 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
         text: title,
         size: 13,
         weight: FontWeight.w800,
-        color: AppColors.textSecondaryLight.withOpacity(0.8),
+        color: AppColors.textSecondaryLight.withValues(alpha: 0.8),
         letterSpacing: 0.5,
       ),
     );
@@ -352,15 +352,15 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
           decoration: InputDecoration(
             hintText: hint,
             filled: true,
-            fillColor: const Color(0xFFF0F9F4).withOpacity(0.3),
+            fillColor: AppColors.slotAvailableBg.withValues(alpha: 0.3),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.borderLight)),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: AppColors.borderLight)),
           ),
         ),
         if (helper != null) ...[
           const AppSizedBox(height: 4),
-          AppText(text: helper, size: 11, color: Colors.grey),
+          AppText(text: helper, size: 11, color: AppColors.textSecondaryLight),
         ],
       ],
     );
@@ -381,10 +381,10 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
             decoration: BoxDecoration(
-              color: isUploaded ? const Color(0xFFF0F9F4).withOpacity(0.5) : Colors.white,
+              color: isUploaded ? AppColors.slotAvailableBg.withValues(alpha: 0.5) : AppColors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isUploaded ? AppColors.primaryDarkGreen.withOpacity(0.3) : AppColors.primaryDarkGreen.withOpacity(0.2),
+                color: isUploaded ? AppColors.primaryDarkGreen.withValues(alpha: 0.3) : AppColors.primaryDarkGreen.withValues(alpha: 0.2),
                 style: isUploaded ? BorderStyle.solid : BorderStyle.none,
               ),
             ),
@@ -394,7 +394,7 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(color: AppColors.primaryDarkGreen, borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.description, color: Colors.white, size: 24),
+                      child: const Icon(Icons.description, color: AppColors.white, size: 24),
                     ),
                     const AppSizedBox(width: 12),
                     Expanded(
@@ -421,7 +421,7 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
                     const AppSizedBox(height: 8),
                     AppText(text: "Upload document", size: 15, weight: FontWeight.w700, color: AppColors.primaryDarkGreen),
                     const AppSizedBox(height: 4),
-                    AppText(text: hint, size: 12, color: Colors.grey),
+                    AppText(text: hint, size: 12, color: AppColors.textSecondaryLight),
                   ],
                 ),
           ),
@@ -441,9 +441,9 @@ class _KycDocumentationScreenState extends State<KycDocumentationScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
+              color: isSelected ? AppColors.slotAvailableBg : AppColors.white,
               borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade200, width: isSelected ? 1.5 : 1),
+              border: Border.all(color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight, width: isSelected ? 1.5 : 1),
             ),
             child: AppText(text: option, size: 13, weight: isSelected ? FontWeight.w700 : FontWeight.w500, color: isSelected ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight),
           ),

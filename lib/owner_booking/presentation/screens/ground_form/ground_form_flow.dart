@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
+import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/ground_repository.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cubit.dart';
@@ -73,7 +74,6 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
           }
 
           if (state is GroundFormSaved) {
-            // Refresh the grounds list in the parent screen.
             context.read<GroundCubit>().fetchGroundsForLocation(widget.locationId);
             toastification.show(
               context: context,
@@ -102,11 +102,15 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
             builder: (context, state) {
               if (state is GroundFormLoading) {
                 return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
+                  backgroundColor: AppColors.bgLight,
+                  body: Center(
+                    child: CircularProgressIndicator(color: AppColors.primaryDarkGreen),
+                  ),
                 );
               }
 
               return Scaffold(
+                backgroundColor: AppColors.bgLight,
                 body: PageView(
                   controller: _pageController,
                   physics: const NeverScrollableScrollPhysics(),

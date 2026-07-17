@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
-import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_layout.dart';
@@ -25,7 +25,7 @@ class Step1Sports extends StatefulWidget {
   State<Step1Sports> createState() => _Step1SportsState();
 }
 
-class _Step1SportsState extends State<Step1Sports> {
+class _Step1SportsState extends State<Step1Sports> with TickerProviderStateMixin {
   String _selectedSport = '';
   bool _initialized = false;
 
@@ -65,72 +65,138 @@ class _Step1SportsState extends State<Step1Sports> {
       subtitle: 'Which single sport is this ground for?',
       onNext: _onNext,
       onBack: () => Navigator.pop(context),
-      child: ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: _kSports.length,
-        itemBuilder: (context, index) {
+      child: Column(
+        children: List.generate(_kSports.length, (index) {
           final sport = _kSports[index];
           final id = sport['id'] as String;
           final isSelected = _selectedSport == id;
 
-          return GestureDetector(
-            onTap: () => _select(id),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 250),
-              margin: const EdgeInsets.only(bottom: 14),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.primaryDarkGreen
-                      : AppColors.primaryDarkGreen.withOpacity(0.1),
-                  width: isSelected ? 2 : 1,
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: Duration(milliseconds: 350 + index * 60),
+            curve: Curves.easeOut,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: child,
                 ),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.white : const Color(0xFFF0F9F4),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isSelected
-                            ? AppColors.primaryDarkGreen.withOpacity(0.2)
-                            : Colors.transparent,
+              );
+            },
+            child: GestureDetector(
+              onTap: () => _select(id),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                margin: const EdgeInsets.only(bottom: AppSizes.md),
+                padding: const EdgeInsets.all(AppSizes.lg),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.slotAvailableBg : AppColors.white,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                  border: Border.all(
+                    color: isSelected
+                        ? AppColors.primaryDarkGreen
+                        : AppColors.borderLight,
+                    width: isSelected ? 2 : 1,
+                  ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: AppColors.primaryDarkGreen.withValues(alpha: 0.15),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [
+                          BoxShadow(
+                            color: AppColors.black.withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                ),
+                child: Row(
+                  children: [
+                    // Icon container with gradient on select
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      padding: const EdgeInsets.all(AppSizes.md),
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  AppColors.primaryDarkGreen,
+                                  Color(0xFF066B3E),
+                                ],
+                              )
+                            : null,
+                        color: isSelected ? null : AppColors.slotAvailableBg,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        sport['icon'] as IconData,
+                        color: isSelected ? AppColors.white : AppColors.primaryDarkGreen,
+                        size: AppSizes.iconLg,
                       ),
                     ),
-                    child: Icon(sport['icon'] as IconData,
-                        color: AppColors.primaryDarkGreen, size: 22),
-                  ),
-                  const AppSizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        AppText(
+                    const SizedBox(width: AppSizes.lg),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppText(
                             text: sport['name'] as String,
                             size: 15,
-                            weight: FontWeight.w700),
-                        AppText(
+                            weight: FontWeight.w700,
+                          ),
+                          const SizedBox(height: AppSizes.xxs),
+                          AppText(
                             text: sport['subtitle'] as String,
                             size: 12,
-                            color: AppColors.textSecondaryLight),
-                      ],
+                            color: AppColors.textSecondaryLight,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  Icon(
-                    isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-                    color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade300,
-                  ),
-                ],
+                    // Animated checkmark indicator
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        gradient: isSelected
+                            ? const LinearGradient(
+                                colors: [
+                                  AppColors.primaryDarkGreen,
+                                  Color(0xFF066B3E),
+                                ],
+                              )
+                            : null,
+                        color: isSelected ? null : AppColors.borderLight,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Center(
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: isSelected
+                              ? const Icon(
+                                  Icons.check_rounded,
+                                  color: AppColors.white,
+                                  size: 16,
+                                  key: ValueKey('check'),
+                                )
+                              : const SizedBox(key: ValueKey('empty')),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
-        },
+        }),
       ),
     );
   }

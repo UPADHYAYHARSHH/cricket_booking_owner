@@ -26,7 +26,16 @@ class _MainNavbarState extends State<MainNavbar> {
   ];
 
   void _openScanner() {
-    Navigator.push(context, MaterialPageRoute(builder: (_) => const ScanTicketScreen()));
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            const ScanTicketScreen(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    );
   }
 
   @override
@@ -37,13 +46,34 @@ class _MainNavbarState extends State<MainNavbar> {
         if (!didPop) setState(() => _selectedIndex = 0);
       },
       child: Scaffold(
-        body: _screens[_selectedIndex],
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position:
+                    Tween<Offset>(
+                      begin: const Offset(0.02, 0),
+                      end: Offset.zero,
+                    ).animate(
+                      CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
+                child: child,
+              ),
+            );
+          },
+          child: _screens[_selectedIndex],
+        ),
         floatingActionButton: _ScanFab(onTap: _openScanner),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         bottomNavigationBar: BottomAppBar(
           shape: const CircularNotchedRectangle(),
           notchMargin: 10,
-          color: Colors.white,
+          color: AppColors.surfaceLight,
           elevation: 12,
           padding: EdgeInsets.zero,
           child: SizedBox(
@@ -62,7 +92,7 @@ class _MainNavbarState extends State<MainNavbar> {
                   selected: _selectedIndex == 1,
                   onTap: () => setState(() => _selectedIndex = 1),
                 ),
-                const SizedBox(width: 64), // reserved space for the notch + scan FAB
+                const SizedBox(width: 64),
                 _NavItem(
                   icon: HugeIcons.strokeRoundedCricketBat,
                   label: 'Grounds',
@@ -84,60 +114,24 @@ class _MainNavbarState extends State<MainNavbar> {
   }
 }
 
-/// The center scan button: raised above the bar and nested in its notch so
-/// the owner can jump straight into ticket scanning from anywhere.
-class _ScanFab extends StatefulWidget {
+class _ScanFab extends StatelessWidget {
   final VoidCallback onTap;
   const _ScanFab({required this.onTap});
-
-  @override
-  State<_ScanFab> createState() => _ScanFabState();
-}
-
-class _ScanFabState extends State<_ScanFab> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Transform.translate(
       offset: const Offset(0, -8),
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primaryDarkGreen.withValues(alpha: 0.3 + 0.2 * _controller.value),
-                  blurRadius: 8 + 4 * _controller.value,
-                  spreadRadius: 2 + 2 * _controller.value,
-                ),
-              ],
-            ),
-            child: FloatingActionButton(
-              onPressed: widget.onTap,
-              backgroundColor: AppColors.primaryDarkGreen,
-              elevation: 0,
-              shape: const CircleBorder(),
-              child: const Icon(Icons.qr_code_scanner_rounded, color: Colors.white, size: 28),
-            ),
-          );
-        },
+      child: FloatingActionButton(
+        onPressed: this.onTap,
+        backgroundColor: AppColors.primaryDarkGreen,
+        elevation: 4,
+        shape: const CircleBorder(),
+        child: const Icon(
+          Icons.qr_code_scanner_rounded,
+          color: AppColors.white,
+          size: 28,
+        ),
       ),
     );
   }
@@ -168,13 +162,21 @@ class _NavItem extends StatelessWidget {
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOutCubic,
           builder: (context, value, child) {
-            final color = Color.lerp(Colors.grey.shade400, AppColors.primaryDarkGreen, value)!;
+            final color = Color.lerp(
+              AppColors.textSecondaryLight,
+              AppColors.primaryDarkGreen,
+              value,
+            )!;
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Transform.scale(
                   scale: 1.0 + (0.15 * value),
-                  child: HugeIcon(icon: icon, color: color, size: 22),
+                  child: HugeIcon(
+                    icon: icon as dynamic,
+                    color: color,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 AppText(
@@ -182,6 +184,19 @@ class _NavItem extends StatelessWidget {
                   size: 11,
                   weight: selected ? FontWeight.w700 : FontWeight.w500,
                   color: color,
+                ),
+                const SizedBox(height: 2),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutCubic,
+                  width: selected ? 20 : 0,
+                  height: 2,
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppColors.primaryDarkGreen
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
                 ),
               ],
             );

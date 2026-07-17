@@ -308,17 +308,17 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: AppColors.textSecondaryLight.withOpacity(0.4)),
+        hintStyle: TextStyle(color: AppColors.textSecondaryLight.withValues(alpha: 0.4)),
         filled: true,
-        fillColor: const Color(0xFFF0F9F4),
+        fillColor: AppColors.slotAvailableBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -340,17 +340,17 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       ),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: AppColors.textSecondaryLight.withOpacity(0.4)),
+        hintStyle: TextStyle(color: AppColors.textSecondaryLight.withValues(alpha: 0.4)),
         filled: true,
         fillColor: const Color(0xFFE2F3E9), // Darker green to emphasize read-only state
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
         ),
       ),
     );
@@ -369,9 +369,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
           ),
           decoration: InputDecoration(
             hintText: "Type at least 3 letters to search...",
-            hintStyle: TextStyle(color: AppColors.textSecondaryLight.withOpacity(0.4)),
+            hintStyle: TextStyle(color: AppColors.textSecondaryLight.withValues(alpha: 0.4)),
             filled: true,
-            fillColor: const Color(0xFFF0F9F4),
+            fillColor: AppColors.slotAvailableBg,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             prefixIcon: const Icon(Icons.search, color: AppColors.primaryDarkGreen),
             suffixIcon: _isSearching
@@ -388,7 +388,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                   )
                 : _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        icon: const Icon(Icons.clear, color: AppColors.textSecondaryLight),
                         onPressed: () {
                           setState(() {
                             _searchController.clear();
@@ -401,11 +401,11 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+              borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+              borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -419,16 +419,16 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
             width: double.infinity,
             constraints: const BoxConstraints(maxHeight: 220),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.white,
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: AppColors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
               ],
-              border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.15)),
+              border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.15)),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
@@ -438,7 +438,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                 itemCount: _suggestions.length,
                 separatorBuilder: (context, index) => Divider(
                   height: 1,
-                  color: AppColors.primaryDarkGreen.withOpacity(0.1),
+                  color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
                 ),
                 itemBuilder: (context, index) {
                   final item = _suggestions[index];
@@ -454,9 +454,9 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     subtitle: const AppText(
                       text: "India",
                       size: 12,
-                      color: Colors.grey,
+                      color: AppColors.textSecondaryLight,
                     ),
-                    hoverColor: const Color(0xFFF0F9F4),
+                    hoverColor: AppColors.slotAvailableBg,
                     onTap: () {
                       setState(() {
                         _cityController.text = item['city']!;
@@ -492,18 +492,18 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
       ),
       decoration: InputDecoration(
         hintText: "Enter Mobile Number",
-        hintStyle: TextStyle(color: AppColors.textSecondaryLight.withOpacity(0.4)),
+        hintStyle: TextStyle(color: AppColors.textSecondaryLight.withValues(alpha: 0.4)),
         filled: true,
-        fillColor: const Color(0xFFF0F9F4),
+        fillColor: AppColors.slotAvailableBg,
         prefixIcon: const Icon(Icons.phone, color: AppColors.primaryDarkGreen),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

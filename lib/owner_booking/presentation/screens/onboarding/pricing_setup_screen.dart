@@ -184,15 +184,15 @@ class _PricingSetupScreenState extends State<PricingSetupScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primaryDarkGreen : Colors.white,
+                  color: isSelected ? AppColors.primaryDarkGreen : AppColors.white,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade300),
+                  border: Border.all(color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight),
                 ),
                 child: Row(
                   children: [
-                    Icon(_sportIcons[id] ?? Icons.sports, color: isSelected ? Colors.white : AppColors.textPrimaryLight, size: 20),
+                    Icon(_sportIcons[id] ?? Icons.sports, color: isSelected ? AppColors.white : AppColors.textPrimaryLight, size: 20),
                     const AppSizedBox(width: 8),
-                    AppText(text: _sportNames[id] ?? id, size: 14, weight: FontWeight.w700, color: isSelected ? Colors.white : AppColors.textPrimaryLight),
+                    AppText(text: _sportNames[id] ?? id, size: 14, weight: FontWeight.w700, color: isSelected ? AppColors.white : AppColors.textPrimaryLight),
                   ],
                 ),
               ),
@@ -236,7 +236,7 @@ class _PricingSetupScreenState extends State<PricingSetupScreen> {
         text: title,
         size: 13,
         weight: FontWeight.w800,
-        color: AppColors.textSecondaryLight.withOpacity(0.8),
+        color: AppColors.textSecondaryLight.withValues(alpha: 0.8),
         letterSpacing: 0.5,
       ),
     );
@@ -257,9 +257,9 @@ class _PricingSetupScreenState extends State<PricingSetupScreen> {
   Widget _buildPricingTable(List<_PricingRowData> rows) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFF0F9F4).withOpacity(0.3),
+        color: AppColors.slotAvailableBg.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.05)),
+        border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
@@ -268,8 +268,8 @@ class _PricingSetupScreenState extends State<PricingSetupScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                AppText(text: "TIME SLOT", size: 12, weight: FontWeight.w800, color: AppColors.primaryDarkGreen.withOpacity(0.6), letterSpacing: 0.5),
-                AppText(text: "RATE / HR", size: 12, weight: FontWeight.w800, color: AppColors.primaryDarkGreen.withOpacity(0.6), letterSpacing: 0.5),
+                AppText(text: "TIME SLOT", size: 12, weight: FontWeight.w800, color: AppColors.primaryDarkGreen.withValues(alpha: 0.6), letterSpacing: 0.5),
+                AppText(text: "RATE / HR", size: 12, weight: FontWeight.w800, color: AppColors.primaryDarkGreen.withValues(alpha: 0.6), letterSpacing: 0.5),
               ],
             ),
           ),
@@ -283,8 +283,8 @@ class _PricingSetupScreenState extends State<PricingSetupScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: row.isPeak ? const Color(0xFFFFF9E6) : Colors.white,
-        border: Border(top: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.05))),
+        color: row.isPeak ? const Color(0xFFFFF9E6) : AppColors.white,
+        border: Border(top: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.05))),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -315,10 +315,10 @@ class _PricingSetupScreenState extends State<PricingSetupScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: row.isPeak ? const Color(0xFFF57F17) : AppColors.primaryDarkGreen),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: row.isPeak ? const Color(0xFFFBC02D) : AppColors.primaryDarkGreen.withOpacity(0.2))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: row.isPeak ? const Color(0xFFFBC02D).withOpacity(0.5) : AppColors.primaryDarkGreen.withOpacity(0.15))),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: row.isPeak ? const Color(0xFFFBC02D) : AppColors.primaryDarkGreen.withValues(alpha: 0.2))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: row.isPeak ? const Color(0xFFFBC02D).withValues(alpha: 0.5) : AppColors.primaryDarkGreen.withValues(alpha: 0.15))),
                 focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: row.isPeak ? const Color(0xFFFBC02D) : AppColors.primaryDarkGreen, width: 1.5)),
               ),
             ),
@@ -339,9 +339,9 @@ class _PricingSetupScreenState extends State<PricingSetupScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
+              color: isSelected ? AppColors.slotAvailableBg : AppColors.white,
               borderRadius: BorderRadius.circular(25),
-              border: Border.all(color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade200, width: isSelected ? 1.5 : 1),
+              border: Border.all(color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight, width: isSelected ? 1.5 : 1),
             ),
             child: AppText(text: option, size: 13, weight: isSelected ? FontWeight.w700 : FontWeight.w500, color: isSelected ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight),
           ),

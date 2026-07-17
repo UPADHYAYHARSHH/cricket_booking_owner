@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
+import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
-import 'package:turfpro_owner/core/text_theme.dart';
 import 'package:toastification/toastification.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -134,12 +135,9 @@ class _SignupScreenState extends State<SignupScreen> {
           final isLoading = state is AuthLoading;
 
           return Scaffold(
-            backgroundColor: const Color(0xffECECEC),
             appBar: AppBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.black87),
+                icon: const Icon(Icons.arrow_back),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -155,15 +153,14 @@ class _SignupScreenState extends State<SignupScreen> {
                           text: "Register Owner",
                           size: 26,
                           weight: FontWeight.w700,
-                          textStyle: AppTextTheme.black17,
                         ),
 
                         const AppSizedBox(height: 6),
 
-                        const AppText(
+                        AppText(
                           text: "Create an account to register your turf",
                           size: 14,
-                          color: Colors.grey,
+                          color: AppColors.textSecondaryLight,
                         ),
 
                         const AppSizedBox(height: 24),
@@ -172,136 +169,104 @@ class _SignupScreenState extends State<SignupScreen> {
                         Container(
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
+                            color: AppColors.surfaceLight,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusXl),
                             boxShadow: [
                               BoxShadow(
                                 blurRadius: 10,
-                                color: Colors.black.withOpacity(.05),
+                                color: AppColors.black.withValues(alpha: 0.05),
                               )
                             ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const AppText(
+                              AppText(
                                 text: "Full Name",
                                 size: 12,
                                 weight: FontWeight.w600,
-                                color: Colors.black54,
+                                color: AppColors.textSecondaryLight,
                               ),
                               const AppSizedBox(height: 6),
                               TextField(
                                 controller: nameController,
-                                style: const TextStyle(color: Colors.black87),
                                 decoration: InputDecoration(
                                   hintText: "e.g. Rajesh Patel",
-                                  hintStyle: const TextStyle(color: Colors.black38),
                                   errorText: nameError,
-                                  prefixIcon: const Icon(Icons.person_outline, color: Colors.black45),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
+                                  prefixIcon: const Icon(Icons.person_outline),
                                 ),
                               ),
 
                               const AppSizedBox(height: 16),
 
-                              const AppText(
+                              AppText(
                                 text: "Email Address",
                                 size: 12,
                                 weight: FontWeight.w600,
-                                color: Colors.black54,
+                                color: AppColors.textSecondaryLight,
                               ),
                               const AppSizedBox(height: 6),
                               TextField(
                                 controller: emailController,
                                 keyboardType: TextInputType.emailAddress,
-                                style: const TextStyle(color: Colors.black87),
                                 decoration: InputDecoration(
                                   hintText: "e.g. rajesh@example.com",
-                                  hintStyle: const TextStyle(color: Colors.black38),
                                   errorText: emailError,
-                                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.black45),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
+                                  prefixIcon: const Icon(Icons.email_outlined),
                                 ),
                               ),
 
                               const AppSizedBox(height: 16),
 
-                              const AppText(
+                              AppText(
                                 text: "Mobile Number",
                                 size: 12,
                                 weight: FontWeight.w600,
-                                color: Colors.black54,
+                                color: AppColors.textSecondaryLight,
                               ),
                               const AppSizedBox(height: 6),
                               TextField(
                                 controller: phoneController,
                                 keyboardType: TextInputType.phone,
                                 maxLength: 10,
-                                style: const TextStyle(color: Colors.black87),
                                 decoration: InputDecoration(
                                   counterText: "",
                                   hintText: "Enter 10 digit number",
-                                  hintStyle: const TextStyle(color: Colors.black38),
                                   errorText: phoneError,
                                   prefixIcon: const Padding(
                                     padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                                     child: Text(
                                       "+91",
                                       style: TextStyle(
-                                        color: Colors.black45,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),
                                     ),
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
                                   ),
                                 ),
                               ),
 
                               const AppSizedBox(height: 16),
 
-                              const AppText(
+                              AppText(
                                 text: "Password",
                                 size: 12,
                                 weight: FontWeight.w600,
-                                color: Colors.black54,
+                                color: AppColors.textSecondaryLight,
                               ),
                               const AppSizedBox(height: 6),
                               TextField(
                                 controller: passwordController,
                                 obscureText: _obscurePassword,
-                                style: const TextStyle(color: Colors.black87),
                                 decoration: InputDecoration(
                                   hintText: "Min 6 characters",
-                                  hintStyle: const TextStyle(color: Colors.black38),
                                   errorText: passwordError,
-                                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.black45),
+                                  prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
-                                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                      color: Colors.black45,
+                                      _obscurePassword
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
                                     ),
                                     onPressed: () {
                                       setState(() {
@@ -309,53 +274,36 @@ class _SignupScreenState extends State<SignupScreen> {
                                       });
                                     },
                                   ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
                                 ),
                               ),
 
                               const AppSizedBox(height: 16),
 
-                              const AppText(
+                              AppText(
                                 text: "Confirm Password",
                                 size: 12,
                                 weight: FontWeight.w600,
-                                color: Colors.black54,
+                                color: AppColors.textSecondaryLight,
                               ),
                               const AppSizedBox(height: 6),
                               TextField(
                                 controller: confirmPasswordController,
                                 obscureText: _obscureConfirmPassword,
-                                style: const TextStyle(color: Colors.black87),
                                 decoration: InputDecoration(
                                   hintText: "Re-enter password",
-                                  hintStyle: const TextStyle(color: Colors.black38),
                                   errorText: confirmPasswordError,
-                                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.black45),
+                                  prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
-                                      _obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                      color: Colors.black45,
+                                      _obscureConfirmPassword
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
                                     ),
                                     onPressed: () {
                                       setState(() {
                                         _obscureConfirmPassword = !_obscureConfirmPassword;
                                       });
                                     },
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
                                   ),
                                 ),
                               ),
@@ -385,10 +333,10 @@ class _SignupScreenState extends State<SignupScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const AppText(
+                            AppText(
                               text: "Already have an account? ",
                               size: 14,
-                              color: Colors.black54,
+                              color: AppColors.textSecondaryLight,
                             ),
                             InkWell(
                               onTap: () {
@@ -398,7 +346,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 text: "Login",
                                 size: 14,
                                 weight: FontWeight.bold,
-                                color: Colors.green.shade700,
+                                color: AppColors.primaryDarkGreen,
                               ),
                             ),
                           ],

@@ -8,10 +8,10 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/services/app_config_service.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart';
-import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_state.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_cubit.dart';
@@ -28,12 +28,32 @@ class DashboardScreen extends StatefulWidget {
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends State<DashboardScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _staggerController;
+  late final Animation<double> _staggerAnimation;
+
   @override
   void initState() {
     super.initState();
     context.read<DashboardCubit>().fetchDashboardData();
     WidgetsBinding.instance.addPostFrameCallback((_) => _runStartupChecks());
+
+    _staggerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+    _staggerAnimation = CurvedAnimation(
+      parent: _staggerController,
+      curve: Curves.easeOutCubic,
+    );
+    _staggerController.forward();
+  }
+
+  @override
+  void dispose() {
+    _staggerController.dispose();
+    super.dispose();
   }
 
   Future<void> _runStartupChecks() async {
@@ -61,8 +81,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  /// Returns true when [current] is strictly less than [minimum].
-  /// Compares dot-separated integer segments (e.g. "1.0.3" < "1.1.0").
   bool _isVersionLower(String current, String minimum) {
     final cur = current.split('.').map((s) => int.tryParse(s) ?? 0).toList();
     final min = minimum.split('.').map((s) => int.tryParse(s) ?? 0).toList();
@@ -96,11 +114,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Widget _buildStaggeredChild(int index, Widget child) {
+    final start = (index * 0.15).clamp(0.0, 1.0);
+    final end = (start + 0.4).clamp(0.0, 1.0);
+    return AnimatedBuilder(
+      animation: _staggerAnimation,
+      builder: (context, _) {
+        final progress = _staggerAnimation.value;
+        final itemProgress = ((progress - start) / (end - start)).clamp(0.0, 1.0);
+        final curvedProgress = Curves.easeOutCubic.transform(itemProgress);
+        return Opacity(
+          opacity: curvedProgress,
+          child: Transform.translate(
+            offset: Offset(0, 30 * (1 - curvedProgress)),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: AppColors.bgLight,
       body: SafeArea(
         bottom: false,
         child: BlocBuilder<DashboardCubit, DashboardState>(
@@ -121,144 +158,149 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 onRefresh: () async {
                   await context.read<DashboardCubit>().fetchDashboardData();
                 },
-                child: TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0.0, end: 1.0),
-                  duration: const Duration(milliseconds: 400),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Opacity(
-                      opacity: value,
-                      child: Transform.translate(
-                        offset: Offset(0, 20 * (1 - value)),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.only(bottom: 30),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Header and Overlapping Revenue Card
-                        Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            Column(
-                              children: [
-                                DashboardHeader(
-                                  ownerName: state.ownerName,
-                                  venueName: state.venueName,
-                                  activeCourts: state.activeCourts,
-                                  locations: state.locations,
-                                  selectedLocationId: state.selectedLocationId,
-                                  onLocationSelected: (locationId) => context
-                                      .read<DashboardCubit>()
-                                      .selectLocation(locationId),
-                                ),
-                                const SizedBox(
-                                  height: 110,
-                                ), // Space for revenue card overlap
-                              ],
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => BlocProvider(
-                                      create: (_) => getIt<RevenueCubit>(),
-                                      child: const RevenueScreen(),
-                                    ),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.only(bottom: 30),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header and Overlapping Revenue Card
+                      _buildStaggeredChild(0, Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Column(
+                            children: [
+                              DashboardHeader(
+                                ownerName: state.ownerName,
+                                venueName: state.venueName,
+                                activeCourts: state.activeCourts,
+                                locations: state.locations,
+                                selectedLocationId: state.selectedLocationId,
+                                onLocationSelected: (locationId) => context
+                                    .read<DashboardCubit>()
+                                    .selectLocation(locationId),
+                              ),
+                              const SizedBox(height: 110),
+                            ],
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            child: _buildStaggeredChild(1, GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => BlocProvider(
+                                    create: (_) => getIt<RevenueCubit>(),
+                                    child: const RevenueScreen(),
                                   ),
                                 ),
-                                child: RevenueCard(
-                                  amount: state.todayRevenue,
-                                  percentageChange: state.revenueChangeLabel,
-                                  bookingsCount: state.todayBookingsCount
-                                      .toString(),
-                                ),
                               ),
+                              child: RevenueCard(
+                                amount: state.todayRevenue,
+                                percentageChange: state.revenueChangeLabel,
+                                bookingsCount: state.todayBookingsCount.toString(),
+                              ),
+                            )),
+                          ),
+                        ],
+                      )),
+                      const SizedBox(height: 28),
+
+                      // Stats Row
+                      _buildStaggeredChild(2, Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          children: [
+                            _AnimatedStatCard(
+                              value: state.todayBookingsCount.toString(),
+                              label: "Today's Bookings",
+                              delay: 0,
+                            ),
+                            const SizedBox(width: 12),
+                            _AnimatedStatCard(
+                              value: state.pendingAcceptCount.toString(),
+                              label: "Pending Accept",
+                              delay: 100,
+                            ),
+                            const SizedBox(width: 12),
+                            _AnimatedStatCard(
+                              value: state.occupancyPercentage,
+                              label: "Occupancy",
+                              delay: 200,
                             ),
                           ],
                         ),
-                        const SizedBox(height: 28),
+                      )),
+                      const SizedBox(height: 32),
 
-                        // Stats Row
-                        Padding(
+                      // Today's Slots Header
+                      _buildStaggeredChild(3, Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const AppText(
+                              text: "Today's Slots",
+                              color: AppColors.textPrimaryLight,
+                              size: 16,
+                              weight: FontWeight.w700,
+                            ),
+                            AppText(
+                              text: DateFormat('EEE, d MMM').format(DateTime.now()),
+                              color: AppColors.textSecondaryLight,
+                              size: 13,
+                              weight: FontWeight.w500,
+                            ),
+                          ],
+                        ),
+                      )),
+                      const SizedBox(height: 16),
+
+                      // Today's Slots List
+                      if (state.todaySlots.isNotEmpty)
+                        ...List.generate(state.todaySlots.length, (index) {
+                          return _buildStaggeredChild(
+                            4 + index,
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                              child: TodayBookingCard(
+                                booking: state.todaySlots[index] as Map<String, dynamic>,
+                              ),
+                            ),
+                          );
+                        })
+                      else
+                        _buildStaggeredChild(4, Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            children: [
-                              StatCard(
-                                value: state.todayBookingsCount.toString(),
-                                label: "Today's Bookings",
+                          child: Container(
+                            padding: const EdgeInsets.all(32),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                              border: Border.all(color: AppColors.borderLight),
+                            ),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.event_busy_rounded,
+                                    size: 48,
+                                    color: AppColors.borderLight,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  AppText(
+                                    text: "No bookings for today yet",
+                                    color: AppColors.textSecondaryLight,
+                                    size: 14,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              StatCard(
-                                value: state.pendingAcceptCount.toString(),
-                                label: "Pending Accept",
-                              ),
-                              const SizedBox(width: 12),
-                              StatCard(
-                                value: state.occupancyPercentage,
-                                label: "Occupancy",
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Today's Slots Header
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const AppText(
-                                text: "Today's Slots",
-                                color: Colors.black87,
-                                size: 16,
-                                weight: FontWeight.w700,
-                              ),
-                              AppText(
-                                text: DateFormat(
-                                  'EEE, d MMM',
-                                ).format(DateTime.now()),
-                                color: Colors.grey.shade500,
-                                size: 13,
-                                weight: FontWeight.w500,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Today's Slots List
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: state.todaySlots.isNotEmpty
-                              ? Column(
-                                  children: state.todaySlots.map((slot) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 12,
-                                      ),
-                                      child: TodayBookingCard(
-                                        booking: slot as Map<String, dynamic>,
-                                      ),
-                                    );
-                                  }).toList(),
-                                )
-                              : const AppText(
-                                  text: "No bookings for today yet.",
-                                  color: Colors.grey,
-                                ),
-                        ),
-                      ],
-                    ),
+                        )),
+                    ],
                   ),
                 ),
               );
@@ -267,6 +309,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
         ),
       ),
+    );
+  }
+}
+
+/// Stat card with bounce-in animation
+class _AnimatedStatCard extends StatefulWidget {
+  final String value;
+  final String label;
+  final int delay;
+
+  const _AnimatedStatCard({
+    required this.value,
+    required this.label,
+    required this.delay,
+  });
+
+  @override
+  State<_AnimatedStatCard> createState() => _AnimatedStatCardState();
+}
+
+class _AnimatedStatCardState extends State<_AnimatedStatCard>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _fadeAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+
+    Future.delayed(Duration(milliseconds: 300 + widget.delay), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _scaleAnimation.value,
+          child: Opacity(
+            opacity: _fadeAnimation.value,
+            child: StatCard(
+              value: widget.value,
+              label: widget.label,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -296,7 +405,7 @@ class _ForceUpdateDialog extends StatelessWidget {
     return PopScope(
       canPop: false,
       child: Dialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surfaceLight,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(28, 36, 28, 28),
@@ -307,7 +416,7 @@ class _ForceUpdateDialog extends StatelessWidget {
                 width: 88,
                 height: 88,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
+                  color: AppColors.statusConfirmedBg,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
@@ -330,15 +439,13 @@ class _ForceUpdateDialog extends StatelessWidget {
                 text: 'Update Required',
                 size: 20,
                 weight: FontWeight.bold,
-                color: Colors.black87,
                 align: TextAlign.center,
               ),
               const SizedBox(height: 10),
               AppText(
-                text:
-                    'A newer version of the app is required to continue. Please update to the latest version.',
+                text: 'A newer version of the app is required to continue. Please update to the latest version.',
                 size: 13,
-                color: Colors.grey.shade500,
+                color: AppColors.textSecondaryLight,
                 align: TextAlign.center,
               ),
               const SizedBox(height: 28),
@@ -349,7 +456,7 @@ class _ForceUpdateDialog extends StatelessWidget {
                     onPressed: _openStore,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primaryDarkGreen,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppColors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(vertical: 15),
                       shape: RoundedRectangleBorder(
@@ -360,7 +467,7 @@ class _ForceUpdateDialog extends StatelessWidget {
                       text: 'Update Now',
                       size: 15,
                       weight: FontWeight.w600,
-                      color: Colors.white,
+                      color: AppColors.white,
                     ),
                   ),
                 ),
@@ -370,17 +477,17 @@ class _ForceUpdateDialog extends StatelessWidget {
                 child: OutlinedButton(
                   onPressed: _closeApp,
                   style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.grey.shade300),
+                    side: const BorderSide(color: AppColors.borderLight),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),
-                  child: AppText(
+                  child: const AppText(
                     text: 'Close App',
                     size: 14,
                     weight: FontWeight.w500,
-                    color: Colors.grey.shade600,
+                    color: AppColors.textSecondaryLight,
                   ),
                 ),
               ),
@@ -436,7 +543,7 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog>
     return PopScope(
       canPop: false,
       child: Dialog(
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.surfaceLight,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(28, 36, 28, 28),
@@ -449,11 +556,11 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog>
                   width: 88,
                   height: 88,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF3E0),
+                    color: AppColors.statusPendingBg,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFF57C00).withValues(alpha: 0.18),
+                        color: AppColors.accentOrange.withValues(alpha: 0.18),
                         blurRadius: 20,
                         spreadRadius: 4,
                       ),
@@ -463,7 +570,7 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog>
                     child: HugeIcon(
                       icon: HugeIcons.strokeRoundedTools,
                       size: 40,
-                      color: Color(0xFFF57C00),
+                      color: AppColors.accentOrange,
                     ),
                   ),
                 ),
@@ -473,15 +580,13 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog>
                 text: "Under Maintenance",
                 size: 20,
                 weight: FontWeight.bold,
-                color: Colors.black87,
                 align: TextAlign.center,
               ),
               const SizedBox(height: 10),
               AppText(
-                text:
-                    "We're working hard to improve your experience.\nPlease check back soon.",
+                text: "We're working hard to improve your experience.\nPlease check back soon.",
                 size: 13,
-                color: Colors.grey.shade500,
+                color: AppColors.textSecondaryLight,
                 align: TextAlign.center,
               ),
               const SizedBox(height: 32),
@@ -491,7 +596,7 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog>
                   onPressed: _closeApp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryDarkGreen,
-                    foregroundColor: Colors.white,
+                    foregroundColor: AppColors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
@@ -502,7 +607,7 @@ class _MaintenanceDialogState extends State<_MaintenanceDialog>
                     text: "Close App",
                     size: 15,
                     weight: FontWeight.w600,
-                    color: Colors.white,
+                    color: AppColors.white,
                   ),
                 ),
               ),
@@ -523,82 +628,66 @@ class _DashboardSkeleton extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header skeleton
           Shimmer.fromColors(
-            baseColor: Colors.grey.shade300,
-            highlightColor: Colors.grey.shade100,
+            baseColor: AppColors.borderLight,
+            highlightColor: AppColors.bgLight,
             child: Container(
               height: 200,
               width: double.infinity,
-              color: Colors.white,
+              color: AppColors.surfaceLight,
             ),
           ),
           const SizedBox(height: 24),
+          // Stats skeleton
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Shimmer.fromColors(
-              baseColor: Colors.grey.shade300,
-              highlightColor: Colors.grey.shade100,
+              baseColor: AppColors.borderLight,
+              highlightColor: AppColors.bgLight,
               child: Row(
-                children: [
-                  Expanded(
+                children: List.generate(
+                  3,
+                  (index) => Expanded(
                     child: Container(
                       height: 80,
+                      margin: EdgeInsets.only(right: index < 2 ? 12 : 0),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.surfaceLight,
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      height: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
           const SizedBox(height: 32),
+          // Title skeleton
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Shimmer.fromColors(
-              baseColor: Colors.grey.shade300,
-              highlightColor: Colors.grey.shade100,
-              child: Container(height: 16, width: 120, color: Colors.white),
+              baseColor: AppColors.borderLight,
+              highlightColor: AppColors.bgLight,
+              child: Container(height: 16, width: 120, color: AppColors.surfaceLight),
             ),
           ),
           const SizedBox(height: 16),
+          // Cards skeleton
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Shimmer.fromColors(
-              baseColor: Colors.grey.shade300,
-              highlightColor: Colors.grey.shade100,
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: List.generate(
-                  4,
-                  (index) => Container(
-                    width: 100,
-                    height: 40,
+            child: Column(
+              children: List.generate(
+                3,
+                (index) => Shimmer.fromColors(
+                  baseColor: AppColors.borderLight,
+                  highlightColor: AppColors.bgLight,
+                  child: Container(
+                    height: 100,
+                    margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.surfaceLight,
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                 ),

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:hugeicons/hugeicons.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -226,25 +227,60 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F6FA),
-        appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.primaryDarkGreen),
-            onPressed: () => Navigator.pop(context),
+        backgroundColor: AppColors.bgLight,
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(100),
+          child: Container(
+            padding: EdgeInsets.only(
+              top: MediaQuery.of(context).padding.top,
+              left: AppSizes.lg,
+              right: AppSizes.lg,
+              bottom: AppSizes.lg,
+            ),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF0B8457), Color(0xFF065B3C)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppSizes.sm),
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: AppColors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSizes.md),
+                  Expanded(
+                    child: AppText(
+                      text: widget.isEdit ? 'Edit Location' : 'Add New Location',
+                      size: 20,
+                      weight: FontWeight.w700,
+                      color: AppColors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          title: AppText(
-            text: widget.isEdit ? 'Edit Location' : 'Add New Location',
-            size: 18,
-            weight: FontWeight.w700,
-          ),
-          centerTitle: true,
         ),
         body: Form(
           key: _formKey,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSizes.xxl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -253,49 +289,61 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                   _addressCtrl,
                   hint: 'Plot 42, Prahlad Nagar, Near ISCON Cross Roads',
                   maxLines: 2,
+                  icon: Icons.location_on_outlined,
                   validator: (v) =>
                       (v == null || v.trim().isEmpty) ? 'Address is required' : null,
                 ),
-                const AppSizedBox(height: 20),
+                const AppSizedBox(height: AppSizes.xxl),
                 _label('CITY *'),
                 _citySearchField(),
-                const AppSizedBox(height: 20),
+                const AppSizedBox(height: AppSizes.xxl),
                 _label('GOOGLE MAPS LINK (Optional)'),
-                _field(_mapsCtrl, hint: 'Paste Google Maps URL here'),
-                const AppSizedBox(height: 20),
+                _field(
+                  _mapsCtrl,
+                  hint: 'Paste Google Maps URL here',
+                  icon: Icons.link,
+                ),
+                const AppSizedBox(height: AppSizes.xxl),
                 _label('GPS COORDINATES (Optional)'),
                 Row(
                   children: [
                     Expanded(
-                      child: _field(_latCtrl,
-                          hint: 'Latitude (e.g. 23.0225)',
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true)),
+                      child: _field(
+                        _latCtrl,
+                        hint: 'Latitude (e.g. 23.0225)',
+                        icon: Icons.my_location,
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: true),
+                      ),
                     ),
-                    const AppSizedBox(width: 12),
+                    const AppSizedBox(width: AppSizes.md),
                     Expanded(
-                      child: _field(_lngCtrl,
-                          hint: 'Longitude (e.g. 72.5714)',
-                          keyboardType:
-                              const TextInputType.numberWithOptions(decimal: true)),
+                      child: _field(
+                        _lngCtrl,
+                        hint: 'Longitude (e.g. 72.5714)',
+                        icon: Icons.explore_outlined,
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: true),
+                      ),
                     ),
                   ],
                 ),
-                const AppSizedBox(height: 28),
+                const AppSizedBox(height: AppSizes.xxl + 4),
                 _label('AMENITIES'),
-                const AppSizedBox(height: 4),
+                const AppSizedBox(height: AppSizes.xs),
                 const AppText(
                   text: 'Shared by every ground at this venue',
                   size: 11,
                   color: AppColors.textSecondaryLight,
                 ),
-                const AppSizedBox(height: 16),
+                const AppSizedBox(height: AppSizes.lg),
                 _amenitiesPicker(),
-                const AppSizedBox(height: 40),
+                const AppSizedBox(height: AppSizes.xxxxl),
                 AppButton(
                   title: widget.isEdit ? 'Save Changes' : 'Add Location',
                   isLoading: _isSaving,
                   onTap: _onSave,
+                  backgroundColor: AppColors.primaryDarkGreen,
                 ),
               ],
             ),
@@ -319,9 +367,9 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
           decoration: InputDecoration(
             hintText: 'Type at least 3 letters to search…',
             hintStyle: TextStyle(
-                color: AppColors.textSecondaryLight.withOpacity(0.4), fontSize: 13),
+                color: AppColors.textSecondaryLight.withValues(alpha: 0.4), fontSize: 13),
             filled: true,
-            fillColor: const Color(0xFFF0F9F4),
+            fillColor: AppColors.inputFillLight,
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             prefixIcon: const Icon(Icons.search, color: AppColors.primaryDarkGreen),
             suffixIcon: _isSearching
@@ -336,7 +384,7 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                   )
                 : _searchCtrl.text.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(Icons.clear, color: Colors.grey),
+                        icon: const Icon(Icons.clear, color: AppColors.textSecondaryLight),
                         onPressed: () => setState(() {
                           _searchCtrl.clear();
                           _cityValue = '';
@@ -345,57 +393,68 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                       )
                     : null,
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+              borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
               borderSide: const BorderSide(color: AppColors.primaryDarkGreen, width: 2),
             ),
           ),
         ),
         if (_suggestions.isNotEmpty) ...[
-          const AppSizedBox(height: 4),
+          const AppSizedBox(height: AppSizes.xs),
           Container(
             width: double.infinity,
             constraints: const BoxConstraints(maxHeight: 220),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.surfaceLight,
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
               boxShadow: [
                 BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: AppColors.black.withValues(alpha: 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, 4))
               ],
-              border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.15)),
+              border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.15)),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
               child: ListView.separated(
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 itemCount: _suggestions.length,
                 separatorBuilder: (_, __) =>
-                    Divider(height: 1, color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+                    Divider(height: 1, color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
                 itemBuilder: (context, i) {
                   final item = _suggestions[i];
                   return ListTile(
                     contentPadding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    leading: const Icon(Icons.location_on, color: AppColors.primaryDarkGreen),
+                    leading: Container(
+                      padding: const EdgeInsets.all(AppSizes.xs),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(AppSizes.radiusXs),
+                      ),
+                      child: const Icon(Icons.location_on, color: AppColors.primaryDarkGreen, size: 18),
+                    ),
                     title: AppText(
                       text: '${item['city']}, ${item['state']}',
                       size: 15,
                       weight: FontWeight.w600,
                       color: AppColors.textPrimaryLight,
                     ),
-                    subtitle: const AppText(text: 'India', size: 12, color: Colors.grey),
-                    hoverColor: const Color(0xFFF0F9F4),
+                    subtitle: const AppText(
+                      text: 'India',
+                      size: 12,
+                      color: AppColors.textSecondaryLight,
+                    ),
+                    hoverColor: AppColors.inputFillLight,
                     onTap: () => _selectCity(item),
                   );
                 },
@@ -420,21 +479,35 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
       children: groups.map((group) {
         final items = _kAmenities.where((a) => a['group'] == group).toList();
         return Padding(
-          padding: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.only(bottom: AppSizes.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AppText(
-                text: group.toUpperCase(),
-                size: 11,
-                weight: FontWeight.w800,
-                color: AppColors.textSecondaryLight.withOpacity(0.75),
-                letterSpacing: 0.5,
+              // Section header with line accent
+              Row(
+                children: [
+                  Container(
+                    width: 3,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryDarkGreen,
+                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                    ),
+                  ),
+                  const SizedBox(width: AppSizes.sm),
+                  AppText(
+                    text: group.toUpperCase(),
+                    size: 11,
+                    weight: FontWeight.w800,
+                    color: AppColors.textSecondaryLight,
+                    letterSpacing: 0.8,
+                  ),
+                ],
               ),
-              const AppSizedBox(height: 4),
+              const AppSizedBox(height: AppSizes.md),
               Wrap(
-                spacing: 8,
-                runSpacing: 8,
+                spacing: AppSizes.sm,
+                runSpacing: AppSizes.sm,
                 children: items.map((amenity) {
                   final id = amenity['id'] as String;
                   final label = amenity['label'] as String;
@@ -448,15 +521,26 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                         _selectedAmenities.add(id);
                       }
                     }),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppSizes.lg, vertical: AppSizes.md),
                       decoration: BoxDecoration(
-                        color: isSel ? const Color(0xFFF0F9F4) : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
+                        color: isSel ? AppColors.inputFillLight : AppColors.white,
+                        borderRadius: BorderRadius.circular(AppSizes.radiusRound),
                         border: Border.all(
-                          color: isSel ? AppColors.primaryDarkGreen : Colors.grey.shade300,
+                          color: isSel ? AppColors.primaryDarkGreen : AppColors.borderLight,
                           width: isSel ? 1.5 : 1,
                         ),
+                        boxShadow: isSel
+                            ? [
+                                BoxShadow(
+                                  color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : [],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -464,14 +548,18 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                           HugeIcon(
                             icon: icon,
                             size: 16,
-                            color: isSel ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+                            color: isSel
+                                ? AppColors.primaryDarkGreen
+                                : AppColors.textSecondaryLight,
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppSizes.sm),
                           AppText(
                             text: label,
                             size: 13,
                             weight: isSel ? FontWeight.w700 : FontWeight.w500,
-                            color: isSel ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+                            color: isSel
+                                ? AppColors.primaryDarkGreen
+                                : AppColors.textSecondaryLight,
                           ),
                         ],
                       ),
@@ -487,13 +575,26 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
   }
 
   Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: 8),
-        child: AppText(
-          text: text,
-          size: 12,
-          weight: FontWeight.w700,
-          color: AppColors.textSecondaryLight,
-          letterSpacing: 0.4,
+        padding: const EdgeInsets.only(bottom: AppSizes.sm),
+        child: Row(
+          children: [
+            Container(
+              width: 3,
+              height: 14,
+              decoration: BoxDecoration(
+                color: AppColors.primaryDarkGreen,
+                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+              ),
+            ),
+            const SizedBox(width: AppSizes.sm),
+            AppText(
+              text: text,
+              size: 12,
+              weight: FontWeight.w700,
+              color: AppColors.textSecondaryLight,
+              letterSpacing: 0.4,
+            ),
+          ],
         ),
       );
 
@@ -503,6 +604,7 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
     int maxLines = 1,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
+    IconData? icon,
   }) {
     return TextFormField(
       controller: ctrl,
@@ -514,24 +616,27 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle:
-            TextStyle(color: AppColors.textSecondaryLight.withOpacity(0.4), fontSize: 13),
+            TextStyle(color: AppColors.textSecondaryLight.withValues(alpha: 0.4), fontSize: 13),
         filled: true,
-        fillColor: const Color(0xFFF0F9F4),
+        fillColor: AppColors.inputFillLight,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        prefixIcon: icon != null
+            ? Icon(icon, size: 20, color: AppColors.primaryDarkGreen.withValues(alpha: 0.6))
+            : null,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
           borderSide: const BorderSide(color: AppColors.primaryDarkGreen, width: 2),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
           borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
       ),

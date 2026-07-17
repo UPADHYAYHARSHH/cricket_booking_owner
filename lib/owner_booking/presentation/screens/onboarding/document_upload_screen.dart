@@ -9,9 +9,13 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
+import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
+import 'package:turfpro_owner/common/widgets/app_text_field.dart';
+import 'package:turfpro_owner/common/widgets/section_header.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/utils/form_util.dart';
@@ -42,10 +46,6 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
   bool _isMapLoading = false;
 
   final ImagePicker _picker = ImagePicker();
-
-  static const Color primaryOrange = Color(0xFFFF6B00);
-  static const Color backgroundGrey = Color(0xFFF5F6FA);
-  static const Color darkBlue = Color(0xFF1A1A2E);
 
   @override
   void initState() {
@@ -344,14 +344,11 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
         builder: (context, state) {
           final isLoading = state is AuthLoading;
           return Scaffold(
-            backgroundColor: backgroundGrey,
+            backgroundColor: AppColors.bgLight,
             appBar: AppBar(
-              backgroundColor: Colors.white,
-              elevation: 0.5,
               leading: IconButton(
                 icon: const Icon(
                   Icons.arrow_back_ios,
-                  color: darkBlue,
                   size: 20,
                 ),
                 onPressed: () => _currentStep > 0
@@ -362,7 +359,6 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                 text: _currentStep == 0 ? "Complete Profile" : "Turf Location",
                 size: 18,
                 weight: FontWeight.w700,
-                color: darkBlue,
               ),
               centerTitle: true,
               actions: [
@@ -373,7 +369,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                       text: "Step ${_currentStep + 1}/2",
                       size: 13,
                       weight: FontWeight.w600,
-                      color: primaryOrange,
+                      color: AppColors.primaryDarkGreen,
                     ),
                   ),
                 ),
@@ -409,7 +405,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
               icon: Icons.business_rounded,
               title: "Business Details",
               subtitle: "Enter your turf business info",
-              color: primaryOrange,
+              color: AppColors.primaryDarkGreen,
             ),
             const AppSizedBox(height: 16),
             _CustomTextField(
@@ -444,7 +440,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
               icon: Icons.verified_user_rounded,
               title: "KYC Documents",
               subtitle: "Upload clear photos",
-              color: primaryOrange,
+              color: AppColors.primaryDarkGreen,
             ),
             const AppSizedBox(height: 16),
             _DocumentUploadCard(
@@ -456,7 +452,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
               onTap: () => _pickImage('pan'),
               onRemove: () => _removeImage('pan'),
               isLoading: isLoading,
-              color: primaryOrange,
+              color: AppColors.primaryDarkGreen,
             ),
             const AppSizedBox(height: 14),
             _DocumentUploadCard(
@@ -468,7 +464,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
               onTap: () => _pickImage('aadhaar'),
               onRemove: () => _removeImage('aadhaar'),
               isLoading: isLoading,
-              color: primaryOrange,
+              color: AppColors.primaryDarkGreen,
             ),
             const AppSizedBox(height: 14),
             _DocumentUploadCard(
@@ -480,7 +476,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
               onTap: () => _pickImage('business'),
               onRemove: () => _removeImage('business'),
               isLoading: isLoading,
-              color: primaryOrange,
+              color: AppColors.primaryDarkGreen,
             ),
             const AppSizedBox(height: 24),
           ],
@@ -517,7 +513,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                   padding: EdgeInsets.only(bottom: 35),
                   child: Icon(
                     Icons.location_on,
-                    color: primaryOrange,
+                    color: AppColors.primaryDarkGreen,
                     size: 40,
                   ),
                 ),
@@ -534,7 +530,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 10,
                       ),
                     ],
@@ -545,7 +541,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                       hintText: "Search location...",
                       prefixIcon: const Icon(
                         Icons.search,
-                        color: primaryOrange,
+                        color: AppColors.primaryDarkGreen,
                       ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
@@ -564,12 +560,12 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
                 child: FloatingActionButton(
                   onPressed: _getCurrentLocation,
                   backgroundColor: Colors.white,
-                  child: const Icon(Icons.my_location, color: primaryOrange),
+                  child: const Icon(Icons.my_location, color: AppColors.primaryDarkGreen),
                 ),
               ),
               if (_isMapLoading)
                 const Center(
-                  child: CircularProgressIndicator(color: primaryOrange),
+                  child: CircularProgressIndicator(color: AppColors.primaryDarkGreen),
                 ),
             ],
           ),
@@ -639,7 +635,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
             label: "Details",
             icon: Icons.business_rounded,
             isActive: _currentStep >= 0,
-            color: primaryOrange,
+            color: AppColors.primaryDarkGreen,
           ),
           Expanded(
             child: Container(
@@ -647,8 +643,8 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
                 color: _currentStep >= 1
-                    ? primaryOrange
-                    : const Color(0xFFE8E8E8),
+                    ? AppColors.primaryDarkGreen
+                    : AppColors.borderLight,
               ),
             ),
           ),
@@ -656,7 +652,7 @@ class _DocumentUploadScreenState extends State<DocumentUploadScreen> {
             label: "Location",
             icon: Icons.map_rounded,
             isActive: _currentStep >= 1,
-            color: primaryOrange,
+            color: AppColors.primaryDarkGreen,
           ),
         ],
       ),
@@ -683,7 +679,7 @@ class _StepDot extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: isActive ? color : const Color(0xFFE8E8E8),
+            color: isActive ? color : AppColors.borderLight,
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -723,7 +719,7 @@ class _SectionHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -768,35 +764,11 @@ class _CustomTextField extends StatelessWidget {
       maxLines: maxLines,
       enabled: enabled,
       validator: validator,
-      style: const TextStyle(fontSize: 14, color: Color(0xFF1A1A2E)),
+      style: TextStyle(fontSize: 14, color: Theme.of(context).colorScheme.onSurface),
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        hintStyle: const TextStyle(color: Color(0xFFBDBDBD), fontSize: 13),
-        labelStyle: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 13),
-        prefixIcon: Icon(icon, color: const Color(0xFFFF6B00), size: 20),
-        filled: true,
-        fillColor: Colors.white,
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE8E8E8)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFFF6B00), width: 1.5),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.redAccent),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.redAccent, width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        prefixIcon: Icon(icon, color: AppColors.primaryDarkGreen, size: 20),
       ),
     );
   }
@@ -833,7 +805,7 @@ class _DocumentUploadCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: hasImage ? const Color(0xFF4CAF50) : const Color(0xFFE8E8E8),
+            color: hasImage ? AppColors.success : AppColors.borderLight,
             width: hasImage ? 1.5 : 1,
           ),
           boxShadow: [
@@ -854,12 +826,12 @@ class _DocumentUploadCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: hasImage
                       ? Colors.transparent
-                      : const Color(0xFFF5F6FA),
+                      : AppColors.bgLight,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: hasImage
-                        ? const Color(0xFF4CAF50).withOpacity(0.3)
-                        : const Color(0xFFE0E0E0),
+                        ? AppColors.success.withValues(alpha: 0.3)
+                        : AppColors.borderLight,
                   ),
                 ),
                 child: hasImage
@@ -873,12 +845,12 @@ class _DocumentUploadCard extends StatelessWidget {
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(icon, color: const Color(0xFFBDBDBD), size: 26),
+                          Icon(icon, color: AppColors.textSecondaryLight, size: 26),
                           const AppSizedBox(height: 4),
                           const AppText(
                             text: "Tap to add",
                             size: 10,
-                            color: Color(0xFFBDBDBD),
+                            color: AppColors.textSecondaryLight,
                           ),
                         ],
                       ),
@@ -911,14 +883,14 @@ class _DocumentUploadCard extends StatelessWidget {
                         children: [
                           const Icon(
                             Icons.check_circle_rounded,
-                            color: Color(0xFF4CAF50),
+                            color: AppColors.success,
                             size: 14,
                           ),
                           const AppSizedBox(width: 4),
                           const AppText(
                             text: "Selected",
                             size: 12,
-                            color: Color(0xFF4CAF50),
+                            color: AppColors.success,
                             weight: FontWeight.w600,
                           ),
                           const AppSizedBox(width: 8),
@@ -950,7 +922,7 @@ class _DocumentUploadCard extends StatelessWidget {
                           vertical: 5,
                         ),
                         decoration: BoxDecoration(
-                          color: color.withOpacity(0.1),
+                          color: color.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Row(

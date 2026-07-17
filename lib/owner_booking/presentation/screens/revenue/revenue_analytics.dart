@@ -61,6 +61,59 @@ List<Map<String, dynamic>> filterByLocation(
   return bookings.where((b) => _locationIdOf(b) == locationId).toList();
 }
 
+/// Filters bookings to only those within [start]..[end] (inclusive, date-only).
+List<Map<String, dynamic>> filterByDateRange(
+  List<Map<String, dynamic>> bookings,
+  DateTime? start,
+  DateTime? end,
+) {
+  if (start == null && end == null) return bookings;
+  return bookings.where((b) {
+    final date = _dateOf(b);
+    if (date == null) return false;
+    final onlyDate = DateTime(date.year, date.month, date.day);
+    if (start != null) {
+      final s = DateTime(start.year, start.month, start.day);
+      if (onlyDate.isBefore(s)) return false;
+    }
+    if (end != null) {
+      final e = DateTime(end.year, end.month, end.day);
+      if (onlyDate.isAfter(e)) return false;
+    }
+    return true;
+  }).toList();
+}
+
+/// Daily revenue for a custom date range, labeled "d MMM".
+List<RevenuePoint> customRangeSeries(
+  List<Map<String, dynamic>> bookings,
+  DateTime start,
+  DateTime end,
+) {
+  final s = DateTime(start.year, start.month, start.day);
+  final e = DateTime(end.year, end.month, end.day);
+  final dayCount = e.difference(s).inDays + 1;
+
+  // Cap at 31 days to keep the chart readable
+  final capped = dayCount > 31 ? 31 : dayCount;
+  final days = List.generate(capped, (i) => s.add(Duration(days: i)));
+
+  final totals = {for (final d in days) d: 0.0};
+  for (final b in bookings) {
+    if (!_countsTowardsRevenue(b)) continue;
+    final date = _dateOf(b);
+    if (date == null) continue;
+    final key = DateTime(date.year, date.month, date.day);
+    if (totals.containsKey(key)) {
+      totals[key] = totals[key]! + _amountOf(b);
+    }
+  }
+
+  return days
+      .map((d) => RevenuePoint(DateFormat('d MMM').format(d), totals[d]!))
+      .toList();
+}
+
 double totalRevenue(List<Map<String, dynamic>> bookings) => bookings
     .where(_countsTowardsRevenue)
     .fold(0.0, (sum, b) => sum + _amountOf(b));

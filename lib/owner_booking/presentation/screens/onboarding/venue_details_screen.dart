@@ -198,17 +198,17 @@ class _VenueDetailsScreenState extends State<VenueDetailsScreen> {
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimaryLight),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: AppColors.textSecondaryLight.withOpacity(0.4)),
+        hintStyle: TextStyle(color: AppColors.textSecondaryLight.withValues(alpha: 0.4)),
         filled: true,
-        fillColor: const Color(0xFFF0F9F4),
+        fillColor: AppColors.slotAvailableBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),

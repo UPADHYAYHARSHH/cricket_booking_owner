@@ -153,20 +153,20 @@ class _GroundCourtInfoScreenState extends State<GroundCourtInfoScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primaryDarkGreen : Colors.white,
+                  color: isSelected ? AppColors.primaryDarkGreen : AppColors.white,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade300,
+                    color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight,
                   ),
                   boxShadow: isSelected
-                      ? [BoxShadow(color: AppColors.primaryDarkGreen.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))]
+                      ? [BoxShadow(color: AppColors.primaryDarkGreen.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 4))]
                       : null,
                 ),
                 child: Row(
                   children: [
                     Icon(
                       _sportIcons[id] ?? Icons.sports,
-                      color: isSelected ? Colors.white : AppColors.textPrimaryLight,
+                      color: isSelected ? AppColors.white : AppColors.textPrimaryLight,
                       size: 20,
                     ),
                     const AppSizedBox(width: 8),
@@ -174,7 +174,7 @@ class _GroundCourtInfoScreenState extends State<GroundCourtInfoScreen> {
                       text: _sportNames[id] ?? id,
                       size: 14,
                       weight: FontWeight.w700,
-                      color: isSelected ? Colors.white : AppColors.textPrimaryLight,
+                      color: isSelected ? AppColors.white : AppColors.textPrimaryLight,
                     ),
                   ],
                 ),
@@ -342,17 +342,17 @@ class _GroundCourtInfoScreenState extends State<GroundCourtInfoScreen> {
       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.textPrimaryLight),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: AppColors.textSecondaryLight.withOpacity(0.4)),
+        hintStyle: TextStyle(color: AppColors.textSecondaryLight.withValues(alpha: 0.4)),
         filled: true,
-        fillColor: const Color(0xFFF0F9F4).withOpacity(0.5),
+        fillColor: AppColors.slotAvailableBg.withValues(alpha: 0.5),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.15)),
+          borderSide: BorderSide(color: AppColors.primaryDarkGreen.withValues(alpha: 0.15)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -373,10 +373,10 @@ class _GroundCourtInfoScreenState extends State<GroundCourtInfoScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
+              color: isSelected ? AppColors.slotAvailableBg : AppColors.white,
               borderRadius: BorderRadius.circular(25),
               border: Border.all(
-                color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade200,
+                color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight,
                 width: isSelected ? 1.5 : 1,
               ),
             ),
@@ -411,10 +411,10 @@ class _GroundCourtInfoScreenState extends State<GroundCourtInfoScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
+              color: isSelected ? AppColors.slotAvailableBg : AppColors.white,
               borderRadius: BorderRadius.circular(25),
               border: Border.all(
-                color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade200,
+                color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight,
                 width: isSelected ? 1.5 : 1,
               ),
             ),

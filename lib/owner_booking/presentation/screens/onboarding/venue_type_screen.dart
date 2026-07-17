@@ -234,16 +234,16 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
+            color: isSelected ? AppColors.slotAvailableBg : AppColors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected
                   ? AppColors.primaryDarkGreen
-                  : AppColors.primaryDarkGreen.withOpacity(0.1),
+                  : AppColors.primaryDarkGreen.withValues(alpha: 0.1),
               width: isSelected ? 2 : 1,
             ),
             boxShadow: isSelected
-                ? [BoxShadow(color: AppColors.primaryDarkGreen.withOpacity(0.04), blurRadius: 12, offset: const Offset(0, 4))]
+                ? [BoxShadow(color: AppColors.primaryDarkGreen.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 4))]
                 : null,
           ),
           child: Column(
@@ -255,10 +255,10 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.white : const Color(0xFFF0F9F4).withOpacity(0.5),
+                      color: isSelected ? AppColors.white : AppColors.slotAvailableBg.withValues(alpha: 0.5),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isSelected ? AppColors.primaryDarkGreen.withOpacity(0.2) : Colors.transparent,
+                        color: isSelected ? AppColors.primaryDarkGreen.withValues(alpha: 0.2) : Colors.transparent,
                       ),
                     ),
                     child: Icon(
@@ -290,9 +290,9 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
                   Switch(
                     value: isSelected,
                     activeColor: AppColors.primaryDarkGreen,
-                    activeTrackColor: const Color(0xFFF0F9F4),
-                    inactiveThumbColor: Colors.grey.shade400,
-                    inactiveTrackColor: Colors.grey.shade200,
+                    activeTrackColor: AppColors.slotAvailableBg,
+                    inactiveThumbColor: AppColors.textSecondaryLight,
+                    inactiveTrackColor: AppColors.borderLight,
                     onChanged: (val) => _onSportTap(sportId),
                   ),
                 ],
@@ -323,19 +323,19 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
-                                color: isSelectedCat ? AppColors.primaryDarkGreen : Colors.white,
+                                color: isSelectedCat ? AppColors.primaryDarkGreen : AppColors.white,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelectedCat
                                       ? AppColors.primaryDarkGreen
-                                      : AppColors.primaryDarkGreen.withOpacity(0.15),
+                                      : AppColors.primaryDarkGreen.withValues(alpha: 0.15),
                                 ),
                               ),
                               child: AppText(
                                 text: cat,
                                 size: 12,
                                 weight: isSelectedCat ? FontWeight.w700 : FontWeight.w500,
-                                color: isSelectedCat ? Colors.white : AppColors.textSecondaryLight,
+                                color: isSelectedCat ? AppColors.white : AppColors.textSecondaryLight,
                               ),
                             ),
                           ),
@@ -379,9 +379,9 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.white,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.2)),
+          border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.2)),
         ),
         child: Icon(icon, size: 14, color: AppColors.primaryDarkGreen),
       ),

@@ -147,7 +147,7 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50.withOpacity(0.5),
+                    color: Colors.blue.shade50.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.blue.shade100),
                   ),
@@ -171,7 +171,7 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
                     AppText(
                       text: "Last updated: Today • ",
                       size: 12,
-                      color: Colors.grey.shade600,
+                      color: AppColors.textSecondaryLight,
                     ),
                     AppText(
                       text: "Changes sync instantly",
@@ -239,19 +239,19 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
 
     if (widget.isSettingsMode) {
       return Scaffold(
-        backgroundColor: const Color(0xFFF5F6FA),
+        backgroundColor: AppColors.bgLight,
         appBar: AppBar(
           backgroundColor: AppColors.primaryDarkGreen,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: const Icon(Icons.arrow_back, color: AppColors.white),
             onPressed: () => Navigator.pop(context),
           ),
           title: const AppText(
             text: "Manage Amenities", 
             size: 16, 
             weight: FontWeight.w600, 
-            color: Colors.white,
+            color: AppColors.white,
           ),
           titleSpacing: 0,
         ),
@@ -269,7 +269,7 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
                 minimumSize: const Size(double.infinity, 54),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const AppText(text: "Save Changes", size: 16, weight: FontWeight.bold, color: Colors.white),
+              child: const AppText(text: "Save Changes", size: 16, weight: FontWeight.bold, color: AppColors.white),
             ),
           ),
         ),
@@ -340,7 +340,7 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
         text: displayTitle.toUpperCase(),
         size: 13,
         weight: FontWeight.w800,
-        color: AppColors.textSecondaryLight.withOpacity(0.8),
+        color: AppColors.textSecondaryLight.withValues(alpha: 0.8),
         letterSpacing: 0.5,
       ),
     );
@@ -350,7 +350,7 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
     return Container(
       margin: const EdgeInsets.only(bottom: 1),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.grey.shade100)),
+        border: Border(bottom: BorderSide(color: AppColors.borderLight)),
       ),
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
@@ -358,8 +358,8 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
         value: _amenities[key] ?? false,
         onChanged: (val) => setState(() => _amenities[key] = val),
         activeColor: AppColors.primaryLightGreen,
-        inactiveThumbColor: Colors.white,
-        inactiveTrackColor: Colors.grey.shade300,
+        inactiveThumbColor: AppColors.white,
+        inactiveTrackColor: AppColors.borderLight,
       ),
     );
   }
@@ -388,10 +388,10 @@ class _AmenitiesScreenState extends State<AmenitiesScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               decoration: BoxDecoration(
-                color: isSelected ? const Color(0xFFF0F9F4) : Colors.white,
+                color: isSelected ? AppColors.slotAvailableBg : AppColors.white,
                 borderRadius: BorderRadius.circular(25),
                 border: Border.all(
-                  color: isSelected ? AppColors.primaryDarkGreen : Colors.grey.shade300,
+                  color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight,
                   width: isSelected ? 1.5 : 1,
                 ),
               ),

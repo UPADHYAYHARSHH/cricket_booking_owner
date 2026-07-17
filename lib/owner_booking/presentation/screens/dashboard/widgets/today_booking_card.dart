@@ -1,52 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
 
-/// A fuller booking-detail card used by the dashboard's "Today's Slots" list.
-/// Mirrors the styling of `_BookingCard` on the Bookings screen so both
-/// screens look consistent.
-class TodayBookingCard extends StatelessWidget {
+class TodayBookingCard extends StatefulWidget {
   final Map<String, dynamic> booking;
 
   const TodayBookingCard({super.key, required this.booking});
 
-  Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return const Color(0xFFF57C00);
-      case 'confirmed':
-      case 'completed':
-      case 'paid':
-        return const Color(0xFF2E6A4F);
-      case 'cancelled':
-        return const Color(0xFFD32F2F);
-      default:
-        return Colors.grey.shade700;
-    }
-  }
+  @override
+  State<TodayBookingCard> createState() => _TodayBookingCardState();
+}
 
-  Color _statusBgColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return const Color(0xFFFFF8E1);
-      case 'confirmed':
-      case 'completed':
-      case 'paid':
-        return const Color(0xFFE8F5E9);
-      case 'cancelled':
-        return const Color(0xFFFFEBEE);
-      default:
-        return Colors.grey.shade200;
-    }
-  }
-
-  Color _borderColor(String status) {
-    if (status.toLowerCase() == 'pending') return const Color(0xFFFFCA28);
-    return Colors.grey.shade200;
-  }
+class _TodayBookingCardState extends State<TodayBookingCard>
+    with SingleTickerProviderStateMixin {
+  bool _isPressed = false;
 
   String _formatLabel(String raw) {
     if (raw.isEmpty) return raw;
@@ -58,99 +29,150 @@ class TodayBookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final status = (booking['status'] ?? 'pending').toString();
-    final playerName = booking['player_name'] ?? 'Customer';
-    final groundName = booking['ground_name'] ?? 'Court';
-    final period = booking['period'] ?? 'Time';
-    final sportName = _formatLabel((booking['sport_name'] ?? 'Sport').toString());
-    final amount = booking['amount'] ?? booking['total_amount'] ?? 0;
+    final status = (widget.booking['status'] ?? 'pending').toString();
+    final playerName = widget.booking['player_name'] ?? 'Customer';
+    final groundName = widget.booking['ground_name'] ?? 'Court';
+    final period = widget.booking['period'] ?? 'Time';
+    final sportName = _formatLabel((widget.booking['sport_name'] ?? 'Sport').toString());
+    final amount = widget.booking['amount'] ?? widget.booking['total_amount'] ?? 0;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: _borderColor(status), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: AppText(
-                  text: playerName,
-                  size: 15,
-                  weight: FontWeight.w700,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _statusBgColor(status),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: AppText(
-                  text: _formatLabel(status),
-                  color: _statusColor(status),
-                  size: 12,
-                  weight: FontWeight.w600,
-                ),
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.97 : 1.0,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutCubic,
+        child: Container(
+          padding: const EdgeInsets.all(AppSizes.lg),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceLight,
+            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+            border: Border.all(
+              color: AppColors.bookingStatusBorderColor(status),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.black.withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          AppText(
-            text: "$groundName • $period",
-            size: 13,
-            color: Colors.grey.shade600,
-          ),
-          const SizedBox(height: 12),
-          Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _InfoChip(icon: sportIcon((booking['sport_name'] ?? '').toString()), text: sportName),
-              const SizedBox(width: 12),
-              _InfoChip(icon: HugeIcons.strokeRoundedMoneyBag01, text: "₹$amount"),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton(
-                onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => BookingDetailsScreen(booking: booking),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: AppColors.bookingStatusBgColor(status),
+                            borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                          ),
+                          child: Center(
+                            child: HugeIcon(
+                              icon: sportIcon((widget.booking['sport_name'] ?? '').toString()),
+                              size: 18,
+                              color: AppColors.bookingStatusColor(status),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AppText(
+                                text: playerName,
+                                size: 15,
+                                weight: FontWeight.w700,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              AppText(
+                                text: "$groundName · $period",
+                                size: 12,
+                                color: AppColors.textSecondaryLight,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.bookingStatusBgColor(status),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                    ),
+                    child: AppText(
+                      text: _formatLabel(status),
+                      color: AppColors.bookingStatusColor(status),
+                      size: 11,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.bgLight,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                 ),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.primaryDarkGreen,
-                  side: const BorderSide(color: AppColors.primaryDarkGreen),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                ),
-                child: const AppText(
-                  text: "Details",
-                  color: AppColors.primaryDarkGreen,
-                  weight: FontWeight.w600,
-                  size: 13,
+                child: Row(
+                  children: [
+                    _InfoChip(
+                      icon: HugeIcons.strokeRoundedMoneyBag01,
+                      text: "₹$amount",
+                    ),
+                    const SizedBox(width: 16),
+                    _InfoChip(
+                      icon: sportIcon((widget.booking['sport_name'] ?? '').toString()),
+                      text: sportName,
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      onTap: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BookingDetailsScreen(booking: widget.booking),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppText(
+                            text: "Details",
+                            color: AppColors.primaryDarkGreen,
+                            size: 12,
+                            weight: FontWeight.w600,
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 10,
+                            color: AppColors.primaryDarkGreen,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -167,9 +189,14 @@ class _InfoChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        HugeIcon(icon: icon, color: Colors.grey.shade500, size: 14),
+        HugeIcon(icon: icon, size: 14, color: AppColors.textSecondaryLight),
         const SizedBox(width: 4),
-        AppText(text: text, size: 12, color: Colors.grey.shade700, weight: FontWeight.w500),
+        AppText(
+          text: text,
+          size: 12,
+          color: AppColors.textSecondaryLight,
+          weight: FontWeight.w500,
+        ),
       ],
     );
   }

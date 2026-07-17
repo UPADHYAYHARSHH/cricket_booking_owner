@@ -107,8 +107,8 @@ class OnboardingLayout extends StatelessWidget {
                   margin: const EdgeInsets.symmetric(horizontal: 2),
                   decoration: BoxDecoration(
                     color: index < currentStep
-                        ? Colors.white
-                        : Colors.white.withOpacity(0.3),
+                        ? AppColors.white
+                        : AppColors.white.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -119,18 +119,18 @@ class OnboardingLayout extends StatelessWidget {
           AppText(
             text: "Step $currentStep of 10",
             size: 14,
-            color: Colors.white70,
+            color: AppColors.white.withValues(alpha: 0.7),
             weight: FontWeight.w500,
           ),
           const AppSizedBox(height: 8),
           AppText(
             text: title,
             size: 28,
-            color: Colors.white,
+            color: AppColors.white,
             weight: FontWeight.w700,
           ),
           const AppSizedBox(height: 4),
-          AppText(text: subtitle, size: 14, color: Colors.white70),
+          AppText(text: subtitle, size: 14, color: AppColors.white.withValues(alpha: 0.7)),
         ],
       ),
     );
@@ -151,7 +151,7 @@ class OnboardingLayout extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: AppColors.primaryDarkGreen.withOpacity(0.3),
+                    color: AppColors.primaryDarkGreen.withValues(alpha: 0.3),
                   ),
                 ),
                 alignment: Alignment.center,

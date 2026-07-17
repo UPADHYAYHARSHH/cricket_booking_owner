@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
+import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -77,7 +78,7 @@ class EmailVerificationScreen extends StatelessWidget {
           }
 
           return Scaffold(
-            backgroundColor: const Color(0xffECECEC),
+            backgroundColor: AppColors.bgLight,
             body: SafeArea(
               child: Center(
                 child: SingleChildScrollView(
@@ -91,13 +92,13 @@ class EmailVerificationScreen extends StatelessWidget {
                           width: 120,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.green.shade700,
+                            color: AppColors.primaryDarkGreen,
                           ),
                           child: const Center(
                             child: Icon(
                               Icons.mark_email_unread_outlined,
                               size: 60,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           ),
                         ),
@@ -117,7 +118,7 @@ class EmailVerificationScreen extends StatelessWidget {
                         const AppText(
                           text: "A verification link has been sent to your email address:",
                           size: 14,
-                          color: Colors.grey,
+                          color: AppColors.textSecondaryLight,
                           align: TextAlign.center,
                         ),
 
@@ -127,7 +128,7 @@ class EmailVerificationScreen extends StatelessWidget {
                             text: userEmail,
                             size: 16,
                             weight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: AppColors.textPrimaryLight,
                             align: TextAlign.center,
                           ),
                         ],
@@ -137,7 +138,7 @@ class EmailVerificationScreen extends StatelessWidget {
                         const AppText(
                           text: "Please click on the link in your email to complete registration.",
                           size: 13,
-                          color: Colors.grey,
+                          color: AppColors.textSecondaryLight,
                           align: TextAlign.center,
                         ),
 
@@ -147,12 +148,12 @@ class EmailVerificationScreen extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.surfaceLight,
                             borderRadius: BorderRadius.circular(18),
                             boxShadow: [
                               BoxShadow(
                                 blurRadius: 10,
-                                color: Colors.black.withOpacity(.05),
+                                color: AppColors.black.withValues(alpha: 0.05),
                               )
                             ],
                           ),
@@ -171,7 +172,7 @@ class EmailVerificationScreen extends StatelessWidget {
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(
                                   minimumSize: const Size(double.infinity, 50),
-                                  side: BorderSide(color: Colors.green.shade700, width: 1.5),
+                                  side: const BorderSide(color: AppColors.primaryDarkGreen, width: 1.5),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -189,11 +190,11 @@ class EmailVerificationScreen extends StatelessWidget {
                                           autoCloseDuration: const Duration(seconds: 4),
                                         );
                                       },
-                                child: AppText(
+                                child: const AppText(
                                   text: "Resend Verification Email",
                                   size: 14,
                                   weight: FontWeight.bold,
-                                  color: Colors.green.shade700,
+                                  color: AppColors.primaryDarkGreen,
                                 ),
                               ),
                             ],
@@ -221,7 +222,7 @@ class EmailVerificationScreen extends StatelessWidget {
                                     },
                                     child: const Text(
                                       "Log Out",
-                                      style: TextStyle(color: Colors.red),
+                                      style: TextStyle(color: AppColors.error),
                                     ),
                                   ),
                                 ],
@@ -232,7 +233,7 @@ class EmailVerificationScreen extends StatelessWidget {
                             text: "Use a different email / Log Out",
                             size: 14,
                             weight: FontWeight.bold,
-                            color: Colors.red.shade700,
+                            color: AppColors.error,
                           ),
                         ),
 

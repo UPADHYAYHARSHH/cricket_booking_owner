@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
+import 'package:turfpro_owner/common/widgets/status_badge.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_state.dart';
 import 'package:shimmer/shimmer.dart';
@@ -55,67 +57,158 @@ class _BookingsScreenState extends State<BookingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const AppText(text: "Bookings", size: 18, weight: FontWeight.w700),
-        centerTitle: true,
-      ),
+      backgroundColor: AppColors.bgLight,
       body: Column(
         children: [
+          // ── Gradient header ──
           Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: (query) {
-                context.read<BookingsCubit>().searchBookings(query);
-              },
-              decoration: InputDecoration(
-                hintText: "Search by player name, ground or booking ID",
-                hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-                prefixIcon: HugeIcon(icon: HugeIcons.strokeRoundedSearch01, color: Colors.grey.shade400),
-                suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _searchController,
-                  builder: (context, value, _) {
-                    if (value.text.isEmpty) return const SizedBox.shrink();
-                    return IconButton(
-                      icon: Icon(Icons.close_rounded, size: 18, color: Colors.grey.shade400),
-                      onPressed: () {
-                        _searchController.clear();
-                        context.read<BookingsCubit>().searchBookings('');
-                      },
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.primaryDarkGreen,
+                  Color(0xFF0FA968),
+                ],
+              ),
+            ),
+            padding: EdgeInsets.fromLTRB(
+              AppSizes.lg,
+              MediaQuery.of(context).padding.top + AppSizes.lg,
+              AppSizes.lg,
+              AppSizes.xl,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: AppText(
+                    text: "Bookings",
+                    size: 22,
+                    weight: FontWeight.w700,
+                    color: AppColors.white,
+                  ),
+                ),
+                BlocBuilder<BookingsCubit, BookingsState>(
+                  builder: (context, state) {
+                    final count = state is BookingsLoaded
+                        ? state.filteredBookings.length
+                        : 0;
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: AppColors.white.withValues(alpha: 0.2),
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusFull),
+                      ),
+                      child: AppText(
+                        text: "$count",
+                        size: 14,
+                        weight: FontWeight.w700,
+                        color: AppColors.white,
+                      ),
                     );
                   },
                 ),
-                filled: true,
-                fillColor: Colors.grey.shade50,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
+              ],
+            ),
+          ),
+
+          // ── Search bar ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSizes.lg, AppSizes.lg, AppSizes.lg, 0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceLight,
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.black.withValues(alpha: 0.04),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                onChanged: (query) {
+                  context.read<BookingsCubit>().searchBookings(query);
+                },
+                decoration: InputDecoration(
+                  hintText: "Search player, ground or booking ID",
+                  hintStyle: const TextStyle(
+                    color: AppColors.textSecondaryLight,
+                    fontSize: 13,
+                  ),
+                  prefixIcon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedSearch01,
+                    color: AppColors.textSecondaryLight,
+                    size: 20,
+                  ),
+                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _searchController,
+                    builder: (context, value, _) {
+                      if (value.text.isEmpty) return const SizedBox.shrink();
+                      return IconButton(
+                        icon: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppColors.borderLight,
+                            borderRadius: BorderRadius.circular(
+                                AppSizes.radiusFull),
+                          ),
+                          child: const Icon(Icons.close_rounded,
+                              size: 14, color: AppColors.textSecondaryLight),
+                        ),
+                        onPressed: () {
+                          _searchController.clear();
+                          context
+                              .read<BookingsCubit>()
+                              .searchBookings('');
+                        },
+                      );
+                    },
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surfaceLight,
+                  contentPadding:
+                      const EdgeInsets.symmetric(vertical: 0),
+                  border: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppSizes.radiusMd),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppSizes.radiusMd),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppSizes.radiusMd),
+                    borderSide: const BorderSide(
+                        color: AppColors.primaryDarkGreen, width: 1.2),
+                  ),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(color: Colors.grey.shade200),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.primaryDarkGreen),
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
             ),
           ),
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+
+          // ── Date filter chips ──
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+                AppSizes.lg, AppSizes.md, AppSizes.lg, AppSizes.md),
             child: BlocBuilder<BookingsCubit, BookingsState>(
               builder: (context, state) {
-                final dateFilter =
-                    state is BookingsLoaded ? state.dateFilter : BookingDateFilter.all;
-                final rangeStart = state is BookingsLoaded ? state.rangeStart : null;
-                final rangeEnd = state is BookingsLoaded ? state.rangeEnd : null;
+                final dateFilter = state is BookingsLoaded
+                    ? state.dateFilter
+                    : BookingDateFilter.all;
+                final rangeStart =
+                    state is BookingsLoaded ? state.rangeStart : null;
+                final rangeEnd =
+                    state is BookingsLoaded ? state.rangeEnd : null;
 
                 return SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -123,29 +216,42 @@ class _BookingsScreenState extends State<BookingsScreen> {
                     children: [
                       _DateFilterChip(
                         label: 'All',
-                        selected: dateFilter == BookingDateFilter.all,
-                        onTap: () => context.read<BookingsCubit>().setDateFilter(BookingDateFilter.all),
+                        selected:
+                            dateFilter == BookingDateFilter.all,
+                        onTap: () => context
+                            .read<BookingsCubit>()
+                            .setDateFilter(BookingDateFilter.all),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSizes.sm),
                       _DateFilterChip(
                         label: 'Today',
-                        selected: dateFilter == BookingDateFilter.today,
-                        onTap: () => context.read<BookingsCubit>().setDateFilter(BookingDateFilter.today),
+                        selected: dateFilter ==
+                            BookingDateFilter.today,
+                        onTap: () => context
+                            .read<BookingsCubit>()
+                            .setDateFilter(BookingDateFilter.today),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSizes.sm),
                       _DateFilterChip(
                         label: 'Tomorrow',
-                        selected: dateFilter == BookingDateFilter.tomorrow,
-                        onTap: () =>
-                            context.read<BookingsCubit>().setDateFilter(BookingDateFilter.tomorrow),
+                        selected: dateFilter ==
+                            BookingDateFilter.tomorrow,
+                        onTap: () => context
+                            .read<BookingsCubit>()
+                            .setDateFilter(
+                                BookingDateFilter.tomorrow),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: AppSizes.sm),
                       _DateFilterChip(
-                        label: dateFilter == BookingDateFilter.range && rangeStart != null && rangeEnd != null
+                        label: dateFilter ==
+                                    BookingDateFilter.range &&
+                                rangeStart != null &&
+                                rangeEnd != null
                             ? '${DateFormat('d MMM').format(rangeStart)} – ${DateFormat('d MMM').format(rangeEnd)}'
                             : 'Date Range',
                         icon: Icons.date_range_rounded,
-                        selected: dateFilter == BookingDateFilter.range,
+                        selected: dateFilter ==
+                            BookingDateFilter.range,
                         onTap: _pickDateRange,
                       ),
                     ],
@@ -154,47 +260,77 @@ class _BookingsScreenState extends State<BookingsScreen> {
               },
             ),
           ),
+
+          // ── Booking list ──
           Expanded(
             child: BlocBuilder<BookingsCubit, BookingsState>(
               builder: (context, state) {
                 if (state is BookingsLoading) {
                   return ListView.separated(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(
+                        AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
                     itemCount: 4,
-                    separatorBuilder: (context, index) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) => const _BookingSkeleton(),
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: AppSizes.md),
+                    itemBuilder: (context, index) =>
+                        const _BookingSkeleton(),
                   );
                 } else if (state is BookingsError) {
                   return Center(
-                    child: AppText(text: state.message, color: AppColors.error),
+                    child: AppText(
+                        text: state.message, color: AppColors.error),
                   );
                 } else if (state is BookingsLoaded) {
                   if (state.filteredBookings.isEmpty) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          HugeIcon(icon: HugeIcons.strokeRoundedSearch02, size: 64, color: Colors.grey.shade300),
-                          const SizedBox(height: 16),
-                          const AppText(text: "No bookings found", size: 16, color: Colors.grey),
-                        ],
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSizes.xxxl),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(AppSizes.xl),
+                              decoration: BoxDecoration(
+                                color: AppColors.borderLight
+                                    .withValues(alpha: 0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: HugeIcon(
+                                icon: HugeIcons
+                                    .strokeRoundedSearch02,
+                                size: 48,
+                                color: AppColors.textSecondaryLight,
+                              ),
+                            ),
+                            const SizedBox(height: AppSizes.lg),
+                            AppText(
+                              text: "No bookings found",
+                              size: 16,
+                              weight: FontWeight.w600,
+                              color: AppColors.textSecondaryLight,
+                            ),
+                            const SizedBox(height: AppSizes.xs),
+                            AppText(
+                              text:
+                                  "Try adjusting your search or filters",
+                              size: 13,
+                              color: AppColors.borderLight,
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }
 
                   return RefreshIndicator(
                     onRefresh: () async {
-                      await context.read<BookingsCubit>().fetchBookings();
+                      await context
+                          .read<BookingsCubit>()
+                          .fetchBookings();
                     },
                     color: AppColors.primaryDarkGreen,
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: state.filteredBookings.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final booking = state.filteredBookings[index];
-                        return _BookingCard(booking: booking);
-                      },
+                    child: _StaggeredBookingList(
+                      bookings: state.filteredBookings.cast<Map<String, dynamic>>(),
                     ),
                   );
                 }
@@ -207,6 +343,85 @@ class _BookingsScreenState extends State<BookingsScreen> {
     );
   }
 }
+
+// ── Staggered entrance animation wrapper ──
+
+class _StaggeredBookingList extends StatefulWidget {
+  final List<Map<String, dynamic>> bookings;
+
+  const _StaggeredBookingList({required this.bookings});
+
+  @override
+  State<_StaggeredBookingList> createState() => _StaggeredBookingListState();
+}
+
+class _StaggeredBookingListState extends State<_StaggeredBookingList>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _fadeIn;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: Duration(milliseconds: 400 + widget.bookings.length * 60),
+    );
+    _fadeIn = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _controller.forward();
+  }
+
+  @override
+  void didUpdateWidget(covariant _StaggeredBookingList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.bookings != widget.bookings) {
+      _controller.reset();
+      _controller.duration = Duration(
+          milliseconds: 400 + widget.bookings.length * 60);
+      _controller.forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: _fadeIn,
+      builder: (context, _) {
+        return ListView.separated(
+          padding: const EdgeInsets.fromLTRB(
+              AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
+          itemCount: widget.bookings.length,
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: AppSizes.md),
+          itemBuilder: (context, index) {
+            final start = index / widget.bookings.length;
+            final end = (index + 1) / widget.bookings.length;
+            final itemFade = Interval(
+              start.clamp(0.0, 1.0),
+              end.clamp(0.0, 1.0),
+              curve: Curves.easeOut,
+            ).transform(_fadeIn.value);
+            return Opacity(
+              opacity: itemFade,
+              child: Transform.translate(
+                offset: Offset(0, 16 * (1 - itemFade)),
+                child: _BookingCard(booking: widget.bookings[index]),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+// ── Booking card ──
 
 class _BookingCard extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -224,52 +439,16 @@ class _BookingCardState extends State<_BookingCard> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BookingDetailsScreen(booking: widget.booking),
+        builder: (context) =>
+            BookingDetailsScreen(booking: widget.booking),
       ),
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return const Color(0xFFF57C00); // Amber text
-      case 'confirmed':
-      case 'completed':
-        return const Color(0xFF2E6A4F); // Green text
-      case 'cancelled':
-        return const Color(0xFFD32F2F); // Red text
-      default:
-        return Colors.grey.shade700;
-    }
-  }
-
-  Color _getStatusBgColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return const Color(0xFFFFF8E1); // Light amber
-      case 'confirmed':
-      case 'completed':
-        return const Color(0xFFE8F5E9); // Light green
-      case 'cancelled':
-        return const Color(0xFFFFEBEE); // Light red
-      default:
-        return Colors.grey.shade200;
-    }
-  }
-
-  Color _getCardBorderColor(String status) {
-    if (status.toLowerCase() == 'pending') {
-      return const Color(0xFFFFCA28); // Amber border for pending
-    }
-    return Colors.grey.shade200;
   }
 
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
     final status = (booking['status'] ?? 'pending').toString();
-    final statusColor = _getStatusColor(status);
-    final statusBgColor = _getStatusBgColor(status);
 
     final playerName = booking['player_name'] ?? 'Player Name';
     final groundName = booking['ground_name'] ?? 'Court';
@@ -277,12 +456,15 @@ class _BookingCardState extends State<_BookingCard> {
     final sportName = booking['sport_name'] ?? 'Sport';
     final amount = booking['amount'] ?? booking['total_amount'] ?? 0;
 
-    // Formatting booking ID
     String displayId = booking['display_id']?.toString() ?? '';
     if (displayId.isEmpty) {
       final fullId = booking['id']?.toString() ?? '';
-      displayId = fullId.length > 5 ? fullId.substring(0, 5).toUpperCase() : fullId;
+      displayId = fullId.length > 5
+          ? fullId.substring(0, 5).toUpperCase()
+          : fullId;
     }
+
+    final statusColor = AppColors.bookingStatusColor(status);
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
@@ -293,93 +475,156 @@ class _BookingCardState extends State<_BookingCard> {
         duration: const Duration(milliseconds: 110),
         curve: Curves.easeOut,
         child: Material(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          color: AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
           child: InkWell(
             onTap: _openDetails,
-            borderRadius: BorderRadius.circular(12),
-            splashColor: AppColors.primaryDarkGreen.withOpacity(0.08),
-            highlightColor: AppColors.primaryDarkGreen.withOpacity(0.04),
+            borderRadius:
+                BorderRadius.circular(AppSizes.radiusLg),
+            splashColor:
+                AppColors.primaryDarkGreen.withValues(alpha: 0.06),
+            highlightColor:
+                AppColors.primaryDarkGreen.withValues(alpha: 0.03),
             child: Container(
-              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _getCardBorderColor(status), width: 1.5),
+                borderRadius:
+                    BorderRadius.circular(AppSizes.radiusLg),
+                border: Border.all(
+                  color: AppColors.borderLight,
+                  width: 1,
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      AppText(
-                        text: playerName,
-                        size: 16,
-                        weight: FontWeight.w700,
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: statusBgColor,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: AppText(
-                          text: status[0].toUpperCase() + status.substring(1),
-                          color: statusColor,
-                          size: 12,
-                          weight: FontWeight.w600,
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    // Left color accent bar
+                    Container(
+                      width: 4,
+                      decoration: BoxDecoration(
+                        color: statusColor,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(AppSizes.radiusLg),
+                          bottomLeft:
+                              Radius.circular(AppSizes.radiusLg),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  AppText(
-                    text: "$groundName • $period",
-                    size: 13,
-                    color: Colors.grey.shade600,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _InfoChip(
-                        icon: sportIcon(sportName.toString()),
-                        text: formatSportName(sportName.toString()),
+                    ),
+                    // Card content
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppSizes.lg),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Player name + status badge
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: AppText(
+                                    text: playerName,
+                                    size: 15,
+                                    weight: FontWeight.w700,
+                                  ),
+                                ),
+                                StatusBadge(status: status),
+                              ],
+                            ),
+                            const SizedBox(height: AppSizes.xs),
+
+                            // Ground + time
+                            AppText(
+                              text: "$groundName • $period",
+                              size: 13,
+                              color: AppColors.textSecondaryLight,
+                            ),
+                            const SizedBox(height: AppSizes.md),
+
+                            // Info chips in tinted row
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: AppSizes.md,
+                                  vertical: AppSizes.sm),
+                              decoration: BoxDecoration(
+                                color: AppColors.bgLight,
+                                borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusSm),
+                              ),
+                              child: Row(
+                                children: [
+                                  _InfoChip(
+                                    icon: sportIcon(
+                                        sportName.toString()),
+                                    text: formatSportName(
+                                        sportName.toString()),
+                                  ),
+                                  const SizedBox(width: AppSizes.lg),
+                                  _InfoChip(
+                                    icon: HugeIcons
+                                        .strokeRoundedUserGroup,
+                                    text: "Players",
+                                  ),
+                                  const SizedBox(width: AppSizes.lg),
+                                  _InfoChip(
+                                    icon: HugeIcons
+                                        .strokeRoundedMoneyBag01,
+                                    text: "₹$amount",
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: AppSizes.md),
+
+                            // Booking ID tag + View Details
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: AppSizes.sm,
+                                      vertical: AppSizes.xxs),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.borderLight,
+                                    borderRadius:
+                                        BorderRadius.circular(
+                                            AppSizes.radiusXs),
+                                  ),
+                                  child: AppText(
+                                    text: "CB$displayId",
+                                    size: 11,
+                                    weight: FontWeight.w600,
+                                    color:
+                                        AppColors.textSecondaryLight,
+                                  ),
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    AppText(
+                                      text: "View Details",
+                                      size: 12,
+                                      weight: FontWeight.w700,
+                                      color: AppColors.primaryDarkGreen,
+                                    ),
+                                    const SizedBox(width: AppSizes.xxs),
+                                    const Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 10,
+                                      color:
+                                          AppColors.primaryDarkGreen,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(width: 12),
-                      _InfoChip(icon: HugeIcons.strokeRoundedUserGroup, text: "Players"), // Mocked players
-                      const SizedBox(width: 12),
-                      _InfoChip(icon: HugeIcons.strokeRoundedMoneyBag01, text: "₹$amount"),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      AppText(
-                        text: "Booking #CB$displayId",
-                        size: 12,
-                        color: Colors.grey.shade500,
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AppText(
-                            text: "View Details",
-                            size: 12,
-                            weight: FontWeight.w700,
-                            color: AppColors.primaryDarkGreen,
-                          ),
-                          const SizedBox(width: 2),
-                          const Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 11,
-                            color: AppColors.primaryDarkGreen,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -388,6 +633,8 @@ class _BookingCardState extends State<_BookingCard> {
     );
   }
 }
+
+// ── Date filter chip (pill style) ──
 
 class _DateFilterChip extends StatelessWidget {
   final String label;
@@ -406,34 +653,69 @@ class _DateFilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        padding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryDarkGreen : Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(20),
+          color:
+              selected ? AppColors.primaryDarkGreen : AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           border: Border.all(
-            color: selected ? AppColors.primaryDarkGreen : Colors.grey.shade200,
+            color: selected
+                ? AppColors.primaryDarkGreen
+                : AppColors.borderLight,
+            width: 1,
           ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primaryDarkGreen
+                        .withValues(alpha: 0.15),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[
-              Icon(icon, size: 14, color: selected ? Colors.white : Colors.grey.shade600),
+            if (!selected && icon != null) ...[
+              Icon(
+                icon,
+                size: 14,
+                color: AppColors.textSecondaryLight,
+              ),
               const SizedBox(width: 5),
             ],
             AppText(
               text: label,
               size: 13,
               weight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.grey.shade700,
+              color:
+                  selected ? AppColors.white : AppColors.textPrimaryLight,
             ),
+            if (selected) ...[
+              const SizedBox(width: 6),
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: AppColors.accentOrange,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 }
+
+// ── Info chip ──
 
 class _InfoChip extends StatelessWidget {
   final dynamic icon;
@@ -444,14 +726,24 @@ class _InfoChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        HugeIcon(icon: icon, size: 14, color: Colors.grey.shade600),
+        HugeIcon(
+            icon: icon,
+            size: 13,
+            color: AppColors.textSecondaryLight),
         const SizedBox(width: 4),
-        AppText(text: text, size: 12, color: Colors.grey.shade700),
+        AppText(
+          text: text,
+          size: 12,
+          color: AppColors.textSecondaryLight,
+        ),
       ],
     );
   }
 }
+
+// ── Skeleton ──
 
 class _BookingSkeleton extends StatelessWidget {
   const _BookingSkeleton();
@@ -459,101 +751,104 @@ class _BookingSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200, width: 1.5),
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        border: Border.all(color: AppColors.borderLight, width: 1),
       ),
-      child: Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      child: IntrinsicHeight(
+        child: Row(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 120,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                Container(
-                  width: 60,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
             Container(
-              width: 180,
-              height: 14,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
+              width: 4,
+              decoration: const BoxDecoration(
+                color: AppColors.borderLight,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(AppSizes.radiusLg),
+                  bottomLeft: Radius.circular(AppSizes.radiusLg),
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Container(
-                  width: 80,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
+            Expanded(
+              child: Shimmer.fromColors(
+                baseColor: AppColors.borderLight,
+                highlightColor:
+                    AppColors.borderLight.withValues(alpha: 0.4),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSizes.lg),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            width: 120,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          Container(
+                            width: 60,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius:
+                                  BorderRadius.circular(AppSizes.radiusFull),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSizes.sm),
+                      Container(
+                        width: 180,
+                        height: 13,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceLight,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.md),
+                      Container(
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceLight,
+                          borderRadius:
+                              BorderRadius.circular(AppSizes.radiusSm),
+                        ),
+                      ),
+                      const SizedBox(height: AppSizes.md),
+                      Row(
+                        mainAxisAlignment:
+                            MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 18,
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius:
+                                  BorderRadius.circular(AppSizes.radiusXs),
+                            ),
+                          ),
+                          Container(
+                            width: 80,
+                            height: 14,
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceLight,
+                              borderRadius:
+                                  BorderRadius.circular(4),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 60,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 60,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Container(
-              width: 100,
-              height: 12,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
               ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Container(
-                  width: 80,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -561,4 +856,3 @@ class _BookingSkeleton extends StatelessWidget {
     );
   }
 }
-

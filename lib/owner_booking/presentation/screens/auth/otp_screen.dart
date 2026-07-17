@@ -5,6 +5,7 @@ import 'package:pinput/pinput.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
+import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:toastification/toastification.dart';
@@ -68,22 +69,22 @@ class _OtpScreenState extends State<OtpScreen> {
         fontWeight: FontWeight.w600,
       ),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: AppColors.borderLight),
       ),
     );
 
     final focusedPinTheme = defaultPinTheme.copyWith(
       decoration: defaultPinTheme.decoration!.copyWith(
-        border: Border.all(color: Colors.green, width: 2),
+        border: Border.all(color: AppColors.primaryDarkGreen, width: 2),
       ),
     );
 
     final submittedPinTheme = defaultPinTheme.copyWith(
       decoration: defaultPinTheme.decoration!.copyWith(
-        color: Colors.green.withOpacity(0.05),
-        border: Border.all(color: Colors.green),
+        color: AppColors.primaryDarkGreen.withValues(alpha: 0.05),
+        border: Border.all(color: AppColors.primaryDarkGreen),
       ),
     );
 
@@ -134,7 +135,7 @@ class _OtpScreenState extends State<OtpScreen> {
           final isLoading = state is AuthLoading;
 
           return Scaffold(
-            backgroundColor: const Color(0xffECECEC),
+            backgroundColor: AppColors.bgLight,
             body: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -156,7 +157,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       AppText(
                         text: "Enter the code sent to $phone",
                         size: 14,
-                        color: Colors.grey,
+                        color: AppColors.textSecondaryLight,
                       ),
                       const AppSizedBox(height: 40),
                       Center(
@@ -203,7 +204,7 @@ class _OtpScreenState extends State<OtpScreen> {
                             const AppText(
                               text: "Didn't receive the code?",
                               size: 13,
-                              color: Colors.grey,
+                              color: AppColors.textSecondaryLight,
                             ),
                             const AppSizedBox(height: 8),
                             GestureDetector(
@@ -218,8 +219,8 @@ class _OtpScreenState extends State<OtpScreen> {
                                 size: 14,
                                 weight: FontWeight.w600,
                                 color: (isLoading || _secondsRemaining > 0)
-                                    ? Colors.grey
-                                    : Colors.green,
+                                    ? AppColors.textSecondaryLight
+                                    : AppColors.primaryDarkGreen,
                               ),
                             ),
                             if (_secondsRemaining > 0) ...[
@@ -227,7 +228,7 @@ class _OtpScreenState extends State<OtpScreen> {
                               AppText(
                                 text: "(00:${_secondsRemaining.toString().padLeft(2, '0')})",
                                 size: 12,
-                                color: Colors.grey,
+                                color: AppColors.textSecondaryLight,
                               ),
                             ]
                           ],

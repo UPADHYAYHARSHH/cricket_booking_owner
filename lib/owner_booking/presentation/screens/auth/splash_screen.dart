@@ -66,24 +66,24 @@ class _SplashScreenState extends State<SplashScreen> {
               const Icon(
                 Icons.stadium_outlined,
                 size: 100,
-                color: Colors.white,
+                color: AppColors.white,
               ),
               const SizedBox(height: 24),
               const AppText(
                 text: "TurfPro Owner",
                 size: 32,
                 weight: FontWeight.w700,
-                color: Colors.white,
+                color: AppColors.white,
               ),
               const SizedBox(height: 8),
               AppText(
                 text: "Your turf, managed professionally",
                 size: 16,
-                color: Colors.white.withOpacity(0.8),
+                color: AppColors.white.withValues(alpha: 0.8),
               ),
               const SizedBox(height: 48),
               const CircularProgressIndicator(
-                color: Colors.white,
+                color: AppColors.white,
               ),
             ],
           ),

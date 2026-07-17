@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
+import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
-import 'package:turfpro_owner/core/text_theme.dart';
 import 'package:toastification/toastification.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -113,7 +114,6 @@ class _LoginScreenState extends State<LoginScreen> {
           final isLoading = state is AuthLoading;
 
           return Scaffold(
-            backgroundColor: const Color(0xffECECEC),
             body: SafeArea(
               child: Center(
                 child: SingleChildScrollView(
@@ -126,14 +126,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 160,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            color: Colors.green.shade700,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                            color: AppColors.primaryDarkGreen,
                           ),
                           child: const Center(
                             child: Icon(
                               Icons.stadium_outlined,
                               size: 80,
-                              color: Colors.white,
+                              color: AppColors.white,
                             ),
                           ),
                         ),
@@ -145,15 +145,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           text: "Owner Portal",
                           size: 26,
                           weight: FontWeight.w700,
-                          textStyle: AppTextTheme.black17,
                         ),
 
                         const AppSizedBox(height: 6),
 
-                        const AppText(
+                        AppText(
                           text: "Manage your turfs and bookings",
                           size: 14,
-                          color: Colors.grey,
+                          color: AppColors.textSecondaryLight,
                         ),
 
                         const AppSizedBox(height: 24),
@@ -162,23 +161,23 @@ class _LoginScreenState extends State<LoginScreen> {
                         Container(
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(18),
+                            color: AppColors.surfaceLight,
+                            borderRadius: BorderRadius.circular(AppSizes.radiusXl),
                             boxShadow: [
                               BoxShadow(
                                 blurRadius: 10,
-                                color: Colors.black.withOpacity(.05),
+                                color: AppColors.black.withValues(alpha: 0.05),
                               )
                             ],
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const AppText(
+                              AppText(
                                 text: "Email Address",
                                 size: 12,
                                 weight: FontWeight.w600,
-                                color: Colors.black54,
+                                color: AppColors.textSecondaryLight,
                               ),
 
                               const AppSizedBox(height: 6),
@@ -186,30 +185,20 @@ class _LoginScreenState extends State<LoginScreen> {
                               TextField(
                                 controller: emailController,
                                 keyboardType: TextInputType.emailAddress,
-                                style: const TextStyle(color: Colors.black87),
                                 decoration: InputDecoration(
                                   hintText: "e.g. rajesh@example.com",
-                                  hintStyle: const TextStyle(color: Colors.black38),
                                   errorText: emailError,
-                                  prefixIcon: const Icon(Icons.email_outlined, color: Colors.black45),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
+                                  prefixIcon: const Icon(Icons.email_outlined),
                                 ),
                               ),
 
                               const AppSizedBox(height: 20),
 
-                              const AppText(
+                              AppText(
                                 text: "Password",
                                 size: 12,
                                 weight: FontWeight.w600,
-                                color: Colors.black54,
+                                color: AppColors.textSecondaryLight,
                               ),
 
                               const AppSizedBox(height: 6),
@@ -217,30 +206,21 @@ class _LoginScreenState extends State<LoginScreen> {
                               TextField(
                                 controller: passwordController,
                                 obscureText: _obscurePassword,
-                                style: const TextStyle(color: Colors.black87),
                                 decoration: InputDecoration(
                                   hintText: "Enter password",
-                                  hintStyle: const TextStyle(color: Colors.black38),
                                   errorText: passwordError,
-                                  prefixIcon: const Icon(Icons.lock_outline, color: Colors.black45),
+                                  prefixIcon: const Icon(Icons.lock_outline),
                                   suffixIcon: IconButton(
                                     icon: Icon(
-                                      _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                      color: Colors.black45,
+                                      _obscurePassword
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
                                     ),
                                     onPressed: () {
                                       setState(() {
                                         _obscurePassword = !_obscurePassword;
                                       });
                                     },
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                    borderSide: BorderSide(color: Colors.grey.shade300),
                                   ),
                                 ),
                               ),
@@ -257,7 +237,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     text: "Forgot Password?",
                                     size: 13,
                                     weight: FontWeight.w600,
-                                    color: Colors.green.shade700,
+                                    color: AppColors.primaryDarkGreen,
                                   ),
                                 ),
                               ),
@@ -285,10 +265,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const AppText(
+                            AppText(
                               text: "Don't have an account? ",
                               size: 14,
-                              color: Colors.black54,
+                              color: AppColors.textSecondaryLight,
                             ),
                             InkWell(
                               onTap: () {
@@ -298,7 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 text: "Sign Up",
                                 size: 14,
                                 weight: FontWeight.bold,
-                                color: Colors.green.shade700,
+                                color: AppColors.primaryDarkGreen,
                               ),
                             ),
                           ],
@@ -306,10 +286,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         const AppSizedBox(height: 24),
 
-                        const AppText(
+                        AppText(
                           text: "By continuing, you agree to our Terms of Service",
                           size: 12,
-                          color: Colors.grey,
+                          color: AppColors.textSecondaryLight,
                           align: TextAlign.center,
                         ),
                       ],

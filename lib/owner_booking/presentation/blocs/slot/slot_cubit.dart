@@ -47,20 +47,24 @@ class SlotCubit extends Cubit<SlotState> {
       final locationId = SharedPrefsService.instance.selectedLocationId;
       var groundsData = allGroundsData;
       if (locationId != null) {
-        groundsData = groundsData.where((g) => g['location_id'] == locationId).toList();
+        groundsData = groundsData
+            .where((g) => g['location_id'] == locationId)
+            .toList();
       }
       if (groundsData.isEmpty) {
-        emit(SlotLoaded(
-          venueName: venueName,
-          grounds: [],
-          selectedGroundId: '',
-          selectedDate: DateTime.now(),
-          slots: [],
-          bookedCount: 0,
-          blockedCount: 0,
-          totalSlots: 0,
-          todayRevenue: 0,
-        ));
+        emit(
+          SlotLoaded(
+            venueName: venueName,
+            grounds: [],
+            selectedGroundId: '',
+            selectedDate: DateTime.now(),
+            slots: [],
+            bookedCount: 0,
+            totalSlots: 0,
+            todayRevenue: 0,
+            blockedCount: 0,
+          ),
+        );
         return;
       }
 
@@ -118,10 +122,20 @@ class SlotCubit extends Cubit<SlotState> {
 
       final openParts = openingTimeStr.split(':');
       final closeParts = closingTimeStr.split(':');
-      final slotStart = DateTime(date.year, date.month, date.day,
-          int.parse(openParts[0]), int.parse(openParts[1]));
-      var slotEnd = DateTime(date.year, date.month, date.day,
-          int.parse(closeParts[0]), int.parse(closeParts[1]));
+      final slotStart = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        int.parse(openParts[0]),
+        int.parse(openParts[1]),
+      );
+      var slotEnd = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        int.parse(closeParts[0]),
+        int.parse(closeParts[1]),
+      );
 
       if (slotEnd.isBefore(slotStart) || slotEnd.isAtSameMomentAs(slotStart)) {
         slotEnd = slotEnd.add(const Duration(days: 1));
@@ -141,9 +155,9 @@ class SlotCubit extends Cubit<SlotState> {
       _bookingsSubscription = _slotRepository
           .watchBookingsForGround(groundId)
           .listen((data) {
-        _latestBookings = data;
-        _rebuildSlots();
-      });
+            _latestBookings = data;
+            _rebuildSlots();
+          });
     } catch (e) {
       emit(SlotError(e.toString()));
     }
@@ -151,11 +165,18 @@ class SlotCubit extends Cubit<SlotState> {
 
   void _rebuildSlots() {
     final dateStartStr = DateTime(
-            _selectedDate.year, _selectedDate.month, _selectedDate.day)
-        .toIso8601String();
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+    ).toIso8601String();
     final dateEndStr = DateTime(
-            _selectedDate.year, _selectedDate.month, _selectedDate.day, 23, 59, 59)
-        .toIso8601String();
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      23,
+      59,
+      59,
+    ).toIso8601String();
 
     final bookingsForDate = _latestBookings.where((b) {
       if (b['status'] != 'confirmed') return false;
@@ -169,17 +190,20 @@ class SlotCubit extends Cubit<SlotState> {
     DateTime currentSlotTime = _slotStart;
 
     while (currentSlotTime.isBefore(_slotEnd)) {
-      final nextSlotTime =
-          currentSlotTime.add(Duration(minutes: _slotDurationMins));
+      final nextSlotTime = currentSlotTime.add(
+        Duration(minutes: _slotDurationMins),
+      );
       if (nextSlotTime.isAfter(_slotEnd)) break;
 
       final isPeak = currentSlotTime.hour >= 18 && currentSlotTime.hour <= 21;
-      virtualSlots.add(VirtualSlot(
-        startTime: currentSlotTime,
-        endTime: nextSlotTime,
-        status: isPeak ? SlotStatus.peak : SlotStatus.open,
-        price: isPeak ? _defaultPrice + 100 : _defaultPrice,
-      ));
+      virtualSlots.add(
+        VirtualSlot(
+          startTime: currentSlotTime,
+          endTime: nextSlotTime,
+          status: isPeak ? SlotStatus.peak : SlotStatus.open,
+          price: isPeak ? _defaultPrice + 100 : _defaultPrice,
+        ),
+      );
       currentSlotTime = nextSlotTime;
     }
 
@@ -194,16 +218,14 @@ class SlotCubit extends Cubit<SlotState> {
     for (int i = 0; i < virtualSlots.length; i++) {
       final vSlot = virtualSlots[i];
 
-      final matchingBooking =
-          bookingsForDate.cast<Map<String, dynamic>?>().firstWhere(
-        (b) {
-          if (b == null) return false;
-          final bookingTime = DateTime.parse(b['slot_time']).toLocal();
-          return bookingTime.hour == vSlot.startTime.hour &&
-              bookingTime.minute == vSlot.startTime.minute;
-        },
-        orElse: () => null,
-      );
+      final matchingBooking = bookingsForDate
+          .cast<Map<String, dynamic>?>()
+          .firstWhere((b) {
+            if (b == null) return false;
+            final bookingTime = DateTime.parse(b['slot_time']).toLocal();
+            return bookingTime.hour == vSlot.startTime.hour &&
+                bookingTime.minute == vSlot.startTime.minute;
+          }, orElse: () => null);
 
       if (matchingBooking == null) continue;
 
@@ -229,8 +251,8 @@ class SlotCubit extends Cubit<SlotState> {
           price: (matchingBooking['amount'] as num?)?.toInt() ?? vSlot.price,
           bookedPlayerName:
               matchingBooking['player_name']?.toString().isNotEmpty == true
-                  ? matchingBooking['player_name']
-                  : 'Customer (ID: ${matchingBooking['user_id']?.toString().substring(0, 4) ?? '—'})',
+              ? matchingBooking['player_name']
+              : 'Customer (ID: ${matchingBooking['user_id']?.toString().substring(0, 4) ?? '—'})',
           bookedPlayersCount: 8,
           bookingId: matchingBooking['id'],
           bookingDetails: matchingBooking,
@@ -238,21 +260,27 @@ class SlotCubit extends Cubit<SlotState> {
       }
     }
 
-    emit(SlotLoaded(
-      venueName: _venueName,
-      grounds: _grounds,
-      selectedGroundId: _selectedGroundId,
-      selectedDate: _selectedDate,
-      slots: virtualSlots,
-      bookedCount: bookingsForDate.where((b) => b['user_id'] != null).length,
-      blockedCount: bookingsForDate.where((b) => b['user_id'] == null).length,
-      totalSlots: virtualSlots.length,
-      todayRevenue: todayRevenue,
-    ));
+    emit(
+      SlotLoaded(
+        venueName: _venueName,
+        grounds: _grounds,
+        selectedGroundId: _selectedGroundId,
+        selectedDate: _selectedDate,
+        slots: virtualSlots,
+        bookedCount: bookingsForDate.where((b) => b['user_id'] != null).length,
+        blockedCount: bookingsForDate.where((b) => b['user_id'] == null).length,
+        totalSlots: virtualSlots.length,
+        todayRevenue: todayRevenue,
+      ),
+    );
   }
 
   /// Books a slot as the owner. Uses optimistic update for instant UI feedback.
-  Future<void> bookOwnerSlot(DateTime startTime, int price, {String? note}) async {
+  Future<void> bookOwnerSlot(
+    DateTime startTime,
+    int price, {
+    String? note,
+  }) async {
     try {
       final localSlotTime = DateTime(
         _selectedDate.year,
@@ -291,10 +319,9 @@ class SlotCubit extends Cubit<SlotState> {
         period: period,
         note: note,
       );
-      _latestBookings = _latestBookings
-          .where((b) => b['id'] != placeholder['id'])
-          .toList()
-        ..add(inserted);
+      _latestBookings =
+          _latestBookings.where((b) => b['id'] != placeholder['id']).toList()
+            ..add(inserted);
       _rebuildSlots();
     } catch (e) {
       _latestBookings = _latestBookings
@@ -312,17 +339,19 @@ class SlotCubit extends Cubit<SlotState> {
 
   String _sportNameForGround(String groundId) {
     final ground = _grounds.cast<Map<String, dynamic>?>().firstWhere(
-          (g) => g?['id'] == groundId,
-          orElse: () => null,
-        );
+      (g) => g?['id'] == groundId,
+      orElse: () => null,
+    );
     // Prefer category, fall back to ground_type, then ground name
-    final raw = (ground?['category']?.toString().trim().isNotEmpty == true
-            ? ground!['category']
-            : ground?['ground_type']?.toString().trim().isNotEmpty == true
+    final raw =
+        (ground?['category']?.toString().trim().isNotEmpty == true
+                ? ground!['category']
+                : ground?['ground_type']?.toString().trim().isNotEmpty == true
                 ? ground!['ground_type']
                 : ground?['name'])
-        ?.toString()
-        .trim() ?? '';
+            ?.toString()
+            .trim() ??
+        '';
     if (raw.isEmpty) return 'Sport';
     return raw[0].toUpperCase() + raw.substring(1).toLowerCase();
   }
@@ -334,8 +363,9 @@ class SlotCubit extends Cubit<SlotState> {
       orElse: () => {},
     );
     try {
-      _latestBookings =
-          _latestBookings.where((b) => b['id'] != bookingId).toList();
+      _latestBookings = _latestBookings
+          .where((b) => b['id'] != bookingId)
+          .toList();
       _rebuildSlots();
       await _slotRepository.deleteOwnerBooking(bookingId);
     } catch (e) {
