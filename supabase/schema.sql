@@ -1,16 +1,21 @@
 -- Create bookings table
+-- NOTE: ground_id is UUID in the actual database (not TEXT).
+-- user_id is TEXT because firebase_uid_migration converted it for Firebase Auth.
 CREATE TABLE IF NOT EXISTS public.bookings (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-    ground_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    ground_id UUID NOT NULL,
     slot_time TIMESTAMP WITH TIME ZONE NOT NULL,
     amount INTEGER NOT NULL, -- in paise/INR subunits
-    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'paid', 'failed'
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'paid', 'failed', 'confirmed'
+    sport_name TEXT,
+    period TEXT,
     razorpay_order_id TEXT,
     razorpay_payment_id TEXT,
     razorpay_signature TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    checked_in BOOLEAN NOT NULL DEFAULT false,
+    checked_in_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Enable RLS

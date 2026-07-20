@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
@@ -6,16 +7,9 @@ import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_layout.dart';
-
-const List<Map<String, dynamic>> _kSports = [
-  {'id': 'box_cricket', 'name': 'Box Cricket', 'subtitle': 'Enclosed cricket arena', 'icon': Icons.sports_cricket},
-  {'id': 'football', 'name': 'Football / Futsal', 'subtitle': '5-a-side, 7-a-side', 'icon': Icons.sports_soccer},
-  {'id': 'badminton', 'name': 'Badminton', 'subtitle': 'Single / double court', 'icon': Icons.sports_tennis},
-  {'id': 'volleyball', 'name': 'Volleyball', 'subtitle': 'Indoor / outdoor', 'icon': Icons.sports_volleyball},
-  {'id': 'pickleball', 'name': 'Pickleball', 'subtitle': 'Paddle sport', 'icon': Icons.sports_tennis},
-  {'id': 'tennis', 'name': 'Tennis', 'subtitle': 'Hard / clay / grass', 'icon': Icons.sports_tennis},
-  {'id': 'basketball', 'name': 'Basketball', 'subtitle': 'Full / half court', 'icon': Icons.sports_basketball},
-];
+import 'package:turfpro_owner/owner_booking/presentation/blocs/sport/sport_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/sport/sport_state.dart';
+import 'package:turfpro_owner/owner_booking/data/models/sport_model.dart';
 
 class Step1Sports extends StatefulWidget {
   final bool isEdit;
@@ -65,11 +59,17 @@ class _Step1SportsState extends State<Step1Sports> with TickerProviderStateMixin
       subtitle: 'Which single sport is this ground for?',
       onNext: _onNext,
       onBack: () => Navigator.pop(context),
-      child: Column(
-        children: List.generate(_kSports.length, (index) {
-          final sport = _kSports[index];
-          final id = sport['id'] as String;
-          final isSelected = _selectedSport == id;
+      child: BlocBuilder<SportCubit, SportState>(
+        builder: (context, sportState) {
+          final sports = sportState is SportLoaded ? sportState.sports : <SportModel>[];
+          if (sports.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          return Column(
+            children: List.generate(sports.length, (index) {
+              final sport = sports[index];
+              final id = sport.slug;
+              final isSelected = _selectedSport == id;
 
           return TweenAnimationBuilder<double>(
             tween: Tween(begin: 0.0, end: 1.0),
@@ -135,11 +135,43 @@ class _Step1SportsState extends State<Step1Sports> with TickerProviderStateMixin
                         color: isSelected ? null : AppColors.slotAvailableBg,
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(
-                        sport['icon'] as IconData,
-                        color: isSelected ? AppColors.white : AppColors.primaryDarkGreen,
-                        size: AppSizes.iconLg,
-                      ),
+                      child: sport.iconUrl.isNotEmpty
+                          ? ClipOval(
+                              child: CachedNetworkImage(
+                                imageUrl: sport.iconUrl,
+                                width: AppSizes.iconLg,
+                                height: AppSizes.iconLg,
+                                fit: BoxFit.cover,
+                                placeholder: (_, _) => SizedBox(
+                                  width: AppSizes.iconLg,
+                                  height: AppSizes.iconLg,
+                                ),
+                                errorWidget: (_, _, _) => Icon(
+                                  Icons.sports,
+                                  color: isSelected ? AppColors.white : AppColors.primaryDarkGreen,
+                                  size: AppSizes.iconLg,
+                                ),
+                              ),
+                            )
+                          : sport.localAsset.isNotEmpty
+                              ? ClipOval(
+                                  child: Image.asset(
+                                    sport.localAsset,
+                                    width: AppSizes.iconLg,
+                                    height: AppSizes.iconLg,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, _, _) => Icon(
+                                      Icons.sports,
+                                      color: isSelected ? AppColors.white : AppColors.primaryDarkGreen,
+                                      size: AppSizes.iconLg,
+                                    ),
+                                  ),
+                                )
+                              : Icon(
+                                  Icons.sports,
+                                  color: isSelected ? AppColors.white : AppColors.primaryDarkGreen,
+                                  size: AppSizes.iconLg,
+                                ),
                     ),
                     const SizedBox(width: AppSizes.lg),
                     Expanded(
@@ -147,13 +179,13 @@ class _Step1SportsState extends State<Step1Sports> with TickerProviderStateMixin
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           AppText(
-                            text: sport['name'] as String,
+                            text: sport.name,
                             size: 15,
                             weight: FontWeight.w700,
                           ),
                           const SizedBox(height: AppSizes.xxs),
                           AppText(
-                            text: sport['subtitle'] as String,
+                            text: 'Sport Configuration',
                             size: 12,
                             color: AppColors.textSecondaryLight,
                           ),
@@ -197,6 +229,8 @@ class _Step1SportsState extends State<Step1Sports> with TickerProviderStateMixin
             ),
           );
         }),
+      );
+        },
       ),
     );
   }

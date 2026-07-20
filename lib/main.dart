@@ -14,6 +14,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/sport/sport_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/login_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/otp_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/signup_screen.dart';
@@ -33,12 +34,11 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/venu
 import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/ground_court_info_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/splash_screen.dart';
 
+//"Read MEMORY.md and continue working"
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await Supabase.initialize(
     url: const String.fromEnvironment(
@@ -47,7 +47,8 @@ void main() async {
     ),
     anonKey: const String.fromEnvironment(
       'SUPABASE_ANON_KEY',
-      defaultValue: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjeWJuem9wZmZ5em1waWF4d2JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDYyNzMsImV4cCI6MjA4OTY4MjI3M30.cRnvZzQhbwI26PhRkdjnptVa5yiWo6oBIGZlZU7JEgg',
+      defaultValue:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFjeWJuem9wZmZ5em1waWF4d2JjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMDYyNzMsImV4cCI6MjA4OTY4MjI3M30.cRnvZzQhbwI26PhRkdjnptVa5yiWo6oBIGZlZU7JEgg',
     ),
   );
 
@@ -71,6 +72,9 @@ class MyApp extends StatelessWidget {
         BlocProvider<SlotCubit>(create: (_) => di.getIt<SlotCubit>()),
         BlocProvider<BookingsCubit>(create: (_) => di.getIt<BookingsCubit>()),
         BlocProvider<DashboardCubit>(create: (_) => di.getIt<DashboardCubit>()),
+        BlocProvider<SportCubit>(
+          create: (_) => di.getIt<SportCubit>()..fetchSports(),
+        ),
       ],
       child: ToastificationWrapper(
         child: MaterialApp(

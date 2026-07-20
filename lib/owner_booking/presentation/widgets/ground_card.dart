@@ -636,6 +636,8 @@ class GroundsSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       padding: const EdgeInsets.all(AppSizes.xl),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: 3,
       separatorBuilder: (_, _) => const SizedBox(height: AppSizes.lg),
       itemBuilder: (_, _) => Shimmer.fromColors(

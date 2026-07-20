@@ -20,6 +20,8 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cub
 import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
+import 'package:turfpro_owner/owner_booking/data/repositories/sport_repository.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/sport/sport_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -76,5 +78,12 @@ Future<void> init() async {
   );
   getIt.registerFactory<RevenueCubit>(
     () => RevenueCubit(getIt<BookingRepository>(), getIt<LocationRepository>()),
+  );
+
+  getIt.registerLazySingleton<SportRepository>(
+    () => SportRepository(getIt<SupabaseClient>()),
+  );
+  getIt.registerLazySingleton<SportCubit>(
+    () => SportCubit(getIt<SportRepository>()),
   );
 }

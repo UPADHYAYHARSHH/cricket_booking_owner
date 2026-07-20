@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -42,20 +43,40 @@ String formatSportName(String? sport) {
 }
 
 /// Reusable widget that renders the correct sport icon for [sport].
+/// If [iconUrl] is provided and non-empty, shows the network image.
+/// Otherwise, falls back to a HugeIcon based on the sport slug.
 class SportIcon extends StatelessWidget {
   final String? sport;
+  final String? iconUrl;
   final double size;
   final Color? color;
 
   const SportIcon({
     super.key,
     required this.sport,
+    this.iconUrl,
     this.size = 16,
     this.color,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (iconUrl != null && iconUrl!.isNotEmpty) {
+      return ClipOval(
+        child: CachedNetworkImage(
+          imageUrl: iconUrl!,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          placeholder: (_, _) => SizedBox(width: size, height: size),
+          errorWidget: (_, _, _) => HugeIcon(
+            icon: sportIcon(sport),
+            size: size,
+            color: color ?? Colors.grey.shade700,
+          ),
+        ),
+      );
+    }
     return HugeIcon(
       icon: sportIcon(sport),
       size: size,

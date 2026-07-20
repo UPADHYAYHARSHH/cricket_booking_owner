@@ -22,7 +22,6 @@ class SlotsScreen extends StatefulWidget {
 class _SlotsScreenState extends State<SlotsScreen> {
   final ScrollController _dateScrollController = ScrollController();
   DateTime? _lastScrolledDate;
-  String _selectedTimeFilter = 'All';
 
   @override
   void initState() {
@@ -69,9 +68,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                 const SizedBox(height: AppSizes.lg),
                                 _buildLegend(),
                                 const SizedBox(height: AppSizes.lg),
-                                _buildTimeFilters(),
-                                const SizedBox(height: AppSizes.lg),
-                                _buildSlotGrid(context, state),
+                                _buildGroupedSlotGrid(context, state),
                                 const SizedBox(height: AppSizes.xxl),
                                 _buildSummaryCard(state),
                                 const SizedBox(height: AppSizes.xxl),
@@ -517,103 +514,56 @@ class _SlotsScreenState extends State<SlotsScreen> {
             dotColor: AppColors.accentOrange,
             isPeak: true,
           ),
+          _LegendChip(
+            label: "Passed",
+            bgColor: AppColors.bgLight,
+            textColor: AppColors.textSecondaryLight,
+            dotColor: Colors.grey,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildTimeFilters() {
-    final filters = ['All', 'Morning', 'Afternoon', 'Evening', 'Night'];
-    return SizedBox(
-      height: 38,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
-        scrollDirection: Axis.horizontal,
-        itemCount: filters.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 6),
-        itemBuilder: (context, index) {
-          final filter = filters[index];
-          final isSelected = _selectedTimeFilter == filter;
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                _selectedTimeFilter = filter;
-              });
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primaryDarkGreen
-                    : AppColors.white,
-                borderRadius: BorderRadius.circular(AppSizes.radiusRound),
-                border: Border.all(
-                  color: isSelected
-                      ? AppColors.primaryDarkGreen
-                      : AppColors.borderLight,
-                  width: isSelected ? 1.5 : 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (isSelected) ...[
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: AppColors.accentOrange,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                  ],
-                  AppText(
-                    text: filter,
-                    color: isSelected
-                        ? AppColors.white
-                        : AppColors.textSecondaryLight,
-                    weight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    size: 13,
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildSlotGrid(BuildContext context, SlotLoaded state) {
-    List<VirtualSlot> filteredSlots = state.slots;
-
-    if (_selectedTimeFilter != 'All') {
-      filteredSlots = state.slots.where((slot) {
-        final hour = slot.startTime.hour;
-        switch (_selectedTimeFilter) {
-          case 'Morning':
-            return hour >= 6 && hour < 12;
-          case 'Afternoon':
-            return hour >= 12 && hour < 16;
-          case 'Evening':
-            return hour >= 16 && hour < 20;
-          case 'Night':
-            return hour >= 20 || hour < 6;
-          default:
-            return true;
-        }
-      }).toList();
+  Widget _buildGroupedSlotGrid(BuildContext context, SlotLoaded state) {
+    // Group slots by time period
+    final Map<String, List<VirtualSlot>> grouped = {};
+    for (final slot in state.slots) {
+      final hour = slot.startTime.hour;
+      String period;
+      if (hour >= 6 && hour < 12) {
+        period = 'Morning';
+      } else if (hour >= 12 && hour < 16) {
+        period = 'Afternoon';
+      } else if (hour >= 16 && hour < 20) {
+        period = 'Evening';
+      } else {
+        period = 'Night';
+      }
+      grouped.putIfAbsent(period, () => []);
+      grouped[period]!.add(slot);
     }
 
-    if (filteredSlots.isEmpty) {
+    final periodOrder = ['Morning', 'Afternoon', 'Evening', 'Night'];
+    final periodIcons = {
+      'Morning': Icons.wb_sunny_rounded,
+      'Afternoon': Icons.wb_cloudy_rounded,
+      'Evening': Icons.wb_twilight_rounded,
+      'Night': Icons.nights_stay_rounded,
+    };
+    final periodColors = {
+      'Morning': const Color(0xFFFFB300),
+      'Afternoon': const Color(0xFFFF7043),
+      'Evening': const Color(0xFFE65100),
+      'Night': const Color(0xFF5C6BC0),
+    };
+
+    if (grouped.isEmpty) {
       return Padding(
         padding: const EdgeInsets.all(32.0),
         child: Center(
           child: AppText(
-            text: "No slots available for $_selectedTimeFilter.",
+            text: "No slots available.",
             color: AppColors.textSecondaryLight,
           ),
         ),
@@ -622,28 +572,97 @@ class _SlotsScreenState extends State<SlotsScreen> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 2.2,
-          crossAxisSpacing: AppSizes.md,
-          mainAxisSpacing: AppSizes.md,
-        ),
-        itemCount: filteredSlots.length,
-        itemBuilder: (context, index) {
-          final slot = filteredSlots[index];
-          return _SlotCard(
-            slot: slot,
-            onTap: () => _handleSlotTap(context, slot),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: periodOrder.where((p) => grouped.containsKey(p)).map((period) {
+          final periodSlots = grouped[period]!;
+          final periodColor = periodColors[period] ?? AppColors.primaryDarkGreen;
+          final periodIcon = periodIcons[period] ?? Icons.access_time;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Period label
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: periodColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: periodColor.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(periodIcon, size: 14, color: periodColor),
+                    const SizedBox(width: 6),
+                    AppText(
+                      text: period.toUpperCase(),
+                      size: 11,
+                      color: periodColor,
+                      weight: FontWeight.w700,
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: periodColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: AppText(
+                        text: "${periodSlots.length}",
+                        size: 10,
+                        color: periodColor,
+                        weight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Slots grid
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 2.2,
+                  crossAxisSpacing: AppSizes.md,
+                  mainAxisSpacing: AppSizes.md,
+                ),
+                itemCount: periodSlots.length,
+                itemBuilder: (context, index) {
+                  final slot = periodSlots[index];
+                  return _SlotCard(
+                    slot: slot,
+                    onTap: () => _handleSlotTap(context, slot),
+                  );
+                },
+              ),
+              const SizedBox(height: AppSizes.xxl),
+            ],
           );
-        },
+        }).toList(),
       ),
     );
   }
 
   void _handleSlotTap(BuildContext context, VirtualSlot slot) {
+    // Check if slot has passed
+    final now = DateTime.now();
+    final isExpired = slot.startTime.isBefore(now);
+
+    if (isExpired) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("This slot has already passed."),
+          backgroundColor: AppColors.textSecondaryLight,
+        ),
+      );
+      return;
+    }
+
     switch (slot.status) {
       case SlotStatus.booked:
       case SlotStatus.blocked:
@@ -1571,17 +1590,82 @@ class _SlotCard extends StatelessWidget {
     final timeRange =
         "${timeFormat.format(slot.startTime)} - ${timeFormat.format(slot.endTime)}";
 
+    // Check if slot has passed
+    final now = DateTime.now();
+    final isExpired = slot.startTime.isBefore(now);
+
     switch (slot.status) {
       case SlotStatus.open:
-        return _buildOpenSlot(timeRange);
+        return isExpired ? _buildExpiredSlot(timeRange) : _buildOpenSlot(timeRange);
       case SlotStatus.booked:
         return _buildBookedSlot(timeRange);
       case SlotStatus.blocked:
       case SlotStatus.maintenance:
         return _buildBlockedSlot(timeRange);
       case SlotStatus.peak:
-        return _buildPeakSlot(timeRange);
+        return isExpired ? _buildExpiredSlot(timeRange) : _buildPeakSlot(timeRange);
     }
+  }
+
+  Widget _buildExpiredSlot(String timeRange) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.bgLight,
+        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+        border: Border.all(color: AppColors.borderLight),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey.withValues(alpha: 0.3),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppSizes.radiusSm),
+                bottomLeft: Radius.circular(AppSizes.radiusSm),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSizes.md,
+                vertical: AppSizes.sm - 2,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppText(
+                    text: timeRange,
+                    size: 12,
+                    color: AppColors.textSecondaryLight.withValues(alpha: 0.5),
+                    weight: FontWeight.w600,
+                  ),
+                  const SizedBox(height: 2),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 10,
+                        color: AppColors.textSecondaryLight.withValues(alpha: 0.4),
+                      ),
+                      const SizedBox(width: 3),
+                      AppText(
+                        text: "Passed",
+                        size: 11,
+                        color: AppColors.textSecondaryLight.withValues(alpha: 0.4),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildOpenSlot(String timeRange) {
@@ -2048,6 +2132,23 @@ class _SlotsSkeleton extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSizes.xxl),
+                // Period label shimmer
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+                  child: Shimmer.fromColors(
+                    baseColor: AppColors.borderLight,
+                    highlightColor: AppColors.bgLight,
+                    child: Container(
+                      width: 140,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppColors.white,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.lg),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
                   child: Shimmer.fromColors(
@@ -2063,7 +2164,7 @@ class _SlotsSkeleton extends StatelessWidget {
                             crossAxisSpacing: AppSizes.md,
                             mainAxisSpacing: AppSizes.md,
                           ),
-                      itemCount: 8,
+                      itemCount: 6,
                       itemBuilder: (_, _) => Container(
                         decoration: BoxDecoration(
                           color: AppColors.white,

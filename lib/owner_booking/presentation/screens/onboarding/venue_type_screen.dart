@@ -1,10 +1,13 @@
 import 'dart:convert';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/sport/sport_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/sport/sport_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -28,6 +31,7 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
   void initState() {
     super.initState();
     _fetchExistingDetails();
+    _loadSports();
   }
 
   Future<void> _fetchExistingDetails() async {
@@ -73,44 +77,23 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
     }
   }
 
-  final List<Map<String, dynamic>> _sports = [
-    {
-      'id': 'box_cricket',
-      'name': 'Box Cricket',
-      'subtitle': 'Enclosed cricket arena',
-      'icon': Icons.sports_cricket,
-    },
-    {
-      'id': 'volleyball',
-      'name': 'Volleyball',
-      'subtitle': 'Indoor / outdoor',
-      'icon': Icons.sports_volleyball,
-    },
-    {
-      'id': 'pickleball',
-      'name': 'Pickleball',
-      'subtitle': 'Paddle sport',
-      'icon': Icons.sports_tennis,
-    },
-    {
-      'id': 'football',
-      'name': 'Football / Futsal',
-      'subtitle': '5-a-side, 7-a-side',
-      'icon': Icons.sports_soccer,
-    },
-    {
-      'id': 'badminton',
-      'name': 'Badminton',
-      'subtitle': 'Single / double court',
-      'icon': Icons.sports_tennis,
-    },
-    {
-      'id': 'tennis',
-      'name': 'Tennis',
-      'subtitle': 'Hard / clay / grass',
-      'icon': Icons.sports_tennis,
-    },
-  ];
+  void _loadSports() {
+    final sportState = context.read<SportCubit>().state;
+    if (sportState is SportLoaded) {
+      setState(() {
+        _sports = sportState.sports.map((s) => {
+          'id': s.slug,
+          'name': s.name,
+          'subtitle': 'Sport Configuration',
+          'icon_url': s.iconUrl,
+          'local_asset': s.localAsset,
+          'color': s.color,
+        }).toList();
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> _sports = [];
 
   void _onSportTap(String id) {
     setState(() {
@@ -192,24 +175,31 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
           );
         }
       },
-      child: BlocBuilder<AuthCubit, AuthState>(
-        builder: (context, state) {
-          return OnboardingLayout(
-            currentStep: 2,
-            title: "Venue Type",
-            subtitle: "Select and configure your sports",
-            isLoading: state is AuthLoading,
-            onNext: _onSave,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildLabel("SELECT & CONFIGURE SPORTS *"),
-                const AppSizedBox(height: 16),
-                _buildSportsList(),
-              ],
-            ),
-          );
+      child: BlocListener<SportCubit, SportState>(
+        listener: (context, state) {
+          if (state is SportLoaded) {
+            _loadSports();
+          }
         },
+        child: BlocBuilder<AuthCubit, AuthState>(
+          builder: (context, state) {
+            return OnboardingLayout(
+              currentStep: 2,
+              title: "Venue Type",
+              subtitle: "Select and configure your sports",
+              isLoading: state is AuthLoading,
+              onNext: _onSave,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildLabel("SELECT & CONFIGURE SPORTS *"),
+                  const AppSizedBox(height: 16),
+                  _buildSportsList(),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -279,11 +269,43 @@ class _VenueTypeScreenState extends State<VenueTypeScreen> {
                             : Colors.transparent,
                       ),
                     ),
-                    child: Icon(
-                      sport['icon'],
-                      color: AppColors.primaryDarkGreen,
-                      size: 24,
-                    ),
+                    child: sport['icon_url'] != null && sport['icon_url'] != ''
+                        ? ClipOval(
+                            child: CachedNetworkImage(
+                              imageUrl: sport['icon_url'],
+                              width: 24,
+                              height: 24,
+                              fit: BoxFit.cover,
+                              placeholder: (_, _) => const SizedBox(
+                                width: 24,
+                                height: 24,
+                              ),
+                              errorWidget: (_, _, _) => Icon(
+                                Icons.sports,
+                                color: AppColors.primaryDarkGreen,
+                                size: 24,
+                              ),
+                            ),
+                          )
+                        : sport['local_asset'] != null && sport['local_asset'] != ''
+                            ? ClipOval(
+                                child: Image.asset(
+                                  sport['local_asset'],
+                                  width: 24,
+                                  height: 24,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) => Icon(
+                                    Icons.sports,
+                                    color: AppColors.primaryDarkGreen,
+                                    size: 24,
+                                  ),
+                                ),
+                              )
+                        : Icon(
+                            sport['icon'] ?? Icons.sports,
+                            color: AppColors.primaryDarkGreen,
+                            size: 24,
+                          ),
                   ),
                   const AppSizedBox(width: 14),
                   Expanded(

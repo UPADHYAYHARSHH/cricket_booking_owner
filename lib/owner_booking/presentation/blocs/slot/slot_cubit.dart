@@ -21,6 +21,7 @@ class SlotCubit extends Cubit<SlotState> {
   DateTime _slotStart = DateTime.now();
   DateTime _slotEnd = DateTime.now();
   int _defaultPrice = 800;
+  int _weekendPrice = 800;
   int _slotDurationMins = 60;
 
   SlotCubit(this._slotRepository) : super(SlotInitial());
@@ -119,6 +120,8 @@ class SlotCubit extends Cubit<SlotState> {
       final slotDurationMins = ground['slot_duration'] ?? 60;
       final int defaultPrice =
           (ground['price_per_hour'] as num?)?.toInt() ?? 800;
+      final int weekendPrice =
+          (ground['weekend_price'] as num?)?.toInt() ?? defaultPrice;
 
       final openParts = openingTimeStr.split(':');
       final closeParts = closingTimeStr.split(':');
@@ -148,6 +151,7 @@ class SlotCubit extends Cubit<SlotState> {
       _slotStart = slotStart;
       _slotEnd = slotEnd;
       _defaultPrice = defaultPrice;
+      _weekendPrice = weekendPrice;
       _slotDurationMins = slotDurationMins;
       _latestBookings = [];
 
@@ -186,6 +190,11 @@ class SlotCubit extends Cubit<SlotState> {
           slotTime.compareTo(dateEndStr) <= 0;
     }).toList();
 
+    // Determine price based on weekday/weekend
+    final isWeekend = _selectedDate.weekday == DateTime.saturday ||
+        _selectedDate.weekday == DateTime.sunday;
+    final basePrice = isWeekend ? _weekendPrice : _defaultPrice;
+
     final List<VirtualSlot> virtualSlots = [];
     DateTime currentSlotTime = _slotStart;
 
@@ -201,7 +210,7 @@ class SlotCubit extends Cubit<SlotState> {
           startTime: currentSlotTime,
           endTime: nextSlotTime,
           status: isPeak ? SlotStatus.peak : SlotStatus.open,
-          price: isPeak ? _defaultPrice + 100 : _defaultPrice,
+          price: isPeak ? basePrice + 100 : basePrice,
         ),
       );
       currentSlotTime = nextSlotTime;
