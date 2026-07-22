@@ -33,20 +33,16 @@ class _SplashScreenState extends State<SplashScreen> {
           clearAndGo('/');
         } else if (state is AuthSuccess) {
           clearAndGo('/dashboard');
-        } else if (state is AuthProfileIncomplete) {
-          String route = '/personal-info';
-          if (state.step == 2) route = '/venue-type';
-          if (state.step == 3) route = '/venue-details';
-          if (state.step == 4) route = '/ground-court-info';
-          if (state.step == 5) route = '/amenities';
-          if (state.step == 6) route = '/slot-config';
-          if (state.step == 7) route = '/pricing-setup';
-          if (state.step == 8) route = '/kyc-documentation';
-          if (state.step == 9) route = '/photos-media';
-          if (state.step == 10) route = '/review-submit';
-          clearAndGo(route);
-        } else if (state is AuthDocumentsRequired) {
-          clearAndGo('/upload-documents');
+        } else if (state is AuthLocationRequired) {
+          clearAndGo('/add-location');
+        } else if (state is AuthStep1Required) {
+          clearAndGo('/onboarding/step1');
+        } else if (state is AuthStep2Required) {
+          clearAndGo('/onboarding/step2');
+        } else if (state is AuthStep3Required) {
+          clearAndGo('/onboarding/step3');
+        } else if (state is AuthPendingApproval) {
+          clearAndGo('/pending-approval');
         } else if (state is AuthError) {
           toastification.show(
             context: context,
@@ -83,9 +79,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: AppColors.white.withValues(alpha: 0.8),
               ),
               const SizedBox(height: 48),
-              const CircularProgressIndicator(
-                color: AppColors.white,
-              ),
+              const CircularProgressIndicator(color: AppColors.white),
             ],
           ),
         ),

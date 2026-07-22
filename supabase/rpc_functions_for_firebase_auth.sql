@@ -262,3 +262,170 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.get_locations_with_grounds() TO anon;
 GRANT EXECUTE ON FUNCTION public.get_locations_with_grounds() TO authenticated;
+
+-- ============================================================
+-- 8. Grounds: Register new ground (bypasses RLS for Firebase Auth)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.register_ground(
+    p_owner_id TEXT,
+    p_location_id TEXT,
+    p_name TEXT,
+    p_category TEXT,
+    p_description TEXT,
+    p_price_per_hour INT,
+    p_weekend_price INT,
+    p_opening_time TEXT,
+    p_closing_time TEXT
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    result JSON;
+BEGIN
+    INSERT INTO public.grounds (
+        owner_id, location_id, name, category, description,
+        price_per_hour, weekend_price, opening_time, closing_time
+    )
+    VALUES (
+        p_owner_id, p_location_id::uuid, p_name, p_category, p_description,
+        p_price_per_hour, p_weekend_price, p_opening_time::time, p_closing_time::time
+    )
+    RETURNING to_json(grounds.*) INTO result;
+    RETURN result;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT) TO authenticated;
+
+-- ============================================================
+-- 9. Ground Images: Insert images (bypasses RLS for Firebase Auth)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.insert_ground_images(
+    p_ground_id TEXT,
+    p_image_urls TEXT[]
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    INSERT INTO public.ground_images (ground_id, image_url)
+    SELECT p_ground_id::uuid, unnest(p_image_urls);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.insert_ground_images(TEXT, TEXT[]) TO anon;
+GRANT EXECUTE ON FUNCTION public.insert_ground_images(TEXT, TEXT[]) TO authenticated;
+
+-- ============================================================
+-- 10. Ground Images: Replace images (bypasses RLS for Firebase Auth)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.replace_ground_images(
+    p_ground_id TEXT,
+    p_image_urls TEXT[]
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    DELETE FROM public.ground_images WHERE ground_id = p_ground_id::uuid;
+    INSERT INTO public.ground_images (ground_id, image_url)
+    SELECT p_ground_id::uuid, unnest(p_image_urls);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.replace_ground_images(TEXT, TEXT[]) TO anon;
+GRANT EXECUTE ON FUNCTION public.replace_ground_images(TEXT, TEXT[]) TO authenticated;
+
+-- ============================================================
+-- 11. Grounds: Update ground (bypasses RLS for Firebase Auth)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.update_ground(
+    p_ground_id TEXT,
+    p_name TEXT,
+    p_category TEXT,
+    p_description TEXT,
+    p_price_per_hour INT,
+    p_weekend_price INT,
+    p_opening_time TEXT,
+    p_closing_time TEXT
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    UPDATE public.grounds
+    SET name = p_name,
+        category = p_category,
+        description = p_description,
+        price_per_hour = p_price_per_hour,
+        weekend_price = p_weekend_price,
+        opening_time = p_opening_time::time,
+        closing_time = p_closing_time::time
+    WHERE id = p_ground_id::uuid;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT) TO authenticated;
+
+-- ============================================================
+-- 12. Slots: Generate slots for a ground (bypasses RLS for Firebase Auth)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.generate_ground_slots(
+    p_ground_id TEXT,
+    p_opening_time TEXT,
+    p_closing_time TEXT,
+    p_weekday_price INT,
+    p_weekend_price INT
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_open_hour INT;
+    v_close_hour INT;
+    v_date DATE;
+    v_date_str TEXT;
+    v_is_weekend BOOLEAN;
+    v_slot_price INT;
+    v_hour INT;
+    v_slots JSON[];
+    v_slot JSON;
+BEGIN
+    v_open_hour := CAST(split_part(p_opening_time, ':', 1) AS INT);
+    v_close_hour := CAST(split_part(p_closing_time, ':', 1) AS INT);
+
+    IF v_open_hour IS NULL OR v_close_hour IS NULL OR v_open_hour >= v_close_hour THEN
+        RETURN;
+    END IF;
+
+    FOR i IN 0..13 LOOP
+        v_date := CURRENT_DATE + i;
+        v_date_str := to_char(v_date, 'YYYY-MM-DD');
+        v_is_weekend := EXTRACT(DOW FROM v_date) IN (0, 6);
+        v_slot_price := CASE WHEN v_is_weekend THEN p_weekend_price ELSE p_weekday_price END;
+
+        FOR v_hour IN v_open_hour..(v_close_hour - 1) LOOP
+            INSERT INTO public.slots (ground_id, date, start_time, end_time, price, status)
+            VALUES (
+                p_ground_id::uuid,
+                v_date::date,
+                LPAD(v_hour::TEXT, 2, '0') || ':00',
+                LPAD((v_hour + 1)::TEXT, 2, '0') || ':00',
+                v_slot_price,
+                'available'
+            );
+        END LOOP;
+    END LOOP;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.generate_ground_slots(TEXT, TEXT, TEXT, INT, INT) TO anon;
+GRANT EXECUTE ON FUNCTION public.generate_ground_slots(TEXT, TEXT, TEXT, INT, INT) TO authenticated;

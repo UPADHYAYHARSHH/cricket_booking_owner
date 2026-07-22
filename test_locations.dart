@@ -6,10 +6,8 @@ void main() async {
   final client = SupabaseClient(supabaseUrl, supabaseKey);
 
   try {
-    final response = await client.from('owner_details').select().order('created_at', ascending: false).limit(3);
-    for (var r in response) {
-      print("User ID: ${r['id']}, Name: ${r['owner_name']}, Phone: ${r['phone']}, City: ${r['city']}, Business: ${r['business_name']}, Venue: ${r['venue_name']}");
-    }
+    final response = await client.from('locations').select().limit(5);
+    print(response);
   } catch (e) {
     print('Error: $e');
   }

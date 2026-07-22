@@ -19,7 +19,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  
+
   String? emailError;
   String? passwordError;
   bool _obscurePassword = true;
@@ -63,7 +63,8 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
-      listenWhen: (previous, current) => ModalRoute.of(context)?.isCurrent == true,
+      listenWhen: (previous, current) =>
+          ModalRoute.of(context)?.isCurrent == true,
       listener: (context, state) {
         if (state is AuthSuccess) {
           toastification.show(
@@ -82,15 +83,15 @@ class _LoginScreenState extends State<LoginScreen> {
         }
 
         if (state is AuthEmailUnverified) {
-          Navigator.pushNamed(
-            context,
-            '/email-verification',
-          );
+          Navigator.pushNamed(context, '/email-verification');
         }
 
-        if (state is AuthProfileIncomplete) {
-          // If the profile is incomplete, it will navigate to Splash which routes to the current onboarding step automatically.
-          // Or we can let main.dart/Splash route appropriately.
+        if (state is AuthLocationRequired ||
+            state is AuthPendingApproval ||
+            state is AuthStep1Required ||
+            state is AuthStep2Required ||
+            state is AuthStep3Required) {
+          // Let splash route to the correct step
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/splash',
@@ -126,7 +127,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           height: 160,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusLg,
+                            ),
                             color: AppColors.primaryDarkGreen,
                           ),
                           child: const Center(
@@ -162,12 +165,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           padding: const EdgeInsets.all(22),
                           decoration: BoxDecoration(
                             color: AppColors.surfaceLight,
-                            borderRadius: BorderRadius.circular(AppSizes.radiusXl),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusXl,
+                            ),
                             boxShadow: [
                               BoxShadow(
                                 blurRadius: 10,
                                 color: AppColors.black.withValues(alpha: 0.05),
-                              )
+                              ),
                             ],
                           ),
                           child: Column(
@@ -231,7 +236,10 @@ class _LoginScreenState extends State<LoginScreen> {
                                 alignment: Alignment.centerRight,
                                 child: InkWell(
                                   onTap: () {
-                                    Navigator.pushNamed(context, '/forgot-password');
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/forgot-password',
+                                    );
                                   },
                                   child: AppText(
                                     text: "Forgot Password?",
@@ -249,7 +257,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 isLoading: isLoading,
                                 onTap: () {
                                   if (_validateFields()) {
-                                    context.read<AuthCubit>().signInWithEmailAndPassword(
+                                    context
+                                        .read<AuthCubit>()
+                                        .signInWithEmailAndPassword(
                                           emailController.text.trim(),
                                           passwordController.text.trim(),
                                         );
@@ -287,7 +297,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         const AppSizedBox(height: 24),
 
                         AppText(
-                          text: "By continuing, you agree to our Terms of Service",
+                          text:
+                              "By continuing, you agree to our Terms of Service",
                           size: 12,
                           color: AppColors.textSecondaryLight,
                           align: TextAlign.center,

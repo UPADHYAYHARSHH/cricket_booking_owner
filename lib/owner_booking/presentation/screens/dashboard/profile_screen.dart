@@ -189,7 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
     final ownerName = _ownerDetails?['owner_name'] ?? "Owner Name";
     final phone = _ownerDetails?['phone'] ?? "No Phone";
-    final city = _ownerDetails?['business_city'] ?? "City";
+    final city = _ownerDetails?['city'] ?? "City";
     final venueName = _ownerDetails?['venue_name'] ?? "Venue Name";
 
     final createdAtStr = _ownerDetails?['created_at'];

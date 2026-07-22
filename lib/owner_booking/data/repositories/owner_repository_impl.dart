@@ -42,6 +42,33 @@ class OwnerRepositoryImpl implements OwnerRepository {
   }
 
   @override
+  Future<void> uploadKycDocuments({
+    required String userId,
+    required String businessName,
+    required String venueName,
+    required String city,
+    required String address,
+    required String panUrl,
+    required String aadharUrl,
+    required Map<String, dynamic> bankDetails,
+  }) async {
+    await _supabase
+        .from('owner_details')
+        .update({
+          'business_name': businessName,
+          'venue_name': venueName,
+          'city': city,
+          'address': address,
+          'pan_url': panUrl,
+          'aadhar_url': aadharUrl,
+          'kyc_config': bankDetails, // Save bank info inside kyc_config
+          'status': 'submitted', // Update status
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
+  }
+
+  @override
   Future<int> getOnboardingStep(String userId) async {
     final data = await getOwnerDetails(userId);
 
@@ -418,5 +445,69 @@ class OwnerRepositoryImpl implements OwnerRepository {
       'business_reg_url': ?businessRegUrl,
       'updated_at': DateTime.now().toIso8601String(),
     });
+  }
+
+  // ── 3-Step Onboarding ──
+
+  @override
+  Future<void> saveStep1({
+    required String userId,
+    required String fullName,
+    required String phone,
+    required String city,
+  }) async {
+    await _supabase.from('owner_details').upsert({
+      'id': userId,
+      'owner_name': fullName,
+      'phone': phone,
+      'city': city,
+      'updated_at': DateTime.now().toIso8601String(),
+    }, onConflict: 'id');
+  }
+
+  @override
+  Future<void> saveStep2({
+    required String userId,
+    required String businessName,
+    required String panUrl,
+    required String aadharUrl,
+    required Map<String, dynamic> bankDetails,
+  }) async {
+    await _supabase
+        .from('owner_details')
+        .update({
+          'business_name': businessName,
+          'pan_url': panUrl,
+          'aadhar_url': aadharUrl,
+          'kyc_config': bankDetails,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
+  }
+
+  @override
+  Future<void> saveStep3({
+    required String userId,
+    required String venueName,
+    required String address,
+    required String city,
+    required String googleMapsLink,
+    required double latitude,
+    required double longitude,
+  }) async {
+    await _supabase
+        .from('owner_details')
+        .update({
+          'venue_name': venueName,
+          'address': address,
+          'city': city,
+          'google_maps_link': googleMapsLink,
+          'latitude': latitude,
+          'longitude': longitude,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', userId);
+
+    await submitApplication(userId);
   }
 }

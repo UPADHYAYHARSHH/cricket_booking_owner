@@ -55,7 +55,7 @@ Future<void> init() async {
 
   // Cubits
   getIt.registerFactory<AuthCubit>(
-    () => AuthCubit(getIt<AuthRepository>(), getIt<OwnerRepository>()),
+    () => AuthCubit(getIt<AuthRepository>(), getIt<OwnerRepository>(), getIt<LocationRepository>()),
   );
   getIt.registerFactory<BookingsCubit>(
     () => BookingsCubit(getIt<BookingRepository>()),

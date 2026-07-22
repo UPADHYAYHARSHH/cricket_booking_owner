@@ -1,4 +1,3 @@
-import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/ground_repository.dart';
 
@@ -58,23 +57,19 @@ class GroundRepositoryImpl implements GroundRepository {
     required List<String> imageUrls,
     Map<String, int>? pricingOverrides,
   }) async {
-    final groundResponse = await _supabase
-        .from('grounds')
-        .insert({
-          'owner_id': ownerId,
-          'location_id': locationId,
-          'name': name,
-          'category': category,
-          'description': description,
-          'price_per_hour': pricingOverrides?['weekday'] ?? 600,
-          'weekend_price': pricingOverrides?['weekend'] ?? 800,
-          'opening_time': openingTime,
-          'closing_time': closingTime,
-        })
-        .select()
-        .single();
+    final groundResponse = await _supabase.rpc('register_ground', params: {
+      'p_owner_id': ownerId,
+      'p_location_id': locationId,
+      'p_name': name,
+      'p_category': category,
+      'p_description': description,
+      'p_price_per_hour': pricingOverrides?['weekday'] ?? 600,
+      'p_weekend_price': pricingOverrides?['weekend'] ?? 800,
+      'p_opening_time': openingTime,
+      'p_closing_time': closingTime,
+    });
 
-    final groundId = groundResponse['id'] as String;
+    final groundId = (groundResponse as Map<String, dynamic>)['id'] as String;
 
     if (imageUrls.isNotEmpty) {
       await insertGroundImages(groundId, imageUrls);
@@ -88,25 +83,35 @@ class GroundRepositoryImpl implements GroundRepository {
     required String groundId,
     required Map<String, dynamic> data,
   }) async {
-    await _supabase.from('grounds').update(data).eq('id', groundId);
+    await _supabase.rpc('update_ground', params: {
+      'p_ground_id': groundId,
+      'p_name': data['name'] ?? '',
+      'p_category': data['category'] ?? '',
+      'p_description': data['description'] ?? '',
+      'p_price_per_hour': data['price_per_hour'] ?? 600,
+      'p_weekend_price': data['weekend_price'] ?? 800,
+      'p_opening_time': data['opening_time'] ?? '06:00',
+      'p_closing_time': data['closing_time'] ?? '23:00',
+    });
   }
 
   @override
   Future<void> insertGroundImages(
       String groundId, List<String> imageUrls) async {
     if (imageUrls.isEmpty) return;
-    await _supabase.from('ground_images').insert(
-          imageUrls
-              .map((url) => {'ground_id': groundId, 'image_url': url})
-              .toList(),
-        );
+    await _supabase.rpc('insert_ground_images', params: {
+      'p_ground_id': groundId,
+      'p_image_urls': imageUrls,
+    });
   }
 
   @override
   Future<void> replaceGroundImages(
       String groundId, List<String> imageUrls) async {
-    await _supabase.from('ground_images').delete().eq('ground_id', groundId);
-    await insertGroundImages(groundId, imageUrls);
+    await _supabase.rpc('replace_ground_images', params: {
+      'p_ground_id': groundId,
+      'p_image_urls': imageUrls,
+    });
   }
 
   @override
@@ -116,36 +121,13 @@ class GroundRepositoryImpl implements GroundRepository {
     String closingTime,
     Map<String, int> pricing,
   ) async {
-    final List<Map<String, dynamic>> slotsToInsert = [];
-    final openHour = _parseHour(openingTime);
-    final closeHour = _parseHour(closingTime);
-
-    if (openHour == null || closeHour == null || openHour >= closeHour) return;
-
-    for (int i = 0; i < 14; i++) {
-      final date = DateTime.now().add(Duration(days: i));
-      final dateStr = DateFormat('yyyy-MM-dd').format(date);
-      final isWeekend = date.weekday == DateTime.saturday ||
-          date.weekday == DateTime.sunday;
-
-      final slotPrice =
-          isWeekend ? (pricing['weekend'] ?? 800) : (pricing['weekday'] ?? 600);
-
-      for (int hour = openHour; hour < closeHour; hour++) {
-        slotsToInsert.add({
-          'ground_id': groundId,
-          'date': dateStr,
-          'start_time': '${hour.toString().padLeft(2, '0')}:00',
-          'end_time': '${(hour + 1).toString().padLeft(2, '0')}:00',
-          'price': slotPrice,
-          'status': 'available',
-        });
-      }
-    }
-
-    if (slotsToInsert.isNotEmpty) {
-      await _supabase.from('slots').insert(slotsToInsert);
-    }
+    await _supabase.rpc('generate_ground_slots', params: {
+      'p_ground_id': groundId,
+      'p_opening_time': openingTime,
+      'p_closing_time': closingTime,
+      'p_weekday_price': pricing['weekday'] ?? 600,
+      'p_weekend_price': pricing['weekend'] ?? 800,
+    });
   }
 
   @override
@@ -155,7 +137,7 @@ class GroundRepositoryImpl implements GroundRepository {
     String closingTime,
     Map<String, int> pricing,
   ) async {
-    final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final todayStr = DateTime.now().toIso8601String().substring(0, 10);
 
     // Delete only available slots from tomorrow onwards so we don't cancel bookings.
     await _supabase
@@ -166,13 +148,5 @@ class GroundRepositoryImpl implements GroundRepository {
         .gte('date', todayStr);
 
     await generateSlots(groundId, openingTime, closingTime, pricing);
-  }
-
-  int? _parseHour(String time) {
-    try {
-      return int.parse(time.split(':')[0]);
-    } catch (_) {
-      return null;
-    }
   }
 }

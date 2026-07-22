@@ -21,18 +21,13 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/auth/signup_scr
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/forgot_password_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/email_verification_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/document_upload_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/step1_personal_info_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/step2_documents_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/step3_venue_details_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/main_navbar.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/personal_info_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/venue_type_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/amenities_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/slot_config_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/pricing_setup_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/kyc_documentation_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/photos_media_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/review_submit_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/venue_details_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/onboarding/ground_court_info_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/splash_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_form_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/auth/pending_approval_screen.dart';
 
 //"Read MEMORY.md and continue working"
 void main() async {
@@ -91,20 +86,13 @@ class MyApp extends StatelessWidget {
             '/forgot-password': (context) => const ForgotPasswordScreen(),
             '/email-verification': (context) => const EmailVerificationScreen(),
             '/otp': (context) => const OtpScreen(),
-            '/upload-documents': (context) => const DocumentUploadScreen(),
+            '/document-upload': (context) => const DocumentUploadScreen(),
+            '/onboarding/step1': (context) => const Step1PersonalInfoScreen(),
+            '/onboarding/step2': (context) => const Step2DocumentsScreen(),
+            '/onboarding/step3': (context) => const Step3VenueDetailsScreen(),
             '/dashboard': (context) => const MainNavbar(),
-            '/personal-info': (context) => const PersonalInfoScreen(),
-            '/venue-type': (context) => const VenueTypeScreen(),
-            '/venue-details': (context) => const VenueDetailsScreen(),
-            '/ground-court-info': (context) => const GroundCourtInfoScreen(),
-            '/amenities': (context) => const AmenitiesScreen(),
-            '/amenities-settings': (context) =>
-                const AmenitiesScreen(isSettingsMode: true),
-            '/slot-config': (context) => const SlotConfigScreen(),
-            '/pricing-setup': (context) => const PricingSetupScreen(),
-            '/kyc-documentation': (context) => const KycDocumentationScreen(),
-            '/photos-media': (context) => const PhotosMediaScreen(),
-            '/review-submit': (context) => const ReviewSubmitScreen(),
+            '/add-location': (context) => const LocationFormScreen(),
+            '/pending-approval': (context) => const PendingApprovalScreen(),
           },
         ),
       ),

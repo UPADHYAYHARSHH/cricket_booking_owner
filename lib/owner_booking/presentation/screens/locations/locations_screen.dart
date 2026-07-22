@@ -345,6 +345,7 @@ class _LocationsScreenState extends State<LocationsScreen>
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'locations_add_location',
         onPressed: _openAddLocation,
         backgroundColor: AppColors.primaryDarkGreen,
         foregroundColor: AppColors.white,

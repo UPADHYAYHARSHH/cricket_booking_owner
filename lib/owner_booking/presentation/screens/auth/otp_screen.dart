@@ -92,6 +92,14 @@ class _OtpScreenState extends State<OtpScreen> {
       listenWhen: (previous, current) => ModalRoute.of(context)?.isCurrent == true,
       listener: (context, state) {
         debugPrint("DEBUG: OtpScreen received state: $state");
+        if (state is AuthLocationRequired || state is AuthPendingApproval) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/splash',
+            (route) => false,
+          );
+        }
+
         if (state is AuthSuccess) {
           Navigator.pushNamedAndRemoveUntil(
             context,
@@ -100,25 +108,7 @@ class _OtpScreenState extends State<OtpScreen> {
           );
         }
 
-        if (state is AuthProfileIncomplete) {
-          String route = '/personal-info';
-          if (state.step == 2) route = '/venue-type';
-          if (state.step == 3) route = '/venue-details';
-          
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            route,
-            (route) => false,
-          );
-        }
 
-        if (state is AuthDocumentsRequired) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/upload-documents',
-            (route) => false,
-          );
-        }
         if (state is AuthError) {
           toastification.show(
             context: context,

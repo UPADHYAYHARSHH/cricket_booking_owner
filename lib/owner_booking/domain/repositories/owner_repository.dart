@@ -10,6 +10,17 @@ abstract class OwnerRepository {
     required String phone,
   });
 
+  Future<void> uploadKycDocuments({
+    required String userId,
+    required String businessName,
+    required String venueName,
+    required String city,
+    required String address,
+    required String panUrl,
+    required String aadharUrl,
+    required Map<String, dynamic> bankDetails,
+  });
+
   Future<int> getOnboardingStep(String userId);
 
   Future<void> savePersonalInfo({
@@ -89,5 +100,35 @@ abstract class OwnerRepository {
     required double longitude,
     String? phone,
     String? businessRegUrl,
+  });
+
+  // ── 3-Step Onboarding ──
+
+  /// Step 1: Save personal info (name, phone, city)
+  Future<void> saveStep1({
+    required String userId,
+    required String fullName,
+    required String phone,
+    required String city,
+  });
+
+  /// Step 2: Save KYC documents (business name, PAN, Aadhar, bank details)
+  Future<void> saveStep2({
+    required String userId,
+    required String businessName,
+    required String panUrl,
+    required String aadharUrl,
+    required Map<String, dynamic> bankDetails,
+  });
+
+  /// Step 3: Save venue details and auto-submit application
+  Future<void> saveStep3({
+    required String userId,
+    required String venueName,
+    required String address,
+    required String city,
+    required String googleMapsLink,
+    required double latitude,
+    required double longitude,
   });
 }

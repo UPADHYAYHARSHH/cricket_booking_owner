@@ -196,6 +196,7 @@ class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'grounds_at_location_add_ground',
         onPressed: _openAddFlow,
         backgroundColor: AppColors.primaryDarkGreen,
         foregroundColor: AppColors.white,

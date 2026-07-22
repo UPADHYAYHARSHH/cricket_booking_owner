@@ -69,7 +69,11 @@ class _GroundsScreenState extends State<GroundsScreen> {
         locationId = locations.first['id'] as String;
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pick a location above first, then add a ground to it.')),
+          const SnackBar(
+            content: Text(
+              'Pick a location above first, then add a ground to it.',
+            ),
+          ),
         );
         return;
       }
@@ -77,7 +81,9 @@ class _GroundsScreenState extends State<GroundsScreen> {
 
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => GroundFormFlow(locationId: locationId!)),
+      MaterialPageRoute(
+        builder: (_) => GroundFormFlow(locationId: locationId!),
+      ),
     );
     if (!mounted) return;
     _fetchGrounds();
@@ -90,7 +96,8 @@ class _GroundsScreenState extends State<GroundsScreen> {
     await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => GroundFormFlow(locationId: locationId, groundData: ground),
+        builder: (_) =>
+            GroundFormFlow(locationId: locationId, groundData: ground),
       ),
     );
     if (!mounted) return;
@@ -103,13 +110,16 @@ class _GroundsScreenState extends State<GroundsScreen> {
       backgroundColor: AppColors.bgLight,
       body: BlocBuilder<LocationCubit, LocationState>(
         builder: (context, locationState) {
-          final locations =
-              locationState is LocationLoaded ? locationState.locations : <Map<String, dynamic>>[];
+          final locations = locationState is LocationLoaded
+              ? locationState.locations
+              : <Map<String, dynamic>>[];
 
           return BlocBuilder<GroundCubit, GroundState>(
             builder: (context, state) {
               return CustomScrollView(
-                physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
                 slivers: [
                   SliverAppBar(
                     automaticallyImplyLeading: false,
@@ -161,7 +171,9 @@ class _GroundsScreenState extends State<GroundsScreen> {
                               Container(
                                 padding: const EdgeInsets.all(AppSizes.xxl),
                                 decoration: BoxDecoration(
-                                  color: AppColors.error.withValues(alpha: 0.08),
+                                  color: AppColors.error.withValues(
+                                    alpha: 0.08,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const HugeIcon(
@@ -187,7 +199,9 @@ class _GroundsScreenState extends State<GroundsScreen> {
                                     vertical: AppSizes.md,
                                   ),
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                                    borderRadius: BorderRadius.circular(
+                                      AppSizes.radiusFull,
+                                    ),
                                   ),
                                 ),
                                 icon: const Icon(Icons.refresh, size: 18),
@@ -208,39 +222,44 @@ class _GroundsScreenState extends State<GroundsScreen> {
                       hasScrollBody: false,
                       child: EmptyGrounds(
                         onAdd: () => _openAddFlow(locations),
-                        title: _selectedLocationId == null ? 'No Grounds Yet' : 'No Grounds Here Yet',
+                        title: _selectedLocationId == null
+                            ? 'No Grounds Yet'
+                            : 'No Grounds Here Yet',
                         message: locations.isEmpty
                             ? 'Add a venue location first, then add grounds to it.'
                             : 'Add a ground (one sport at a time) to start accepting bookings.',
-                        buttonLabel: locations.isEmpty ? 'Add Location' : 'Add Ground',
+                        buttonLabel: locations.isEmpty
+                            ? 'Add Location'
+                            : 'Add Ground',
                       ),
                     )
                   else if (state is GroundLoaded)
                     SliverPadding(
                       padding: const EdgeInsets.all(AppSizes.xl),
                       sliver: SliverList(
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final ground = state.grounds[index] as Map<String, dynamic>;
-                            return _StaggeredGroundCard(
-                              index: index,
-                              child: Padding(
-                                padding: const EdgeInsets.only(bottom: AppSizes.lg),
-                                child: GroundCard(
-                                  ground: ground,
-                                  onEdit: () => _openEditFlow(ground),
-                                  onAvailabilityChanged: (value) =>
-                                      context.read<GroundCubit>().setGroundAvailability(
-                                            ground['id'] as String,
-                                            value,
-                                            locationId: _selectedLocationId,
-                                          ),
-                                ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final ground =
+                              state.grounds[index] as Map<String, dynamic>;
+                          return _StaggeredGroundCard(
+                            index: index,
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                bottom: AppSizes.lg,
                               ),
-                            );
-                          },
-                          childCount: state.grounds.length,
-                        ),
+                              child: GroundCard(
+                                ground: ground,
+                                onEdit: () => _openEditFlow(ground),
+                                onAvailabilityChanged: (value) => context
+                                    .read<GroundCubit>()
+                                    .setGroundAvailability(
+                                      ground['id'] as String,
+                                      value,
+                                      locationId: _selectedLocationId,
+                                    ),
+                              ),
+                            ),
+                          );
+                        }, childCount: state.grounds.length),
                       ),
                     ),
                 ],
@@ -250,9 +269,11 @@ class _GroundsScreenState extends State<GroundsScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'grounds_add_ground',
         onPressed: () => _openAddFlow(
           context.read<LocationCubit>().state is LocationLoaded
-              ? (context.read<LocationCubit>().state as LocationLoaded).locations
+              ? (context.read<LocationCubit>().state as LocationLoaded)
+                    .locations
               : <Map<String, dynamic>>[],
         ),
         backgroundColor: AppColors.primaryDarkGreen,
@@ -269,17 +290,17 @@ class _GroundsScreenState extends State<GroundsScreen> {
     );
   }
 
-  Widget _buildGreenHeader(BuildContext context, List<Map<String, dynamic>> locations) {
+  Widget _buildGreenHeader(
+    BuildContext context,
+    List<Map<String, dynamic>> locations,
+  ) {
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.primaryDarkGreen,
-            Color(0xFF0FA968),
-          ],
+          colors: [AppColors.primaryDarkGreen, Color(0xFF0FA968)],
         ),
       ),
       child: SafeArea(

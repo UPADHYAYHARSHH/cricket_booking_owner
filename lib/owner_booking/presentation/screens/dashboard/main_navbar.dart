@@ -123,6 +123,7 @@ class _ScanFab extends StatelessWidget {
     return Transform.translate(
       offset: const Offset(0, -8),
       child: FloatingActionButton(
+        heroTag: 'main_scan_fab',
         onPressed: onTap,
         backgroundColor: AppColors.primaryDarkGreen,
         elevation: 4,

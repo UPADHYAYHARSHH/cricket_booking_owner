@@ -15,7 +15,8 @@ class EmailVerificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
-      listenWhen: (previous, current) => ModalRoute.of(context)?.isCurrent == true,
+      listenWhen: (previous, current) =>
+          ModalRoute.of(context)?.isCurrent == true,
       listener: (context, state) {
         if (state is AuthSuccess) {
           toastification.show(
@@ -33,7 +34,11 @@ class EmailVerificationScreen extends StatelessWidget {
           );
         }
 
-        if (state is AuthProfileIncomplete) {
+        if (state is AuthLocationRequired ||
+            state is AuthPendingApproval ||
+            state is AuthStep1Required ||
+            state is AuthStep2Required ||
+            state is AuthStep3Required) {
           toastification.show(
             context: context,
             type: ToastificationType.success,
@@ -50,11 +55,7 @@ class EmailVerificationScreen extends StatelessWidget {
         }
 
         if (state is AuthUnauthenticated) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/',
-            (route) => false,
-          );
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         }
 
         if (state is AuthError && !state.message.contains("not verified yet")) {
@@ -71,7 +72,7 @@ class EmailVerificationScreen extends StatelessWidget {
       child: BlocBuilder<AuthCubit, AuthState>(
         builder: (context, state) {
           final isLoading = state is AuthLoading;
-          
+
           String userEmail = "";
           if (state is AuthEmailUnverified) {
             userEmail = state.email;
@@ -116,7 +117,8 @@ class EmailVerificationScreen extends StatelessWidget {
                         const AppSizedBox(height: 12),
 
                         const AppText(
-                          text: "A verification link has been sent to your email address:",
+                          text:
+                              "A verification link has been sent to your email address:",
                           size: 14,
                           color: AppColors.textSecondaryLight,
                           align: TextAlign.center,
@@ -136,7 +138,8 @@ class EmailVerificationScreen extends StatelessWidget {
                         const AppSizedBox(height: 16),
 
                         const AppText(
-                          text: "Please click on the link in your email to complete registration.",
+                          text:
+                              "Please click on the link in your email to complete registration.",
                           size: 13,
                           color: AppColors.textSecondaryLight,
                           align: TextAlign.center,
@@ -154,7 +157,7 @@ class EmailVerificationScreen extends StatelessWidget {
                               BoxShadow(
                                 blurRadius: 10,
                                 color: AppColors.black.withValues(alpha: 0.05),
-                              )
+                              ),
                             ],
                           ),
                           child: Column(
@@ -163,7 +166,9 @@ class EmailVerificationScreen extends StatelessWidget {
                                 title: "I've Verified My Email",
                                 isLoading: isLoading,
                                 onTap: () {
-                                  context.read<AuthCubit>().checkEmailVerification();
+                                  context
+                                      .read<AuthCubit>()
+                                      .checkEmailVerification();
                                 },
                               ),
 
@@ -172,7 +177,10 @@ class EmailVerificationScreen extends StatelessWidget {
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(
                                   minimumSize: const Size(double.infinity, 50),
-                                  side: const BorderSide(color: AppColors.primaryDarkGreen, width: 1.5),
+                                  side: const BorderSide(
+                                    color: AppColors.primaryDarkGreen,
+                                    width: 1.5,
+                                  ),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(10),
                                   ),
@@ -180,14 +188,23 @@ class EmailVerificationScreen extends StatelessWidget {
                                 onPressed: isLoading
                                     ? null
                                     : () async {
-                                        await context.read<AuthCubit>().resendVerificationEmail();
+                                        await context
+                                            .read<AuthCubit>()
+                                            .resendVerificationEmail();
                                         toastification.show(
                                           context: context,
                                           type: ToastificationType.success,
-                                          style: ToastificationStyle.flatColored,
-                                          title: const Text("Resent Verification Email"),
-                                          description: const Text("A new link has been sent."),
-                                          autoCloseDuration: const Duration(seconds: 4),
+                                          style:
+                                              ToastificationStyle.flatColored,
+                                          title: const Text(
+                                            "Resent Verification Email",
+                                          ),
+                                          description: const Text(
+                                            "A new link has been sent.",
+                                          ),
+                                          autoCloseDuration: const Duration(
+                                            seconds: 4,
+                                          ),
                                         );
                                       },
                                 child: const AppText(
@@ -209,10 +226,13 @@ class EmailVerificationScreen extends StatelessWidget {
                               context: context,
                               builder: (dialogContext) => AlertDialog(
                                 title: const Text("Log Out"),
-                                content: const Text("Are you sure you want to log out?"),
+                                content: const Text(
+                                  "Are you sure you want to log out?",
+                                ),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.pop(dialogContext),
+                                    onPressed: () =>
+                                        Navigator.pop(dialogContext),
                                     child: const Text("Cancel"),
                                   ),
                                   TextButton(

@@ -44,10 +44,12 @@ class _Step2BasicInfoState extends State<Step2BasicInfo> {
     if (!_initialized) return;
     if (!_formKey.currentState!.validate()) return;
     final cubit = context.read<GroundFormCubit>();
-    cubit.updateData(cubit.data.copyWith(
-      name: nameCtrl.text.trim(),
-      description: descCtrl.text.trim(),
-    ));
+    cubit.updateData(
+      cubit.data.copyWith(
+        name: nameCtrl.text.trim(),
+        description: descCtrl.text.trim(),
+      ),
+    );
     cubit.goToStep(3);
   }
 
@@ -72,13 +74,17 @@ class _Step2BasicInfoState extends State<Step2BasicInfo> {
                     nameCtrl,
                     hint: 'e.g. Champions Box Cricket Arena',
                     maxLines: 1,
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Ground name is required' : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? 'Ground name is required'
+                        : null,
                   ),
                   const SizedBox(height: AppSizes.sm),
                   _helperText('This is shown to players on the booking app'),
                   const SizedBox(height: AppSizes.xxl),
-                  _labelWithIcon('DESCRIPTION / ABOUT THIS GROUND', Icons.description_outlined),
+                  _labelWithIcon(
+                    'DESCRIPTION / ABOUT THIS GROUND',
+                    Icons.description_outlined,
+                  ),
                   const SizedBox(height: AppSizes.sm),
                   _field(
                     descCtrl,
@@ -87,21 +93,29 @@ class _Step2BasicInfoState extends State<Step2BasicInfo> {
                     maxLines: 5,
                   ),
                   const SizedBox(height: AppSizes.xs),
-                  Row(
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _helperText('A good description increases bookings by up to 40%'),
-                      const Spacer(),
-                      ValueListenableBuilder<TextEditingValue>(
-                        valueListenable: _descCtrl!,
-                        builder: (_, value, _) {
-                          return Text(
-                            '${value.text.length}/500',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textSecondaryLight.withValues(alpha: 0.6),
-                            ),
-                          );
-                        },
+                      _helperText(
+                        'A good description increases bookings by up to 40%',
+                      ),
+                      const SizedBox(height: AppSizes.xs),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: ValueListenableBuilder<TextEditingValue>(
+                          valueListenable: _descCtrl!,
+                          builder: (_, value, _) {
+                            return Text(
+                              '${value.text.length}/500',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textSecondaryLight.withValues(
+                                  alpha: 0.6,
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -113,40 +127,43 @@ class _Step2BasicInfoState extends State<Step2BasicInfo> {
   }
 
   Widget _labelWithIcon(String text, IconData icon) => Padding(
-        padding: const EdgeInsets.only(bottom: 0),
-        child: Row(
-          children: [
-            Icon(icon, size: 14, color: AppColors.primaryDarkGreen.withValues(alpha: 0.7)),
-            const SizedBox(width: AppSizes.xs),
-            AppText(
-              text: text,
-              size: 12,
-              weight: FontWeight.w700,
-              color: AppColors.textSecondaryLight,
-              letterSpacing: 0.4,
-            ),
-          ],
+    padding: const EdgeInsets.only(bottom: 0),
+    child: Row(
+      children: [
+        Icon(
+          icon,
+          size: 14,
+          color: AppColors.primaryDarkGreen.withValues(alpha: 0.7),
         ),
-      );
+        const SizedBox(width: AppSizes.xs),
+        AppText(
+          text: text,
+          size: 12,
+          weight: FontWeight.w700,
+          color: AppColors.textSecondaryLight,
+          letterSpacing: 0.4,
+        ),
+      ],
+    ),
+  );
 
   Widget _helperText(String text) => Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.info_outline,
-            size: 12,
-            color: AppColors.primaryDarkGreen.withValues(alpha: 0.5),
-          ),
-          const SizedBox(width: AppSizes.xs),
-          Expanded(
-            child: AppText(
-              text: text,
-              size: 11,
-              color: AppColors.textSecondaryLight.withValues(alpha: 0.7),
-            ),
-          ),
-        ],
-      );
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Icon(
+        Icons.info_outline,
+        size: 12,
+        color: AppColors.primaryDarkGreen.withValues(alpha: 0.5),
+      ),
+      const SizedBox(width: AppSizes.xs),
+      AppText(
+        text: text,
+        size: 11,
+        color: AppColors.textSecondaryLight.withValues(alpha: 0.7),
+      ),
+    ],
+  );
 
   Widget _field(
     TextEditingController ctrl, {
@@ -183,9 +200,7 @@ class _Step2BasicInfoState extends State<Step2BasicInfo> {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: BorderSide(
-            color: AppColors.borderLight,
-          ),
+          borderSide: BorderSide(color: AppColors.borderLight),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
@@ -196,17 +211,11 @@ class _Step2BasicInfoState extends State<Step2BasicInfo> {
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(
-            color: AppColors.error,
-            width: 1.5,
-          ),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-          borderSide: const BorderSide(
-            color: AppColors.error,
-            width: 2,
-          ),
+          borderSide: const BorderSide(color: AppColors.error, width: 2),
         ),
       ),
     );

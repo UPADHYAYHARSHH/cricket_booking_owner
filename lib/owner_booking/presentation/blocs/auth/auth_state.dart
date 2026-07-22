@@ -18,12 +18,18 @@ class AuthOtpRequired extends AuthState {
   AuthOtpRequired(this.phone);
 }
 
-class AuthDocumentsRequired extends AuthState {}
+/// Step 1 of onboarding: Personal info incomplete (name, phone, city)
+class AuthStep1Required extends AuthState {}
 
-class AuthProfileIncomplete extends AuthState {
-  final int step;
-  AuthProfileIncomplete(this.step);
-}
+/// Step 2 of onboarding: KYC documents incomplete (PAN, Aadhar, bank details)
+class AuthStep2Required extends AuthState {}
+
+/// Step 3 of onboarding: Venue details incomplete (venue name, address)
+class AuthStep3Required extends AuthState {}
+
+class AuthLocationRequired extends AuthState {}
+
+class AuthPendingApproval extends AuthState {}
 
 class AuthEmailUnverified extends AuthState {
   final String email;
