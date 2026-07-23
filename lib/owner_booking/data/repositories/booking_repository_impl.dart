@@ -78,6 +78,35 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
+  Future<void> sendCheckInNotification({
+    required String userId,
+    required String bookingId,
+    required String groundName,
+    required String checkInTime,
+    required String checkInDate,
+  }) async {
+    try {
+      // Insert notification into the notifications table
+      await _supabase.from('notifications').insert({
+        'user_id': userId,
+        'title': 'Check-In Confirmed',
+        'message': 'Your booking at $groundName has been checked in at $checkInTime on $checkInDate.',
+        'type': 'booking_checked_in',
+        'data': {
+          'booking_id': bookingId,
+          'ground_name': groundName,
+          'check_in_time': checkInTime,
+          'check_in_date': checkInDate,
+        },
+        'is_read': false,
+      });
+    } catch (e) {
+      // Don't fail check-in if notification fails
+      print('Failed to send check-in notification: $e');
+    }
+  }
+
+  @override
   Future<List<Map<String, dynamic>>> getOwnerBookingsWithDetails(
       String ownerId) async {
     // Scoped the same way as getOwnerGrounds: only count bookings whose

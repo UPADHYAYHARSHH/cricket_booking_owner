@@ -336,6 +336,12 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
+      // Rejected by admin
+      if (d?['status'] == 'rejected') {
+        emit(AuthRejected(d?['rejection_reason'] as String? ?? ''));
+        return;
+      }
+
       // Step 1: personal info — need name, phone, and city
       final name = _asTrimmedString(d?['owner_name']);
       final phone = _asTrimmedString(d?['phone']);

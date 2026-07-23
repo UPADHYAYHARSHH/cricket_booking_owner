@@ -423,8 +423,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ),
                         _SettingsItem(
                           icon: Icons.notifications_outlined,
-                          title: "Notification Preferences",
-                          onTap: _showComingSoon,
+                          title: "Notifications",
+                          onTap: () => Navigator.pushNamed(context, '/notifications'),
                         ),
                         _SettingsItem(
                           icon: Icons.card_membership_outlined,

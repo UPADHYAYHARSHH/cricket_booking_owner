@@ -3,10 +3,12 @@ import 'package:toastification/toastification.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/firebase_options.dart';
 import 'package:turfpro_owner/common/services/app_config_service.dart';
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
+import 'package:turfpro_owner/common/services/notification_service.dart';
 import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart' as di;
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cubit.dart';
@@ -28,12 +30,24 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/main_
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/splash_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_form_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/pending_approval_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/notification_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/notification/notification_cubit.dart';
+
+// Background message handler
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  debugPrint('Owner App - Background message: ${message.messageId}');
+}
 
 //"Read MEMORY.md and continue working"
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Set background message handler
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
   await Supabase.initialize(
     url: const String.fromEnvironment(
@@ -50,6 +64,9 @@ void main() async {
   await di.init();
   await AppConfigService.instance.load();
   await SharedPrefsService.instance.init();
+
+  // Initialize notification service
+  await NotificationService.initialize();
 
   runApp(const MyApp());
 }
@@ -93,6 +110,10 @@ class MyApp extends StatelessWidget {
             '/dashboard': (context) => const MainNavbar(),
             '/add-location': (context) => const LocationFormScreen(),
             '/pending-approval': (context) => const PendingApprovalScreen(),
+            '/notifications': (context) => BlocProvider(
+              create: (_) => di.getIt<NotificationCubit>(),
+              child: const NotificationScreen(),
+            ),
           },
         ),
       ),

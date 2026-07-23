@@ -13,6 +13,15 @@ abstract class BookingRepository {
   /// Marks a booking as checked-in/approved at the venue.
   Future<void> checkInBooking(String bookingId);
 
+  /// Sends a check-in notification to the user after successful scan.
+  Future<void> sendCheckInNotification({
+    required String userId,
+    required String bookingId,
+    required String groundName,
+    required String checkInTime,
+    required String checkInDate,
+  });
+
   /// Fetches all of an owner's bookings, each joined with its ground's
   /// name, sport category and location id — used to build the revenue report.
   Future<List<Map<String, dynamic>>> getOwnerBookingsWithDetails(String ownerId);

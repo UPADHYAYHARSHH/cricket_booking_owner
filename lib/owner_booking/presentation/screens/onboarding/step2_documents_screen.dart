@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,6 +33,10 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
 
   File? _panFile;
   File? _aadharFile;
+  Uint8List? _panBytes;
+  Uint8List? _aadharBytes;
+  String? _panFileName;
+  String? _aadharFileName;
   bool _isUploading = false;
 
   @override
@@ -63,11 +68,16 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
                   imageQuality: 70,
                 );
                 if (img != null) {
+                  final bytes = await img.readAsBytes();
                   setState(() {
                     if (isPan) {
                       _panFile = File(img.path);
+                      _panBytes = bytes;
+                      _panFileName = img.name;
                     } else {
                       _aadharFile = File(img.path);
+                      _aadharBytes = bytes;
+                      _aadharFileName = img.name;
                     }
                   });
                 }
@@ -83,11 +93,16 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
                   imageQuality: 70,
                 );
                 if (img != null) {
+                  final bytes = await img.readAsBytes();
                   setState(() {
                     if (isPan) {
                       _panFile = File(img.path);
+                      _panBytes = bytes;
+                      _panFileName = img.name;
                     } else {
                       _aadharFile = File(img.path);
+                      _aadharBytes = bytes;
+                      _aadharFileName = img.name;
                     }
                   });
                 }
@@ -104,11 +119,16 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
                 );
                 if (result != null && result.files.single.path != null) {
                   final f = File(result.files.single.path!);
+                  final bytes = await f.readAsBytes();
                   setState(() {
                     if (isPan) {
                       _panFile = f;
+                      _panBytes = bytes;
+                      _panFileName = result.files.single.name;
                     } else {
                       _aadharFile = f;
+                      _aadharBytes = bytes;
+                      _aadharFileName = result.files.single.name;
                     }
                   });
                 }
@@ -127,6 +147,19 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
     return name.substring(dot + 1).toLowerCase();
   }
 
+  String _fileExtensionFromName(String? name, File? file) {
+    if (name != null) {
+      final dot = name.lastIndexOf('.');
+      if (dot > 0 && dot < name.length - 1) {
+        return name.substring(dot + 1).toLowerCase();
+      }
+    }
+    if (file != null) {
+      return _fileExtension(file);
+    }
+    return 'jpg';
+  }
+
   String _contentTypeFor(String ext) {
     switch (ext) {
       case 'png':
@@ -142,32 +175,44 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
     }
   }
 
-  Future<String> _uploadFile(File file, String docType) async {
+  Future<String> _uploadFile(File? file, Uint8List? bytes, String? fileName, String docType) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       throw Exception('Not authenticated. Please log in again.');
     }
-    if (!await file.exists()) {
-      throw Exception(
-        'Selected $docType file was not found. Please pick it again.',
-      );
+
+    Uint8List fileBytes;
+    String ext;
+
+    if (kIsWeb && bytes != null) {
+      fileBytes = bytes;
+      ext = _fileExtensionFromName(fileName, null);
+    } else if (file != null) {
+      if (!await file.exists()) {
+        throw Exception(
+          'Selected $docType file was not found. Please pick it again.',
+        );
+      }
+      fileBytes = await file.readAsBytes();
+      ext = _fileExtension(file);
+    } else {
+      throw Exception('No file selected for $docType.');
     }
 
-    final ext = _fileExtension(file);
-    final fileName =
-        '$uid/kyc/${docType}_${DateTime.now().millisecondsSinceEpoch}.$ext';
-    final bytes = await file.readAsBytes();
-    if (bytes.isEmpty) {
+    if (fileBytes.isEmpty) {
       throw Exception('$docType file is empty. Please pick another file.');
     }
+
+    final uploadFileName =
+        '$uid/kyc/${docType}_${DateTime.now().millisecondsSinceEpoch}.$ext';
 
     final supabase = Supabase.instance.client;
     try {
       await supabase.storage
           .from('venue_media')
           .uploadBinary(
-            fileName,
-            bytes,
+            uploadFileName,
+            fileBytes,
             fileOptions: FileOptions(
               upsert: true,
               contentType: _contentTypeFor(ext),
@@ -182,12 +227,12 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
       throw Exception('Could not upload $docType: $e');
     }
 
-    return supabase.storage.from('venue_media').getPublicUrl(fileName);
+    return supabase.storage.from('venue_media').getPublicUrl(uploadFileName);
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_panFile == null || _aadharFile == null) {
+    if (_panFile == null && _panBytes == null || _aadharFile == null && _aadharBytes == null) {
       toastification.show(
         context: context,
         type: ToastificationType.error,
@@ -200,8 +245,8 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
 
     setState(() => _isUploading = true);
     try {
-      final panUrl = await _uploadFile(_panFile!, 'pan');
-      final aadharUrl = await _uploadFile(_aadharFile!, 'aadhar');
+      final panUrl = await _uploadFile(_panFile, _panBytes, _panFileName, 'pan');
+      final aadharUrl = await _uploadFile(_aadharFile, _aadharBytes, _aadharFileName, 'aadhar');
 
       if (mounted) {
         await context.read<AuthCubit>().saveStep2(
@@ -324,6 +369,8 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
                         child: _buildDocCard(
                           'PAN Card',
                           _panFile,
+                          _panBytes,
+                          _panFileName,
                           () => _pickFile(true),
                         ),
                       ),
@@ -332,6 +379,8 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
                         child: _buildDocCard(
                           'Aadhar Card',
                           _aadharFile,
+                          _aadharBytes,
+                          _aadharFileName,
                           () => _pickFile(false),
                         ),
                       ),
@@ -415,8 +464,10 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
     );
   }
 
-  Widget _buildDocCard(String label, File? file, VoidCallback onTap) {
-    final isPdf = file?.path.toLowerCase().endsWith('.pdf') ?? false;
+  Widget _buildDocCard(String label, File? file, Uint8List? bytes, String? fileName, VoidCallback onTap) {
+    final hasFile = file != null || bytes != null;
+    final isPdf = (fileName?.toLowerCase().endsWith('.pdf') ?? false) ||
+        (file?.path.toLowerCase().endsWith('.pdf') ?? false);
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -426,13 +477,13 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
           color: AppColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: file != null
+            color: hasFile
                 ? AppColors.primaryDarkGreen
                 : AppColors.borderLight,
             width: 2,
           ),
         ),
-        child: file != null
+        child: hasFile
             ? (isPdf
                   ? const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -453,11 +504,17 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
                     )
                   : ClipRRect(
                       borderRadius: BorderRadius.circular(10),
-                      child: Image.file(
-                        file,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                      ),
+                      child: kIsWeb && bytes != null
+                          ? Image.memory(
+                              bytes,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            )
+                          : Image.file(
+                              file!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                            ),
                     ))
             : Column(
                 mainAxisAlignment: MainAxisAlignment.center,

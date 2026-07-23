@@ -31,6 +31,11 @@ class AuthLocationRequired extends AuthState {}
 
 class AuthPendingApproval extends AuthState {}
 
+class AuthRejected extends AuthState {
+  final String reason;
+  AuthRejected(this.reason);
+}
+
 class AuthEmailUnverified extends AuthState {
   final String email;
   AuthEmailUnverified(this.email);

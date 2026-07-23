@@ -13,6 +13,8 @@ class DashboardHeader extends StatefulWidget {
   final List<Map<String, dynamic>> locations;
   final String? selectedLocationId;
   final ValueChanged<String?> onLocationSelected;
+  final int unreadCount;
+  final VoidCallback? onNotificationTap;
 
   const DashboardHeader({
     super.key,
@@ -22,6 +24,8 @@ class DashboardHeader extends StatefulWidget {
     required this.locations,
     required this.selectedLocationId,
     required this.onLocationSelected,
+    this.unreadCount = 0,
+    this.onNotificationTap,
   });
 
   @override
@@ -105,11 +109,39 @@ class _DashboardHeaderState extends State<DashboardHeader>
                 ),
                 Row(
                   children: [
-                    _buildGlassCircle(
-                      const HugeIcon(
-                        icon: HugeIcons.strokeRoundedNotification03,
-                        color: AppColors.white,
-                        size: 20.0,
+                    GestureDetector(
+                      onTap: widget.onNotificationTap,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          _buildGlassCircle(
+                            const HugeIcon(
+                              icon: HugeIcons.strokeRoundedNotification03,
+                              color: AppColors.white,
+                              size: 20.0,
+                            ),
+                          ),
+                          if (widget.unreadCount > 0)
+                            Positioned(
+                              right: -2,
+                              top: -2,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Text(
+                                  widget.unreadCount > 9 ? '9+' : '${widget.unreadCount}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     const SizedBox(width: 12),
