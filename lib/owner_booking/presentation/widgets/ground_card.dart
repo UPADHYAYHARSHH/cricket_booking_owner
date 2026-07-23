@@ -81,7 +81,7 @@ class GroundCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Category Badge - Glass effect
+                  // Category Badge - Glass effect (show sport image if available)
                   if (category.isNotEmpty)
                     Positioned(
                       top: AppSizes.lg,

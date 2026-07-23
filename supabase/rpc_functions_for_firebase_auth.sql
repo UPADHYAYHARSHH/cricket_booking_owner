@@ -8,6 +8,21 @@
 -- Run this in a NEW query in your Supabase SQL Editor:
 -- ============================================================
 
+-- Ensure `grounds` has columns for operating days and slot duration
+ALTER TABLE public.grounds
+    ADD COLUMN IF NOT EXISTS operating_days TEXT[] DEFAULT ARRAY['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+ALTER TABLE public.grounds
+    ADD COLUMN IF NOT EXISTS slot_duration TEXT DEFAULT '1 Hour';
+
+-- Ensure existing integer slot_duration columns are converted to TEXT so
+-- we can store human-friendly strings like '1 Hour' or '30 Minutes'.
+ALTER TABLE public.grounds
+    ALTER COLUMN slot_duration TYPE TEXT USING slot_duration::text;
+ALTER TABLE public.grounds
+    ALTER COLUMN slot_duration SET DEFAULT '1 Hour';
+
+
 -- 1. Favorites: Add
 CREATE OR REPLACE FUNCTION public.add_favorite(
     p_user_id TEXT,
@@ -275,7 +290,9 @@ CREATE OR REPLACE FUNCTION public.register_ground(
     p_price_per_hour INT,
     p_weekend_price INT,
     p_opening_time TEXT,
-    p_closing_time TEXT
+    p_closing_time TEXT,
+    p_operating_days TEXT[] DEFAULT ARRAY['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    p_slot_duration TEXT DEFAULT '1 Hour'
 )
 RETURNS JSON
 LANGUAGE plpgsql
@@ -287,18 +304,20 @@ BEGIN
     INSERT INTO public.grounds (
         owner_id, location_id, name, category, description,
         price_per_hour, weekend_price, opening_time, closing_time
+        , operating_days, slot_duration
     )
     VALUES (
         p_owner_id, p_location_id::uuid, p_name, p_category, p_description,
         p_price_per_hour, p_weekend_price, p_opening_time::time, p_closing_time::time
+        , p_operating_days, p_slot_duration
     )
     RETURNING to_json(grounds.*) INTO result;
     RETURN result;
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT) TO anon;
-GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT) TO authenticated;
 
 -- ============================================================
 -- 9. Ground Images: Insert images (bypasses RLS for Firebase Auth)
@@ -352,7 +371,10 @@ CREATE OR REPLACE FUNCTION public.update_ground(
     p_price_per_hour INT,
     p_weekend_price INT,
     p_opening_time TEXT,
-    p_closing_time TEXT
+    p_closing_time TEXT,
+    p_operating_days TEXT[] DEFAULT ARRAY['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    p_slot_duration TEXT DEFAULT '1 Hour',
+    p_is_available BOOLEAN DEFAULT TRUE
 )
 RETURNS void
 LANGUAGE plpgsql
@@ -366,13 +388,16 @@ BEGIN
         price_per_hour = p_price_per_hour,
         weekend_price = p_weekend_price,
         opening_time = p_opening_time::time,
-        closing_time = p_closing_time::time
+        closing_time = p_closing_time::time,
+        operating_days = p_operating_days,
+        slot_duration = p_slot_duration,
+        is_available = p_is_available
     WHERE id = p_ground_id::uuid;
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT) TO anon;
-GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, BOOLEAN) TO anon;
+GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, BOOLEAN) TO authenticated;
 
 -- ============================================================
 -- 12. Slots: Generate slots for a ground (bypasses RLS for Firebase Auth)
@@ -382,7 +407,9 @@ CREATE OR REPLACE FUNCTION public.generate_ground_slots(
     p_opening_time TEXT,
     p_closing_time TEXT,
     p_weekday_price INT,
-    p_weekend_price INT
+    p_weekend_price INT,
+    p_slot_duration TEXT DEFAULT '1 Hour',
+    p_operating_days TEXT[] DEFAULT ARRAY['Mon','Tue','Wed','Thu','Fri','Sat','Sun']
 )
 RETURNS void
 LANGUAGE plpgsql
@@ -395,37 +422,110 @@ DECLARE
     v_date_str TEXT;
     v_is_weekend BOOLEAN;
     v_slot_price INT;
-    v_hour INT;
+    v_slot_minutes INT;
+    v_curr_time TIME;
+    v_end_time TIME;
+    v_date_day TEXT;
+    v_slot_price_per_slot INT;
     v_slots JSON[];
     v_slot JSON;
+    v_allowed_dows INT[] := ARRAY[]::INT[];
+    v_in_day TEXT;
 BEGIN
-    v_open_hour := CAST(split_part(p_opening_time, ':', 1) AS INT);
-    v_close_hour := CAST(split_part(p_closing_time, ':', 1) AS INT);
+    -- parse slot duration (supports formats like '1 Hour', '90 Minutes', '1.5 Hour')
+    BEGIN
+        v_slot_minutes := NULL;
+        IF p_slot_duration IS NULL THEN
+            v_slot_minutes := 60;
+        ELSE
+            -- extract numeric part
+            v_slot_minutes := CAST(
+                CASE WHEN p_slot_duration ILIKE '%hour%' THEN
+                    (CAST(regexp_replace(p_slot_duration, '[^0-9\.]', '', 'g') AS NUMERIC) * 60)
+                ELSE
+                    CAST(regexp_replace(p_slot_duration, '[^0-9\.]', '', 'g') AS NUMERIC)
+                END
+            AS INT);
+        END IF;
+    EXCEPTION WHEN others THEN
+        v_slot_minutes := 60;
+    END;
 
-    IF v_open_hour IS NULL OR v_close_hour IS NULL OR v_open_hour >= v_close_hour THEN
+    -- validate times
+    IF p_opening_time IS NULL OR p_closing_time IS NULL THEN
         RETURN;
+    END IF;
+
+    -- normalize operating days into DOW integers (0=Sunday..6=Saturday)
+    IF p_operating_days IS NULL THEN
+        -- no param provided: default to all days
+        v_allowed_dows := ARRAY[0,1,2,3,4,5,6];
+    ELSE
+        -- if an empty array was provided, treat as no operating days -> nothing to generate
+        IF array_length(p_operating_days, 1) = 0 THEN
+            RETURN;
+        END IF;
+        FOR v_in_day IN SELECT unnest(p_operating_days) LOOP
+            CASE lower(trim(v_in_day))
+                WHEN 'sun' THEN v_allowed_dows := v_allowed_dows || 0;
+                WHEN 'sunday' THEN v_allowed_dows := v_allowed_dows || 0;
+                WHEN 'mon' THEN v_allowed_dows := v_allowed_dows || 1;
+                WHEN 'monday' THEN v_allowed_dows := v_allowed_dows || 1;
+                WHEN 'tue' THEN v_allowed_dows := v_allowed_dows || 2;
+                WHEN 'tues' THEN v_allowed_dows := v_allowed_dows || 2;
+                WHEN 'tuesday' THEN v_allowed_dows := v_allowed_dows || 2;
+                WHEN 'wed' THEN v_allowed_dows := v_allowed_dows || 3;
+                WHEN 'wednesday' THEN v_allowed_dows := v_allowed_dows || 3;
+                WHEN 'thu' THEN v_allowed_dows := v_allowed_dows || 4;
+                WHEN 'thur' THEN v_allowed_dows := v_allowed_dows || 4;
+                WHEN 'thursday' THEN v_allowed_dows := v_allowed_dows || 4;
+                WHEN 'fri' THEN v_allowed_dows := v_allowed_dows || 5;
+                WHEN 'friday' THEN v_allowed_dows := v_allowed_dows || 5;
+                WHEN 'sat' THEN v_allowed_dows := v_allowed_dows || 6;
+                WHEN 'saturday' THEN v_allowed_dows := v_allowed_dows || 6;
+                ELSE
+                    -- ignore unknown entries
+            END CASE;
+        END LOOP;
     END IF;
 
     FOR i IN 0..13 LOOP
         v_date := CURRENT_DATE + i;
         v_date_str := to_char(v_date, 'YYYY-MM-DD');
+        -- skip if day not in operating days (use numeric DOW comparison)
+        IF array_length(v_allowed_dows,1) IS NOT NULL THEN
+            IF NOT (EXTRACT(DOW FROM v_date)::INT = ANY(v_allowed_dows)) THEN
+                CONTINUE;
+            END IF;
+        END IF;
+
         v_is_weekend := EXTRACT(DOW FROM v_date) IN (0, 6);
         v_slot_price := CASE WHEN v_is_weekend THEN p_weekend_price ELSE p_weekday_price END;
 
-        FOR v_hour IN v_open_hour..(v_close_hour - 1) LOOP
+        v_curr_time := p_opening_time::time;
+        WHILE (v_curr_time + (v_slot_minutes || ' minutes')::interval) <= p_closing_time::time LOOP
+            v_end_time := (v_curr_time + (v_slot_minutes || ' minutes')::interval);
+            v_slot_price_per_slot := CAST(ceil((v_slot_price::numeric * v_slot_minutes::numeric) / 60.0) AS INT);
+
             INSERT INTO public.slots (ground_id, date, start_time, end_time, price, status)
             VALUES (
                 p_ground_id::uuid,
                 v_date::date,
-                LPAD(v_hour::TEXT, 2, '0') || ':00',
-                LPAD((v_hour + 1)::TEXT, 2, '0') || ':00',
-                v_slot_price,
+                v_curr_time,
+                v_end_time,
+                v_slot_price_per_slot,
                 'available'
-            );
+            )
+            ON CONFLICT (ground_id, date, start_time) DO UPDATE
+            SET end_time = EXCLUDED.end_time,
+                price = EXCLUDED.price,
+                status = EXCLUDED.status;
+
+            v_curr_time := v_end_time;
         END LOOP;
     END LOOP;
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.generate_ground_slots(TEXT, TEXT, TEXT, INT, INT) TO anon;
-GRANT EXECUTE ON FUNCTION public.generate_ground_slots(TEXT, TEXT, TEXT, INT, INT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.generate_ground_slots(TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT[]) TO anon;
+GRANT EXECUTE ON FUNCTION public.generate_ground_slots(TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT[]) TO authenticated;

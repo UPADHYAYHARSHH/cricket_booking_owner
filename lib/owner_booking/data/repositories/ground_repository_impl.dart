@@ -17,7 +17,8 @@ class GroundRepositoryImpl implements GroundRepository {
     return (response as List).map<Map<String, dynamic>>((e) {
       return {
         ...e as Map<String, dynamic>,
-        'imageUrl': (e['ground_images'] != null &&
+        'imageUrl':
+            (e['ground_images'] != null &&
                 (e['ground_images'] as List).isNotEmpty)
             ? e['ground_images'][0]['image_url']
             : 'https://placehold.co/600x400/0B8457/FFFFFF/png?text=${Uri.encodeComponent(e['name'] ?? 'Ground')}',
@@ -27,7 +28,8 @@ class GroundRepositoryImpl implements GroundRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getGroundsForLocation(
-      String locationId) async {
+    String locationId,
+  ) async {
     final response = await _supabase
         .from('grounds')
         .select('*, ground_images(image_url)')
@@ -37,7 +39,8 @@ class GroundRepositoryImpl implements GroundRepository {
     return (response as List).map<Map<String, dynamic>>((e) {
       return {
         ...e as Map<String, dynamic>,
-        'imageUrl': (e['ground_images'] != null &&
+        'imageUrl':
+            (e['ground_images'] != null &&
                 (e['ground_images'] as List).isNotEmpty)
             ? e['ground_images'][0]['image_url']
             : 'https://placehold.co/600x400/0B8457/FFFFFF/png?text=${Uri.encodeComponent(e['name'] ?? 'Ground')}',
@@ -54,20 +57,27 @@ class GroundRepositoryImpl implements GroundRepository {
     required String description,
     required String openingTime,
     required String closingTime,
+    required List<String> operatingDays,
+    required String slotDuration,
     required List<String> imageUrls,
     Map<String, int>? pricingOverrides,
   }) async {
-    final groundResponse = await _supabase.rpc('register_ground', params: {
-      'p_owner_id': ownerId,
-      'p_location_id': locationId,
-      'p_name': name,
-      'p_category': category,
-      'p_description': description,
-      'p_price_per_hour': pricingOverrides?['weekday'] ?? 600,
-      'p_weekend_price': pricingOverrides?['weekend'] ?? 800,
-      'p_opening_time': openingTime,
-      'p_closing_time': closingTime,
-    });
+    final groundResponse = await _supabase.rpc(
+      'register_ground',
+      params: {
+        'p_owner_id': ownerId,
+        'p_location_id': locationId,
+        'p_name': name,
+        'p_category': category,
+        'p_description': description,
+        'p_price_per_hour': pricingOverrides?['weekday'] ?? 600,
+        'p_weekend_price': pricingOverrides?['weekend'] ?? 800,
+        'p_opening_time': openingTime,
+        'p_closing_time': closingTime,
+        'p_operating_days': operatingDays,
+        'p_slot_duration': slotDuration,
+      },
+    );
 
     final groundId = (groundResponse as Map<String, dynamic>)['id'] as String;
 
@@ -83,35 +93,45 @@ class GroundRepositoryImpl implements GroundRepository {
     required String groundId,
     required Map<String, dynamic> data,
   }) async {
-    await _supabase.rpc('update_ground', params: {
-      'p_ground_id': groundId,
-      'p_name': data['name'] ?? '',
-      'p_category': data['category'] ?? '',
-      'p_description': data['description'] ?? '',
-      'p_price_per_hour': data['price_per_hour'] ?? 600,
-      'p_weekend_price': data['weekend_price'] ?? 800,
-      'p_opening_time': data['opening_time'] ?? '06:00',
-      'p_closing_time': data['closing_time'] ?? '23:00',
-    });
+    await _supabase.rpc(
+      'update_ground',
+      params: {
+        'p_ground_id': groundId,
+        'p_name': data['name'] ?? '',
+        'p_category': data['category'] ?? '',
+        'p_description': data['description'] ?? '',
+        'p_price_per_hour': data['price_per_hour'] ?? 600,
+        'p_weekend_price': data['weekend_price'] ?? 800,
+        'p_opening_time': data['opening_time'] ?? '06:00',
+        'p_closing_time': data['closing_time'] ?? '23:00',
+        'p_operating_days': data['operating_days'] ?? <String>[],
+        'p_slot_duration': data['slot_duration'] ?? '1 Hour',
+        'p_is_available': data['is_available'] ?? true,
+      },
+    );
   }
 
   @override
   Future<void> insertGroundImages(
-      String groundId, List<String> imageUrls) async {
+    String groundId,
+    List<String> imageUrls,
+  ) async {
     if (imageUrls.isEmpty) return;
-    await _supabase.rpc('insert_ground_images', params: {
-      'p_ground_id': groundId,
-      'p_image_urls': imageUrls,
-    });
+    await _supabase.rpc(
+      'insert_ground_images',
+      params: {'p_ground_id': groundId, 'p_image_urls': imageUrls},
+    );
   }
 
   @override
   Future<void> replaceGroundImages(
-      String groundId, List<String> imageUrls) async {
-    await _supabase.rpc('replace_ground_images', params: {
-      'p_ground_id': groundId,
-      'p_image_urls': imageUrls,
-    });
+    String groundId,
+    List<String> imageUrls,
+  ) async {
+    await _supabase.rpc(
+      'replace_ground_images',
+      params: {'p_ground_id': groundId, 'p_image_urls': imageUrls},
+    );
   }
 
   @override
@@ -120,14 +140,21 @@ class GroundRepositoryImpl implements GroundRepository {
     String openingTime,
     String closingTime,
     Map<String, int> pricing,
+    List<String> operatingDays,
+    String slotDuration,
   ) async {
-    await _supabase.rpc('generate_ground_slots', params: {
-      'p_ground_id': groundId,
-      'p_opening_time': openingTime,
-      'p_closing_time': closingTime,
-      'p_weekday_price': pricing['weekday'] ?? 600,
-      'p_weekend_price': pricing['weekend'] ?? 800,
-    });
+    await _supabase.rpc(
+      'generate_ground_slots',
+      params: {
+        'p_ground_id': groundId,
+        'p_opening_time': openingTime,
+        'p_closing_time': closingTime,
+        'p_weekday_price': pricing['weekday'] ?? 600,
+        'p_weekend_price': pricing['weekend'] ?? 800,
+        'p_slot_duration': slotDuration,
+        'p_operating_days': operatingDays,
+      },
+    );
   }
 
   @override
@@ -147,6 +174,31 @@ class GroundRepositoryImpl implements GroundRepository {
         .eq('status', 'available')
         .gte('date', todayStr);
 
-    await generateSlots(groundId, openingTime, closingTime, pricing);
+    // fetch slot duration and operating days from ground row so regeneration
+    // uses the same configuration the ground currently has
+    final groundResp = await _supabase
+        .from('grounds')
+        .select('slot_duration, operating_days')
+        .eq('id', groundId)
+        .maybeSingle();
+
+    final slotDuration =
+        (groundResp != null && groundResp['slot_duration'] != null)
+        ? groundResp['slot_duration'] as String
+        : '1 Hour';
+
+    final operatingDays =
+        (groundResp != null && groundResp['operating_days'] != null)
+        ? List<String>.from(groundResp['operating_days'] as List)
+        : <String>['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    await generateSlots(
+      groundId,
+      openingTime,
+      closingTime,
+      pricing,
+      operatingDays,
+      slotDuration,
+    );
   }
 }

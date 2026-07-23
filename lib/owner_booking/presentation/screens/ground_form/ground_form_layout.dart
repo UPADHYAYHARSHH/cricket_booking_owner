@@ -4,7 +4,7 @@ import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 
-const int kGroundFormTotalSteps = 6;
+const int kGroundFormTotalSteps = 5;
 
 class GroundFormLayout extends StatelessWidget {
   final bool isEdit;
@@ -70,10 +70,7 @@ class GroundFormLayout extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            AppColors.primaryDarkGreen,
-            Color(0xFF066B3E),
-          ],
+          colors: [AppColors.primaryDarkGreen, Color(0xFF066B3E)],
         ),
       ),
       child: Column(
@@ -121,13 +118,12 @@ class GroundFormLayout extends StatelessWidget {
                   decoration: BoxDecoration(
                     gradient: isCompleted
                         ? const LinearGradient(
-                            colors: [
-                              AppColors.white,
-                              Color(0xFFB9F6CA),
-                            ],
+                            colors: [AppColors.white, Color(0xFFB9F6CA)],
                           )
                         : null,
-                    color: isCompleted ? null : AppColors.white.withValues(alpha: 0.25),
+                    color: isCompleted
+                        ? null
+                        : AppColors.white.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                   ),
                 ),
@@ -172,10 +168,7 @@ class GroundFormLayout extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(AppSizes.radiusRound),
                   color: AppColors.white,
-                  border: Border.all(
-                    color: AppColors.borderLight,
-                    width: 1.5,
-                  ),
+                  border: Border.all(color: AppColors.borderLight, width: 1.5),
                 ),
                 alignment: Alignment.center,
                 child: Row(
@@ -203,7 +196,8 @@ class GroundFormLayout extends StatelessWidget {
         Expanded(
           flex: 3,
           child: AppButton(
-            title: nextLabel ??
+            title:
+                nextLabel ??
                 (currentStep == kGroundFormTotalSteps
                     ? (isEdit ? 'Save Changes' : 'Add Ground')
                     : 'Next'),

@@ -12,7 +12,6 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ste
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step4_schedule.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step5_pricing.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step7_review.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step_photos.dart';
 
 /// Entry point for the add / edit ground flow. A ground always belongs to a
 /// [locationId]. Pass [groundData] (the full Supabase row including
@@ -74,11 +73,15 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
           }
 
           if (state is GroundFormSaved) {
-            context.read<GroundCubit>().fetchGroundsForLocation(widget.locationId);
+            context.read<GroundCubit>().fetchGroundsForLocation(
+              widget.locationId,
+            );
             toastification.show(
               context: context,
               type: ToastificationType.success,
-              title: Text(_isEdit ? 'Ground updated!' : 'Ground added successfully!'),
+              title: Text(
+                _isEdit ? 'Ground updated!' : 'Ground added successfully!',
+              ),
               description: _isEdit
                   ? null
                   : const Text('It will be reviewed within 24–48 hours.'),
@@ -104,7 +107,9 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
                 return const Scaffold(
                   backgroundColor: AppColors.bgLight,
                   body: Center(
-                    child: CircularProgressIndicator(color: AppColors.primaryDarkGreen),
+                    child: CircularProgressIndicator(
+                      color: AppColors.primaryDarkGreen,
+                    ),
                   ),
                 );
               }
@@ -119,7 +124,6 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
                     Step2BasicInfo(isEdit: _isEdit),
                     Step4Schedule(isEdit: _isEdit),
                     Step5Pricing(isEdit: _isEdit),
-                    StepPhotos(isEdit: _isEdit),
                     Step7Review(isEdit: _isEdit),
                   ],
                 ),

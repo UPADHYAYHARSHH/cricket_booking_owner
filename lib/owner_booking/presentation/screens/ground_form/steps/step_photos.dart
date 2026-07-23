@@ -76,7 +76,7 @@ class _StepPhotosState extends State<StepPhotos> {
   void _onNext() {
     final cubit = context.read<GroundFormCubit>();
     cubit.updateData(cubit.data.copyWith(imageUrls: _imageUrls));
-    cubit.goToStep(6);
+    cubit.goToStep(5);
   }
 
   @override
@@ -100,10 +100,8 @@ class _StepPhotosState extends State<StepPhotos> {
             runSpacing: AppSizes.md,
             children: [
               ..._imageUrls.map(
-                (url) => _ImageTile(
-                  url: url,
-                  onRemove: () => _removeImage(url),
-                ),
+                (url) =>
+                    _ImageTile(url: url, onRemove: () => _removeImage(url)),
               ),
               _AddTile(
                 isUploading: _isUploading,
@@ -122,7 +120,8 @@ class _StepPhotosState extends State<StepPhotos> {
               const SizedBox(width: AppSizes.xs),
               Expanded(
                 child: AppText(
-                  text: 'Optional \u2014 you can also add photos later from the Grounds tab.',
+                  text:
+                      'Optional \u2014 you can also add photos later from the Grounds tab.',
                   size: 12,
                   color: AppColors.textSecondaryLight.withValues(alpha: 0.7),
                 ),
@@ -135,48 +134,46 @@ class _StepPhotosState extends State<StepPhotos> {
   }
 
   Widget _emptyState() => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(
-          vertical: AppSizes.xxl + AppSizes.lg,
-          horizontal: AppSizes.xxl,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.white,
-          borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-          border: Border.all(
-            color: AppColors.borderLight,
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(
+      vertical: AppSizes.xxl + AppSizes.lg,
+      horizontal: AppSizes.xxl,
+    ),
+    decoration: BoxDecoration(
+      color: AppColors.white,
+      borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+      border: Border.all(color: AppColors.borderLight),
+    ),
+    child: Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(AppSizes.lg),
+          decoration: BoxDecoration(
+            color: AppColors.slotAvailableBg,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.add_a_photo_outlined,
+            color: AppColors.primaryDarkGreen,
+            size: AppSizes.iconXl,
           ),
         ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSizes.lg),
-              decoration: BoxDecoration(
-                color: AppColors.slotAvailableBg,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.add_a_photo_outlined,
-                color: AppColors.primaryDarkGreen,
-                size: AppSizes.iconXl,
-              ),
-            ),
-            const SizedBox(height: AppSizes.lg),
-            AppText(
-              text: 'No photos yet',
-              size: 15,
-              weight: FontWeight.w700,
-              color: AppColors.textPrimaryLight,
-            ),
-            const SizedBox(height: AppSizes.xs),
-            AppText(
-              text: 'Tap the button below to add ground photos',
-              size: 12,
-              color: AppColors.textSecondaryLight,
-            ),
-          ],
+        const SizedBox(height: AppSizes.lg),
+        AppText(
+          text: 'No photos yet',
+          size: 15,
+          weight: FontWeight.w700,
+          color: AppColors.textPrimaryLight,
         ),
-      );
+        const SizedBox(height: AppSizes.xs),
+        AppText(
+          text: 'Tap the button below to add ground photos',
+          size: 12,
+          color: AppColors.textSecondaryLight,
+        ),
+      ],
+    ),
+  );
 }
 
 class _ImageTile extends StatelessWidget {
@@ -193,10 +190,7 @@ class _ImageTile extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              border: Border.all(
-                color: AppColors.borderLight,
-                width: 1.5,
-              ),
+              border: Border.all(color: AppColors.borderLight, width: 1.5),
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),

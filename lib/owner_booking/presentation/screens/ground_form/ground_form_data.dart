@@ -30,23 +30,20 @@ class GroundFormData {
   });
 
   factory GroundFormData.empty() => const GroundFormData(
-        groundId: null,
-        locationId: '',
-        name: '',
-        description: '',
-        category: '',
-        openingTime: '06:00',
-        closingTime: '23:00',
-        operatingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        slotDuration: '1 Hour',
-        advanceBookingLimit: '7 days',
-        pricingConfig: {
-          'weekday': 600,
-          'weekend': 800,
-        },
-        imageUrls: [],
-        isVerified: false,
-      );
+    groundId: null,
+    locationId: '',
+    name: '',
+    description: '',
+    category: '',
+    openingTime: '06:00',
+    closingTime: '23:00',
+    operatingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    slotDuration: '1 Hour',
+    advanceBookingLimit: '7 days',
+    pricingConfig: {'weekday': 600, 'weekend': 800},
+    imageUrls: [],
+    isVerified: false,
+  );
 
   factory GroundFormData.fromMap(Map<String, dynamic> map) {
     // Read weekday and weekend prices from DB columns.
@@ -74,8 +71,10 @@ class GroundFormData {
       category: map['category'] as String? ?? '',
       openingTime: map['opening_time'] as String? ?? '06:00',
       closingTime: map['closing_time'] as String? ?? '23:00',
-      operatingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      slotDuration: '1 Hour',
+      operatingDays: (map['operating_days'] is List)
+          ? (map['operating_days'] as List).map((e) => e.toString()).toList()
+          : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      slotDuration: map['slot_duration'] as String? ?? '1 Hour',
       advanceBookingLimit: '7 days',
       pricingConfig: pricingConfig,
       imageUrls: imageUrls,
@@ -94,6 +93,8 @@ class GroundFormData {
       'category': category,
       'opening_time': openingTime,
       'closing_time': closingTime,
+      'operating_days': operatingDays,
+      'slot_duration': slotDuration,
       'price_per_hour': basePrice,
       'weekend_price': pricingConfig['weekend'] ?? 800,
     };
@@ -106,6 +107,8 @@ class GroundFormData {
       'category': category,
       'opening_time': openingTime,
       'closing_time': closingTime,
+      'operating_days': operatingDays,
+      'slot_duration': slotDuration,
       'price_per_hour': basePrice,
       'weekend_price': pricingConfig['weekend'] ?? 800,
     };

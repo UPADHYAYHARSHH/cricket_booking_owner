@@ -117,7 +117,7 @@ class SlotCubit extends Cubit<SlotState> {
       final ground = grounds.firstWhere((g) => g['id'] == groundId);
       final openingTimeStr = ground['opening_time'] ?? '06:00:00';
       final closingTimeStr = ground['closing_time'] ?? '23:00:00';
-      final slotDurationMins = ground['slot_duration'] ?? 60;
+      final slotDurationMins = _parseSlotDuration(ground['slot_duration']);
       final int defaultPrice =
           (ground['price_per_hour'] as num?)?.toInt() ?? 800;
       final int weekendPrice =
@@ -167,6 +167,28 @@ class SlotCubit extends Cubit<SlotState> {
     }
   }
 
+  int _parseSlotDuration(dynamic raw) {
+    try {
+      if (raw == null) return 60;
+      if (raw is int) return raw;
+      if (raw is num) return raw.toInt();
+      if (raw is String) {
+        final s = raw.trim().toLowerCase();
+        final numStr = RegExp(r'[0-9]+(?:\.[0-9]+)?').firstMatch(s)?.group(0);
+        if (numStr == null) return 60;
+        final value = double.tryParse(numStr) ?? 0.0;
+        if (s.contains('hour')) {
+          return (value * 60).round();
+        }
+        // assume minutes if 'min' present or no unit
+        return value.round();
+      }
+    } catch (e) {
+      // fallback
+    }
+    return 60;
+  }
+
   void _rebuildSlots() {
     final dateStartStr = DateTime(
       _selectedDate.year,
@@ -191,7 +213,8 @@ class SlotCubit extends Cubit<SlotState> {
     }).toList();
 
     // Determine price based on weekday/weekend
-    final isWeekend = _selectedDate.weekday == DateTime.saturday ||
+    final isWeekend =
+        _selectedDate.weekday == DateTime.saturday ||
         _selectedDate.weekday == DateTime.sunday;
     final basePrice = isWeekend ? _weekendPrice : _defaultPrice;
 

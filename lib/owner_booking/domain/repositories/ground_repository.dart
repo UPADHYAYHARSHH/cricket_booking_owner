@@ -12,6 +12,8 @@ abstract class GroundRepository {
     required String openingTime,
     required String closingTime,
     required List<String> imageUrls,
+    required List<String> operatingDays,
+    required String slotDuration,
     Map<String, int>? pricingOverrides,
   });
 
@@ -31,6 +33,8 @@ abstract class GroundRepository {
     String openingTime,
     String closingTime,
     Map<String, int> pricing,
+    List<String> operatingDays,
+    String slotDuration,
   );
 
   /// Deletes future *available* slots and regenerates them.

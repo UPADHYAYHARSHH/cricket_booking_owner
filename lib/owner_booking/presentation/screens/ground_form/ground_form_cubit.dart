@@ -24,7 +24,9 @@ class GroundFormCubit extends Cubit<GroundFormState> {
 
   void updateData(GroundFormData newData) {
     _data = newData;
-    final step = state is GroundFormReady ? (state as GroundFormReady).currentStep : 1;
+    final step = state is GroundFormReady
+        ? (state as GroundFormReady).currentStep
+        : 1;
     emit(GroundFormReady(_data, currentStep: step));
   }
 
@@ -48,6 +50,13 @@ class GroundFormCubit extends Cubit<GroundFormState> {
           data: _data.toUpdateMap(),
         );
         await _repo.replaceGroundImages(_data.groundId!, _data.imageUrls);
+        // Regenerate future available slots so operating days / slot duration changes take effect
+        await _repo.regenerateFutureSlots(
+          _data.groundId!,
+          _data.openingTime,
+          _data.closingTime,
+          _data.pricingConfig,
+        );
         emit(GroundFormSaved(isEdit: true));
       } else {
         // Add: insert new ground + generate initial slots.
@@ -59,6 +68,8 @@ class GroundFormCubit extends Cubit<GroundFormState> {
           description: _data.description,
           openingTime: _data.openingTime,
           closingTime: _data.closingTime,
+          operatingDays: _data.operatingDays,
+          slotDuration: _data.slotDuration,
           imageUrls: _data.imageUrls,
           pricingOverrides: _data.pricingConfig,
         );
@@ -69,6 +80,8 @@ class GroundFormCubit extends Cubit<GroundFormState> {
           _data.openingTime,
           _data.closingTime,
           _data.pricingConfig,
+          _data.operatingDays,
+          _data.slotDuration,
         );
 
         emit(GroundFormSaved(isEdit: false));
