@@ -57,15 +57,6 @@ class _DashboardHeaderState extends State<DashboardHeader>
     super.dispose();
   }
 
-  String _getInitials(String name) {
-    if (name.isEmpty) return "O";
-    final parts = name.trim().split(" ");
-    if (parts.length > 1) {
-      return "${parts[0][0]}${parts[1][0]}".toUpperCase();
-    }
-    return parts[0][0].toUpperCase();
-  }
-
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return "Good morning";
@@ -143,15 +134,6 @@ class _DashboardHeaderState extends State<DashboardHeader>
                             ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    _buildGlassCircle(
-                      AppText(
-                        text: _getInitials(widget.ownerName),
-                        color: AppColors.white,
-                        weight: FontWeight.w700,
-                      ),
-                      bordered: true,
                     ),
                   ],
                 ),

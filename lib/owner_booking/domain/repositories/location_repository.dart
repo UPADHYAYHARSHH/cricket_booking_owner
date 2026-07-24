@@ -5,6 +5,7 @@ abstract class LocationRepository {
     required String ownerId,
     required String address,
     required String city,
+    required String description,
     required String googleMapsLink,
     required double latitude,
     required double longitude,

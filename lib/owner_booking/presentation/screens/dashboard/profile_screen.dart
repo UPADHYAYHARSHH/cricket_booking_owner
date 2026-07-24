@@ -10,6 +10,8 @@ import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/bookings_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/locations/locations_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/edit_owner_profile_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -408,8 +410,18 @@ class _ProfileScreenState extends State<ProfileScreen>
                       _buildSettingsSection("Account Settings", [
                         _SettingsItem(
                           icon: Icons.person_outline,
-                          title: "Edit Personal Info",
-                          onTap: _showComingSoon,
+                          title: "Edit Profile",
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EditOwnerProfileScreen(
+                                  ownerDetails: _ownerDetails,
+                                ),
+                              ),
+                            );
+                            if (mounted) _fetchProfileData();
+                          },
                         ),
                         _SettingsItem(
                           icon: Icons.group_outlined,
@@ -449,6 +461,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                             context,
                             MaterialPageRoute(
                               builder: (_) => const BookingsScreen(),
+                            ),
+                          ),
+                        ),
+                        _SettingsItem(
+                          icon: Icons.location_on_outlined,
+                          title: "Manage Locations",
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LocationsScreen(),
                             ),
                           ),
                         ),

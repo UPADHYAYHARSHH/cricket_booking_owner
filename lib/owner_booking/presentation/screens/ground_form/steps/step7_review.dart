@@ -40,7 +40,7 @@ class Step7Review extends StatelessWidget {
               ? 'Confirm your changes before saving'
               : 'Verify details before adding this ground',
           onNext: () => cubit.save(),
-          onBack: () => cubit.goToStep(4),
+          onBack: () => cubit.goToStep(3),
           isLoading: isSaving,
           nextLabel: isEdit ? 'Save Changes' : 'Add Ground',
           child: Column(
@@ -63,31 +63,8 @@ class Step7Review extends StatelessWidget {
               ),
 
               _section(
-                title: 'BASIC INFO',
-                step: 2,
-                context: context,
-                child: Column(
-                  children: [
-                    _row(
-                      Icons.label_outline,
-                      'Name',
-                      data.name.isEmpty ? '\u2014' : data.name,
-                    ),
-                    if (data.description.isNotEmpty)
-                      _row(
-                        Icons.description_outlined,
-                        'Description',
-                        data.description.length > 60
-                            ? '${data.description.substring(0, 57)}\u2026'
-                            : data.description,
-                      ),
-                  ],
-                ),
-              ),
-
-              _section(
                 title: 'SCHEDULE',
-                step: 3,
+                step: 2,
                 context: context,
                 child: Column(
                   children: [
@@ -117,7 +94,7 @@ class Step7Review extends StatelessWidget {
 
               _section(
                 title: 'PRICING',
-                step: 4,
+                step: 3,
                 context: context,
                 child: Column(
                   children: [
@@ -206,12 +183,11 @@ class Step7Review extends StatelessWidget {
   }
 
   bool _isValid(GroundFormData d) =>
-      d.category.isNotEmpty && d.name.isNotEmpty && d.locationId.isNotEmpty;
+      d.category.isNotEmpty && d.locationId.isNotEmpty;
 
   String _validationMessage(GroundFormData d) {
     final issues = <String>[];
     if (d.category.isEmpty) issues.add('sport not selected');
-    if (d.name.isEmpty) issues.add('ground name missing');
     if (d.locationId.isEmpty) issues.add('location missing');
     return 'Please fix: ${issues.join(', ')}';
   }

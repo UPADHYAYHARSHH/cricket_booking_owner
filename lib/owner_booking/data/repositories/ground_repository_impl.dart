@@ -52,14 +52,11 @@ class GroundRepositoryImpl implements GroundRepository {
   Future<String> registerGround({
     required String ownerId,
     required String locationId,
-    required String name,
     required String category,
-    required String description,
     required String openingTime,
     required String closingTime,
     required List<String> operatingDays,
     required String slotDuration,
-    required List<String> imageUrls,
     Map<String, int>? pricingOverrides,
   }) async {
     final groundResponse = await _supabase.rpc(
@@ -67,9 +64,7 @@ class GroundRepositoryImpl implements GroundRepository {
       params: {
         'p_owner_id': ownerId,
         'p_location_id': locationId,
-        'p_name': name,
         'p_category': category,
-        'p_description': description,
         'p_price_per_hour': pricingOverrides?['weekday'] ?? 600,
         'p_weekend_price': pricingOverrides?['weekend'] ?? 800,
         'p_opening_time': openingTime,
@@ -80,11 +75,6 @@ class GroundRepositoryImpl implements GroundRepository {
     );
 
     final groundId = (groundResponse as Map<String, dynamic>)['id'] as String;
-
-    if (imageUrls.isNotEmpty) {
-      await insertGroundImages(groundId, imageUrls);
-    }
-
     return groundId;
   }
 
@@ -97,9 +87,7 @@ class GroundRepositoryImpl implements GroundRepository {
       'update_ground',
       params: {
         'p_ground_id': groundId,
-        'p_name': data['name'] ?? '',
         'p_category': data['category'] ?? '',
-        'p_description': data['description'] ?? '',
         'p_price_per_hour': data['price_per_hour'] ?? 600,
         'p_weekend_price': data['weekend_price'] ?? 800,
         'p_opening_time': data['opening_time'] ?? '06:00',
@@ -108,29 +96,6 @@ class GroundRepositoryImpl implements GroundRepository {
         'p_slot_duration': data['slot_duration'] ?? '1 Hour',
         'p_is_available': data['is_available'] ?? true,
       },
-    );
-  }
-
-  @override
-  Future<void> insertGroundImages(
-    String groundId,
-    List<String> imageUrls,
-  ) async {
-    if (imageUrls.isEmpty) return;
-    await _supabase.rpc(
-      'insert_ground_images',
-      params: {'p_ground_id': groundId, 'p_image_urls': imageUrls},
-    );
-  }
-
-  @override
-  Future<void> replaceGroundImages(
-    String groundId,
-    List<String> imageUrls,
-  ) async {
-    await _supabase.rpc(
-      'replace_ground_images',
-      params: {'p_ground_id': groundId, 'p_image_urls': imageUrls},
     );
   }
 

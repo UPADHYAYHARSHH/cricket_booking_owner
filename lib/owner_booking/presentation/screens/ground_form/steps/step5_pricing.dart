@@ -48,7 +48,7 @@ class _Step5PricingState extends State<Step5Pricing> {
       'weekend': _val(_weekendCtrl!, 800),
     };
     cubit.updateData(cubit.data.copyWith(pricingConfig: pricing));
-    cubit.goToStep(5);
+    cubit.goToStep(4);
   }
 
   @override
@@ -60,7 +60,7 @@ class _Step5PricingState extends State<Step5Pricing> {
         title: 'Pricing',
         subtitle: 'Set rates per 1-hour slot for this ground',
         onNext: _onNext,
-        onBack: () => context.read<GroundFormCubit>().goToStep(3),
+        onBack: () => context.read<GroundFormCubit>().goToStep(2),
         child: const SizedBox.shrink(),
       );
     }
@@ -70,7 +70,7 @@ class _Step5PricingState extends State<Step5Pricing> {
       title: 'Pricing',
       subtitle: 'Set rates per 1-hour slot for this ground',
       onNext: _onNext,
-      onBack: () => context.read<GroundFormCubit>().goToStep(3),
+      onBack: () => context.read<GroundFormCubit>().goToStep(2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -24,6 +24,7 @@ class LocationCubit extends Cubit<LocationState> {
   Future<String?> registerLocation({
     required String address,
     required String city,
+    required String description,
     required String googleMapsLink,
     required double latitude,
     required double longitude,
@@ -37,6 +38,7 @@ class LocationCubit extends Cubit<LocationState> {
         ownerId: userId,
         address: address,
         city: city,
+        description: description,
         googleMapsLink: googleMapsLink,
         latitude: latitude,
         longitude: longitude,

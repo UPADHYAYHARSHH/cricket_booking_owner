@@ -14,11 +14,13 @@ import 'package:turfpro_owner/owner_booking/presentation/widgets/ground_card.dar
 class GroundsAtLocationScreen extends StatefulWidget {
   final String locationId;
   final String locationAddress;
+  final bool isVerified;
 
   const GroundsAtLocationScreen({
     super.key,
     required this.locationId,
     required this.locationAddress,
+    this.isVerified = true,
   });
 
   @override
@@ -34,6 +36,19 @@ class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
   }
 
   Future<void> _openAddFlow() async {
+    if (!widget.isVerified) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'This location is pending admin approval. '
+            'You can add grounds once it is verified.',
+          ),
+          backgroundColor: AppColors.accentOrange,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -82,20 +97,49 @@ class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
             ),
             centerTitle: true,
             actions: [
-              IconButton(
-                tooltip: 'Add new ground',
-                icon: const HugeIcon(
-                  icon: HugeIcons.strokeRoundedAdd01,
-                  size: 24,
-                  color: AppColors.white,
+              if (widget.isVerified)
+                IconButton(
+                  tooltip: 'Add new ground',
+                  icon: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedAdd01,
+                    size: 24,
+                    color: AppColors.white,
+                  ),
+                  onPressed: _openAddFlow,
                 ),
-                onPressed: _openAddFlow,
-              ),
             ],
           ),
         ),
       ),
-      body: BlocBuilder<GroundCubit, GroundState>(
+      body: Column(
+        children: [
+          if (!widget.isVerified)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSizes.lg),
+              color: AppColors.accentOrange.withValues(alpha: 0.1),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    color: AppColors.accentOrange,
+                    size: 20,
+                  ),
+                  const SizedBox(width: AppSizes.sm),
+                  Expanded(
+                    child: AppText(
+                      text: 'This location is pending admin approval. '
+                          'You can add grounds once it is verified.',
+                      size: 13,
+                      color: AppColors.accentOrange,
+                      weight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: BlocBuilder<GroundCubit, GroundState>(
         builder: (context, state) {
           if (state is GroundLoading || state is GroundInitial) {
             return const GroundsSkeleton();
@@ -195,20 +239,25 @@ class _GroundsAtLocationScreenState extends State<GroundsAtLocationScreen> {
           return const SizedBox.shrink();
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'grounds_at_location_add_ground',
-        onPressed: _openAddFlow,
-        backgroundColor: AppColors.primaryDarkGreen,
-        foregroundColor: AppColors.white,
-        elevation: 4,
-        icon: const Icon(Icons.add, size: 20),
-        label: const AppText(
-          text: 'Add Ground',
-          size: 14,
-          weight: FontWeight.w700,
-          color: AppColors.white,
-        ),
+          ),
+        ],
       ),
+      floatingActionButton: widget.isVerified
+          ? FloatingActionButton.extended(
+              heroTag: 'grounds_at_location_add_ground',
+              onPressed: _openAddFlow,
+              backgroundColor: AppColors.primaryDarkGreen,
+              foregroundColor: AppColors.white,
+              elevation: 4,
+              icon: const Icon(Icons.add, size: 20),
+              label: const AppText(
+                text: 'Add Ground',
+                size: 14,
+                weight: FontWeight.w700,
+                color: AppColors.white,
+              ),
+            )
+          : null,
     );
   }
 }

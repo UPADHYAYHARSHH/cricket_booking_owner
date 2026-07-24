@@ -163,12 +163,28 @@ class _LocationsScreenState extends State<LocationsScreen>
   }
 
   void _openGrounds(Map<String, dynamic> location) {
+    final isVerified = location['documents_verified'] == true;
+    if (!isVerified) {
+      // Show message that location needs verification first
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'This location is pending admin approval. '
+            'You can add grounds once it is verified.',
+          ),
+          backgroundColor: AppColors.accentOrange,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => GroundsAtLocationScreen(
           locationId: location['id'] as String,
           locationAddress: location['address'] as String? ?? 'Location',
+          isVerified: isVerified,
         ),
       ),
     );
@@ -388,10 +404,14 @@ class _LocationCard extends StatelessWidget {
     final city = location['city'] as String? ?? '';
     final isActive = location['is_active'] != false;
     final isVerified = location['documents_verified'] == true;
+    final isRejected = location['rejection_reason'] != null && !isVerified;
+    final rejectionReason = location['rejection_reason'] as String? ?? '';
     final hasDocuments = location['property_document_url'] != null;
 
     final accentColor = isVerified
         ? AppColors.primaryDarkGreen
+        : isRejected
+        ? Colors.red
         : isActive
         ? AppColors.accentOrange
         : AppColors.borderLight;
@@ -537,11 +557,15 @@ class _LocationCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isVerified
                       ? AppColors.slotAvailableBg
+                      : isRejected
+                      ? Colors.red.withValues(alpha: 0.1)
                       : AppColors.statusPendingBg,
                   borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                   border: Border.all(
                     color: isVerified
                         ? AppColors.primaryDarkGreen.withValues(alpha: 0.2)
+                        : isRejected
+                        ? Colors.red.withValues(alpha: 0.3)
                         : AppColors.accentOrange.withValues(alpha: 0.3),
                   ),
                 ),
@@ -554,6 +578,8 @@ class _LocationCard extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: isVerified
                             ? AppColors.primaryDarkGreen
+                            : isRejected
+                            ? Colors.red
                             : AppColors.accentOrange,
                         shape: BoxShape.circle,
                       ),
@@ -562,11 +588,15 @@ class _LocationCard extends StatelessWidget {
                     AppText(
                       text: isVerified
                           ? (isActive ? 'Verified & Active' : 'Verified')
+                          : isRejected
+                          ? 'Rejected'
                           : 'Pending Approval',
                       size: 11,
                       weight: FontWeight.w600,
                       color: isVerified
                           ? AppColors.primaryDarkGreen
+                          : isRejected
+                          ? Colors.red
                           : AppColors.accentOrange,
                     ),
                   ],
@@ -649,15 +679,17 @@ class _LocationCard extends StatelessWidget {
                         vertical: AppSizes.sm,
                       ),
                       decoration: BoxDecoration(
-                        color: hasDocuments
+                        color: isRejected
+                            ? Colors.red.withValues(alpha: 0.08)
+                            : hasDocuments
                             ? AppColors.primaryDarkGreen.withValues(alpha: 0.08)
                             : AppColors.bgLight,
                         borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                         border: Border.all(
-                          color: hasDocuments
-                              ? AppColors.primaryDarkGreen.withValues(
-                                  alpha: 0.2,
-                                )
+                          color: isRejected
+                              ? Colors.red.withValues(alpha: 0.2)
+                              : hasDocuments
+                              ? AppColors.primaryDarkGreen.withValues(alpha: 0.2)
                               : AppColors.borderLight,
                         ),
                       ),
@@ -665,20 +697,30 @@ class _LocationCard extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            hasDocuments
+                            isRejected
+                                ? Icons.refresh
+                                : hasDocuments
                                 ? Icons.description
                                 : Icons.upload_file_outlined,
                             size: 14,
-                            color: hasDocuments
+                            color: isRejected
+                                ? Colors.red
+                                : hasDocuments
                                 ? AppColors.primaryDarkGreen
                                 : AppColors.textSecondaryLight,
                           ),
                           const SizedBox(width: AppSizes.xs),
                           AppText(
-                            text: hasDocuments ? 'View Docs' : 'Add Docs',
+                            text: isRejected
+                                ? 'Re-upload'
+                                : hasDocuments
+                                ? 'View Docs'
+                                : 'Add Docs',
                             size: 11,
                             weight: FontWeight.w600,
-                            color: hasDocuments
+                            color: isRejected
+                                ? Colors.red
+                                : hasDocuments
                                 ? AppColors.primaryDarkGreen
                                 : AppColors.textSecondaryLight,
                           ),
@@ -688,52 +730,81 @@ class _LocationCard extends StatelessWidget {
                   ),
                 ],
               ),
-              // Pending approval notice
+              // Pending/Rejected approval notice
               if (!isVerified) ...[
                 const SizedBox(height: AppSizes.md),
                 Container(
                   padding: const EdgeInsets.all(AppSizes.md),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [
-                        AppColors.statusPendingBg,
-                        AppColors.statusPendingBg.withValues(alpha: 0.5),
-                      ],
+                      colors: isRejected
+                          ? [
+                              Colors.red.withValues(alpha: 0.05),
+                              Colors.red.withValues(alpha: 0.02),
+                            ]
+                          : [
+                              AppColors.statusPendingBg,
+                              AppColors.statusPendingBg.withValues(alpha: 0.5),
+                            ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                     border: Border.all(
-                      color: AppColors.accentOrange.withValues(alpha: 0.2),
+                      color: isRejected
+                          ? Colors.red.withValues(alpha: 0.2)
+                          : AppColors.accentOrange.withValues(alpha: 0.2),
                     ),
                   ),
-                  child: Row(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppSizes.xs),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentOrange.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(
-                            AppSizes.radiusXs,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSizes.xs),
+                            decoration: BoxDecoration(
+                              color: isRejected
+                                  ? Colors.red.withValues(alpha: 0.15)
+                                  : AppColors.accentOrange.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusXs,
+                              ),
+                            ),
+                            child: Icon(
+                              isRejected ? Icons.cancel_outlined : Icons.hourglass_top,
+                              size: 14,
+                              color: isRejected ? Colors.red : AppColors.accentOrange,
+                            ),
                           ),
-                        ),
-                        child: const Icon(
-                          Icons.hourglass_top,
-                          size: 14,
-                          color: AppColors.accentOrange,
-                        ),
+                          const SizedBox(width: AppSizes.sm),
+                          Expanded(
+                            child: AppText(
+                              text: isRejected
+                                  ? (rejectionReason.isNotEmpty
+                                      ? rejectionReason
+                                      : 'Your documents were rejected. Please re-upload and submit again.')
+                                  : hasDocuments
+                                  ? "Your location is awaiting admin approval. You can add sports/grounds now — they'll go live once the location is approved."
+                                  : "Submit venue documents for faster approval. You can add sports/grounds now while it's reviewed.",
+                              size: 11,
+                              color: isRejected
+                                  ? Colors.red.shade700
+                                  : const Color(0xFF795548),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: AppSizes.sm),
-                      Expanded(
-                        child: AppText(
-                          text: hasDocuments
-                              ? "Your location is awaiting admin approval. You can add sports/grounds now — they'll go live once the location is approved."
-                              : "Submit venue documents for faster approval. You can add sports/grounds now while it's reviewed.",
-                          size: 11,
-                          color: const Color(0xFF795548),
+                      if (isRejected) ...[
+                        const SizedBox(height: AppSizes.sm),
+                        AppText(
+                          text: 'Tap "Re-upload" to update your documents and resubmit.',
+                          size: 10,
+                          color: Colors.red.withValues(alpha: 0.7),
+                          weight: FontWeight.w500,
                         ),
-                      ),
+                      ],
                     ],
                   ),
                 ),

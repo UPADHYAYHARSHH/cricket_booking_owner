@@ -22,7 +22,7 @@ class GroundCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final name = ground['name'] as String? ?? 'Unknown Ground';
+    final name = ground['name'] as String? ?? ground['address'] as String? ?? 'Unknown Ground';
     final imageUrl = ground['imageUrl'] as String?;
     final isAvailable = ground['is_available'] != false;
     final category = ground['category'] as String? ?? '';

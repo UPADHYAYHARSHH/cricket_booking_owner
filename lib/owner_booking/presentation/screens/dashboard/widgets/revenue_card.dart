@@ -80,6 +80,7 @@ class _RevenueCardState extends State<RevenueCard>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Stack(
+          clipBehavior: Clip.none,
           children: [
             // Shine overlay
             AnimatedBuilder(

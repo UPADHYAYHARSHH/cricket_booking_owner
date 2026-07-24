@@ -6,12 +6,9 @@ abstract class GroundRepository {
   Future<String> registerGround({
     required String ownerId,
     required String locationId,
-    required String name,
     required String category,
-    required String description,
     required String openingTime,
     required String closingTime,
-    required List<String> imageUrls,
     required List<String> operatingDays,
     required String slotDuration,
     Map<String, int>? pricingOverrides,
@@ -21,12 +18,6 @@ abstract class GroundRepository {
     required String groundId,
     required Map<String, dynamic> data,
   });
-
-  Future<void> insertGroundImages(String groundId, List<String> imageUrls);
-
-  /// Replaces all of a ground's images with [imageUrls] (delete-then-insert,
-  /// safe to call repeatedly e.g. from an edit flow).
-  Future<void> replaceGroundImages(String groundId, List<String> imageUrls);
 
   Future<void> generateSlots(
     String groundId,

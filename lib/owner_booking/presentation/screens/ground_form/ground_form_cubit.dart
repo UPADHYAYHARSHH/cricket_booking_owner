@@ -49,7 +49,6 @@ class GroundFormCubit extends Cubit<GroundFormState> {
           groundId: _data.groundId!,
           data: _data.toUpdateMap(),
         );
-        await _repo.replaceGroundImages(_data.groundId!, _data.imageUrls);
         // Regenerate future available slots so operating days / slot duration changes take effect
         await _repo.regenerateFutureSlots(
           _data.groundId!,
@@ -63,14 +62,11 @@ class GroundFormCubit extends Cubit<GroundFormState> {
         final groundId = await _repo.registerGround(
           ownerId: userId,
           locationId: _data.locationId,
-          name: _data.name,
           category: _data.category,
-          description: _data.description,
           openingTime: _data.openingTime,
           closingTime: _data.closingTime,
           operatingDays: _data.operatingDays,
           slotDuration: _data.slotDuration,
-          imageUrls: _data.imageUrls,
           pricingOverrides: _data.pricingConfig,
         );
 

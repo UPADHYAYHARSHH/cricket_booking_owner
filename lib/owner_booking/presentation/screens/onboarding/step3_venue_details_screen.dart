@@ -28,6 +28,7 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
   final _cityFieldKey = GlobalKey<CitySearchFieldState>();
   final _venueNameCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
+  final _descriptionCtrl = TextEditingController();
   final _mapsCtrl = TextEditingController();
   final _latCtrl = TextEditingController();
   final _lngCtrl = TextEditingController();
@@ -47,6 +48,7 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
   void dispose() {
     _venueNameCtrl.dispose();
     _addressCtrl.dispose();
+    _descriptionCtrl.dispose();
     _mapsCtrl.dispose();
     _latCtrl.dispose();
     _lngCtrl.dispose();
@@ -102,6 +104,7 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
       venueName: _venueNameCtrl.text.trim(),
       address: _addressCtrl.text.trim(),
       city: city,
+      description: _descriptionCtrl.text.trim(),
       googleMapsLink: _mapsCtrl.text.trim(),
       latitude: double.tryParse(_latCtrl.text.trim()) ?? 0.0,
       longitude: double.tryParse(_lngCtrl.text.trim()) ?? 0.0,

@@ -30,6 +30,7 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late final TextEditingController _addressCtrl;
+  late final TextEditingController _descriptionCtrl;
   late final TextEditingController _mapsCtrl;
   late final TextEditingController _latCtrl;
   late final TextEditingController _lngCtrl;
@@ -46,6 +47,9 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
     final data = widget.locationData;
     _addressCtrl = TextEditingController(
       text: data?['address'] as String? ?? '',
+    );
+    _descriptionCtrl = TextEditingController(
+      text: data?['description'] as String? ?? '',
     );
     _mapsCtrl = TextEditingController(
       text: data?['google_maps_link'] as String? ?? '',
@@ -66,6 +70,7 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
   @override
   void dispose() {
     _addressCtrl.dispose();
+    _descriptionCtrl.dispose();
     _mapsCtrl.dispose();
     _latCtrl.dispose();
     _lngCtrl.dispose();
@@ -88,6 +93,7 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
     setState(() => _isSaving = true);
     final cubit = context.read<LocationCubit>();
     final address = _addressCtrl.text.trim();
+    final description = _descriptionCtrl.text.trim();
     final mapsLink = _mapsCtrl.text.trim();
     final lat = double.tryParse(_latCtrl.text.trim()) ?? 0.0;
     final lng = double.tryParse(_lngCtrl.text.trim()) ?? 0.0;
@@ -98,6 +104,7 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
         locationId: widget.locationData!['id'] as String,
         data: {
           'address': address,
+          'description': description,
           'city': city,
           'google_maps_link': mapsLink,
           'latitude': lat,
@@ -109,6 +116,7 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
       newLocationId = await cubit.registerLocation(
         address: address,
         city: city,
+        description: description,
         googleMapsLink: mapsLink,
         latitude: lat,
         longitude: lng,
@@ -205,6 +213,14 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                   validator: (v) => (v == null || v.trim().isEmpty)
                       ? 'Address is required'
                       : null,
+                ),
+                const AppSizedBox(height: AppSizes.xxl),
+                _label('DESCRIPTION'),
+                _field(
+                  _descriptionCtrl,
+                  hint: 'Describe what makes this venue special — surface quality, lighting, rules, nearby landmarks...',
+                  maxLines: 4,
+                  icon: Icons.description_outlined,
                 ),
                 const AppSizedBox(height: AppSizes.xxl),
                 _label('CITY *'),

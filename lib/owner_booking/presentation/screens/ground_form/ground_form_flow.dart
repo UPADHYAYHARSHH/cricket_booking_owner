@@ -8,7 +8,6 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cub
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_state.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step1_sports.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step2_basic_info.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step4_schedule.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step5_pricing.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/steps/step7_review.dart';
@@ -121,7 +120,6 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
                   physics: const NeverScrollableScrollPhysics(),
                   children: [
                     Step1Sports(isEdit: _isEdit),
-                    Step2BasicInfo(isEdit: _isEdit),
                     Step4Schedule(isEdit: _isEdit),
                     Step5Pricing(isEdit: _isEdit),
                     Step7Review(isEdit: _isEdit),

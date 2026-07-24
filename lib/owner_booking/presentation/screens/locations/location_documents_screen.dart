@@ -38,6 +38,8 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
   String? _propertyUrl;
   String? _nocUrl;
   bool _isSaving = false;
+  bool _isRejected = false;
+  String _rejectionReason = '';
 
   @override
   void initState() {
@@ -46,6 +48,8 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
     _propertyStatus = data?['property_status'] as String? ?? _propertyStatus;
     _propertyUrl = data?['property_document_url'] as String?;
     _nocUrl = data?['noc_url'] as String?;
+    _isRejected = data?['rejection_reason'] != null && data?['documents_verified'] != true;
+    _rejectionReason = data?['rejection_reason'] as String? ?? '';
   }
 
   Future<void> _pickFile(bool isNoc) async {
@@ -90,6 +94,8 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
               'property_status': _propertyStatus,
               'property_document_url': propertyUrl,
               'noc_url': nocUrl,
+              // Clear rejection when documents are re-uploaded
+              if (_isRejected) 'rejection_reason': null,
             },
           );
 
@@ -189,6 +195,48 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Rejection reason banner
+            if (_isRejected && _rejectionReason.isNotEmpty) ...[
+              Container(
+                padding: const EdgeInsets.all(AppSizes.lg),
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.05),
+                  borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.info_outline, size: 18, color: Colors.red),
+                        SizedBox(width: 8),
+                        AppText(
+                          text: 'Rejection Reason',
+                          size: 14,
+                          weight: FontWeight.w600,
+                          color: Colors.red,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    AppText(
+                      text: _rejectionReason,
+                      size: 13,
+                      color: AppColors.textPrimaryLight,
+                    ),
+                    const SizedBox(height: 8),
+                    AppText(
+                      text: 'Please update your documents and resubmit.',
+                      size: 12,
+                      color: Colors.red.withValues(alpha: 0.7),
+                      weight: FontWeight.w500,
+                    ),
+                  ],
+                ),
+              ),
+              const AppSizedBox(height: AppSizes.xxl),
+            ],
             // Info banner
             Container(
               padding: const EdgeInsets.all(AppSizes.lg),
@@ -257,7 +305,7 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
             ),
             const AppSizedBox(height: AppSizes.xxxxl),
             AppButton(
-              title: 'Save Documents',
+              title: _isRejected ? 'Resubmit Documents' : 'Save Documents',
               isLoading: _isSaving,
               onTap: _save,
               backgroundColor: AppColors.primaryDarkGreen,

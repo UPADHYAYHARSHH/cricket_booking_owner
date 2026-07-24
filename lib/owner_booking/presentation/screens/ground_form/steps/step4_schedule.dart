@@ -9,13 +9,6 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/gro
 
 const List<String> _kDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const List<String> _kDurations = ['30 min', '1 Hour', '1.5 Hours', '2 Hours'];
-const List<String> _kAdvance = [
-  'Same day',
-  '3 days',
-  '7 days',
-  '15 days',
-  '30 days',
-];
 
 class Step4Schedule extends StatefulWidget {
   final bool isEdit;
@@ -108,7 +101,7 @@ class _Step4ScheduleState extends State<Step4Schedule> {
         advanceBookingLimit: _advanceLimit,
       ),
     );
-    cubit.goToStep(4);
+    cubit.goToStep(3);
   }
 
   @override
@@ -119,7 +112,7 @@ class _Step4ScheduleState extends State<Step4Schedule> {
       title: 'Schedule',
       subtitle: 'Set operating hours and booking window',
       onNext: _onNext,
-      onBack: () => context.read<GroundFormCubit>().goToStep(2),
+      onBack: () => context.read<GroundFormCubit>().goToStep(1),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

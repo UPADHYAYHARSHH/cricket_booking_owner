@@ -144,13 +144,13 @@ class _GroundsScreenState extends State<GroundsScreen> {
                     ),
                     actions: [
                       IconButton(
-                        tooltip: 'Manage locations',
+                        tooltip: 'Add ground',
                         icon: const HugeIcon(
-                          icon: HugeIcons.strokeRoundedLocation01,
+                          icon: HugeIcons.strokeRoundedAdd01,
                           size: 22,
                           color: AppColors.white,
                         ),
-                        onPressed: _openManageLocations,
+                        onPressed: () => _openAddFlow(locations),
                       ),
                     ],
                   ),
@@ -267,25 +267,6 @@ class _GroundsScreenState extends State<GroundsScreen> {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'grounds_add_ground',
-        onPressed: () => _openAddFlow(
-          context.read<LocationCubit>().state is LocationLoaded
-              ? (context.read<LocationCubit>().state as LocationLoaded)
-                    .locations
-              : <Map<String, dynamic>>[],
-        ),
-        backgroundColor: AppColors.primaryDarkGreen,
-        foregroundColor: AppColors.white,
-        elevation: 4,
-        icon: const Icon(Icons.add, size: 20),
-        label: const AppText(
-          text: 'Add Ground',
-          size: 14,
-          weight: FontWeight.w700,
-          color: AppColors.white,
-        ),
       ),
     );
   }

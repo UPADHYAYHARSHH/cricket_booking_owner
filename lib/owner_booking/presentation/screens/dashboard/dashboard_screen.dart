@@ -180,7 +180,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     .read<DashboardCubit>()
                                     .selectLocation(locationId),
                               ),
-                              const SizedBox(height: 110),
+                              const SizedBox(height: 100),
                             ],
                           ),
                           Positioned(
@@ -206,7 +206,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ),
                         ],
                       )),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 24),
 
                       // Stats Row
                       _buildStaggeredChild(2, Padding(
