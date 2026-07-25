@@ -56,7 +56,7 @@ class _Step5PricingState extends State<Step5Pricing> {
     if (!_initialized) {
       return GroundFormLayout(
         isEdit: widget.isEdit,
-        currentStep: 4,
+        currentStep: 3,
         title: 'Pricing',
         subtitle: 'Set rates per 1-hour slot for this ground',
         onNext: _onNext,
@@ -66,7 +66,7 @@ class _Step5PricingState extends State<Step5Pricing> {
     }
     return GroundFormLayout(
       isEdit: widget.isEdit,
-      currentStep: 4,
+      currentStep: 3,
       title: 'Pricing',
       subtitle: 'Set rates per 1-hour slot for this ground',
       onNext: _onNext,

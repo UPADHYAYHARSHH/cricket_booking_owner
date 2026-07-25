@@ -44,22 +44,15 @@ class GroundFormCubit extends Cubit<GroundFormState> {
 
     try {
       if (_data.groundId != null) {
-        // Edit: update existing ground row; slot regeneration runs separately.
+        // Edit: update existing ground row.
         await _repo.updateGround(
           groundId: _data.groundId!,
           data: _data.toUpdateMap(),
         );
-        // Regenerate future available slots so operating days / slot duration changes take effect
-        await _repo.regenerateFutureSlots(
-          _data.groundId!,
-          _data.openingTime,
-          _data.closingTime,
-          _data.pricingConfig,
-        );
         emit(GroundFormSaved(isEdit: true));
       } else {
-        // Add: insert new ground + generate initial slots.
-        final groundId = await _repo.registerGround(
+        // Add: insert new ground.
+        await _repo.registerGround(
           ownerId: userId,
           locationId: _data.locationId,
           category: _data.category,
@@ -68,16 +61,6 @@ class GroundFormCubit extends Cubit<GroundFormState> {
           operatingDays: _data.operatingDays,
           slotDuration: _data.slotDuration,
           pricingOverrides: _data.pricingConfig,
-        );
-
-        // Generate slots for 14 days from today.
-        await _repo.generateSlots(
-          groundId,
-          _data.openingTime,
-          _data.closingTime,
-          _data.pricingConfig,
-          _data.operatingDays,
-          _data.slotDuration,
         );
 
         emit(GroundFormSaved(isEdit: false));

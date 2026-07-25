@@ -108,7 +108,7 @@ class _Step4ScheduleState extends State<Step4Schedule> {
   Widget build(BuildContext context) {
     return GroundFormLayout(
       isEdit: widget.isEdit,
-      currentStep: 3,
+      currentStep: 2,
       title: 'Schedule',
       subtitle: 'Set operating hours and booking window',
       onNext: _onNext,
@@ -236,7 +236,7 @@ class _Step4ScheduleState extends State<Step4Schedule> {
           if (widget.isEdit) ...[
             const SizedBox(height: AppSizes.xl),
             _warningBanner(
-              'Changing operating hours will regenerate future available slots. Already-booked slots are not affected.',
+              'Changes take effect immediately. Already-booked slots are not affected.',
             ),
           ],
         ],

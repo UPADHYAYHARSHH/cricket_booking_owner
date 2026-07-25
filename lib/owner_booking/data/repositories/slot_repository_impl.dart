@@ -35,15 +35,6 @@ class SlotRepositoryImpl implements SlotRepository {
   }
 
   @override
-  Stream<List<Map<String, dynamic>>> watchSlotsForGround(String groundId) {
-    return _supabase
-        .from('slots')
-        .stream(primaryKey: ['id'])
-        .eq('ground_id', groundId)
-        .map((list) => List<Map<String, dynamic>>.from(list));
-  }
-
-  @override
   Future<Map<String, dynamic>> insertOwnerBooking({
     required String groundId,
     required String slotTime,

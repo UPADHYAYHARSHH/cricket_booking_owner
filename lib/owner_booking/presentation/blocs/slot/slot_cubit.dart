@@ -11,11 +11,9 @@ class SlotCubit extends Cubit<SlotState> {
   final SlotRepository _slotRepository;
 
   StreamSubscription<List<Map<String, dynamic>>>? _bookingsSubscription;
-  StreamSubscription<List<Map<String, dynamic>>>? _slotsSubscription;
 
   // Cached state for stream rebuilds and optimistic updates
   List<Map<String, dynamic>> _latestBookings = [];
-  List<Map<String, dynamic>> _latestSlots = [];
   String _venueName = '';
   List<Map<String, dynamic>> _grounds = [];
   String _selectedGroundId = '';
@@ -31,7 +29,6 @@ class SlotCubit extends Cubit<SlotState> {
   @override
   Future<void> close() {
     _bookingsSubscription?.cancel();
-    _slotsSubscription?.cancel();
     return super.close();
   }
 
@@ -157,23 +154,14 @@ class SlotCubit extends Cubit<SlotState> {
       _weekendPrice = weekendPrice;
       _slotDurationMins = slotDurationMins;
       _latestBookings = [];
-      _latestSlots = [];
 
       await _bookingsSubscription?.cancel();
-      await _slotsSubscription?.cancel();
 
-      // Watch both bookings and slots tables for real-time sync
+      // Watch bookings table for real-time sync
       _bookingsSubscription = _slotRepository
           .watchBookingsForGround(groundId)
           .listen((data) {
             _latestBookings = data;
-            _rebuildSlots();
-          });
-
-      _slotsSubscription = _slotRepository
-          .watchSlotsForGround(groundId)
-          .listen((data) {
-            _latestSlots = data;
             _rebuildSlots();
           });
     } catch (e) {
@@ -226,12 +214,6 @@ class SlotCubit extends Cubit<SlotState> {
           slotTime.compareTo(dateEndStr) <= 0;
     }).toList();
 
-    // Also get slots from the slots table for this date
-    final formattedDate = "${_selectedDate.year}-${_selectedDate.month.toString().padLeft(2, '0')}-${_selectedDate.day.toString().padLeft(2, '0')}";
-    final slotsFromDb = _latestSlots.where((s) {
-      return s['date'] == formattedDate;
-    }).toList();
-
     // Determine price based on weekday/weekend
     final isWeekend =
         _selectedDate.weekday == DateTime.saturday ||
@@ -260,7 +242,6 @@ class SlotCubit extends Cubit<SlotState> {
     }
 
     int todayRevenue = 0;
-    // Only count customer bookings in revenue (not owner bookings)
     for (var b in bookingsForDate) {
       if (b['user_id'] != null) {
         todayRevenue += (b['amount'] as num?)?.toInt() ?? _defaultPrice;
@@ -270,7 +251,6 @@ class SlotCubit extends Cubit<SlotState> {
     for (int i = 0; i < virtualSlots.length; i++) {
       final vSlot = virtualSlots[i];
 
-      // First check bookings table
       final matchingBooking = bookingsForDate
           .cast<Map<String, dynamic>?>()
           .firstWhere((b) {
@@ -280,25 +260,6 @@ class SlotCubit extends Cubit<SlotState> {
                 bookingTime.minute == vSlot.startTime.minute;
           }, orElse: () => null);
 
-      // Also check slots table for status
-      final matchingSlot = slotsFromDb.cast<Map<String, dynamic>?>().firstWhere((s) {
-        if (s == null) return false;
-        final startTime = s['start_time']?.toString() ?? '';
-        // Parse start_time which could be "HH:mm:ss" or ISO format
-        if (startTime.contains('T')) {
-          final t = DateTime.parse(startTime).toLocal();
-          return t.hour == vSlot.startTime.hour && t.minute == vSlot.startTime.minute;
-        } else {
-          final parts = startTime.split(':');
-          if (parts.length >= 2) {
-            return int.parse(parts[0]) == vSlot.startTime.hour &&
-                int.parse(parts[1]) == vSlot.startTime.minute;
-          }
-        }
-        return false;
-      }, orElse: () => null);
-
-      // Determine the final status - bookings table takes priority
       if (matchingBooking != null) {
         final isOwner = matchingBooking['user_id'] == null;
 
@@ -325,18 +286,6 @@ class SlotCubit extends Cubit<SlotState> {
             bookedPlayersCount: 8,
             bookingId: matchingBooking['id'],
             bookingDetails: matchingBooking,
-          );
-        }
-      } else if (matchingSlot != null) {
-        // Slot from slots table (synced from booking app)
-        final slotStatus = matchingSlot['status']?.toString() ?? 'available';
-        if (slotStatus == 'booked' || slotStatus == 'blocked') {
-          virtualSlots[i] = VirtualSlot(
-            startTime: vSlot.startTime,
-            endTime: vSlot.endTime,
-            status: slotStatus == 'booked' ? SlotStatus.booked : SlotStatus.blocked,
-            price: (matchingSlot['price'] as num?)?.toInt() ?? vSlot.price,
-            bookedPlayerName: 'Customer',
           );
         }
       }

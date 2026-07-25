@@ -18,22 +18,4 @@ abstract class GroundRepository {
     required String groundId,
     required Map<String, dynamic> data,
   });
-
-  Future<void> generateSlots(
-    String groundId,
-    String openingTime,
-    String closingTime,
-    Map<String, int> pricing,
-    List<String> operatingDays,
-    String slotDuration,
-  );
-
-  /// Deletes future *available* slots and regenerates them.
-  /// Booked/pending slots are left untouched.
-  Future<void> regenerateFutureSlots(
-    String groundId,
-    String openingTime,
-    String closingTime,
-    Map<String, int> pricing,
-  );
 }

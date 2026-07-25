@@ -5,8 +5,6 @@ abstract class SlotRepository {
 
   Stream<List<Map<String, dynamic>>> watchBookingsForGround(String groundId);
 
-  Stream<List<Map<String, dynamic>>> watchSlotsForGround(String groundId);
-
   Future<Map<String, dynamic>> insertOwnerBooking({
     required String groundId,
     required String slotTime,

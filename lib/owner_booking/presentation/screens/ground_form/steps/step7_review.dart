@@ -34,7 +34,7 @@ class Step7Review extends StatelessWidget {
 
         return GroundFormLayout(
           isEdit: isEdit,
-          currentStep: 5,
+          currentStep: 4,
           title: 'Review & Save',
           subtitle: isEdit
               ? 'Confirm your changes before saving'

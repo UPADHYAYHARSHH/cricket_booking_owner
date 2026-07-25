@@ -284,9 +284,7 @@ GRANT EXECUTE ON FUNCTION public.get_locations_with_grounds() TO authenticated;
 CREATE OR REPLACE FUNCTION public.register_ground(
     p_owner_id TEXT,
     p_location_id TEXT,
-    p_name TEXT,
     p_category TEXT,
-    p_description TEXT,
     p_price_per_hour INT,
     p_weekend_price INT,
     p_opening_time TEXT,
@@ -300,24 +298,35 @@ SECURITY DEFINER
 AS $$
 DECLARE
     result JSON;
+    v_count INT;
+    v_display_name TEXT;
 BEGIN
+    -- Auto-generate name: "Cricket 1", "Volleyball 2", etc.
+    SELECT COUNT(*) INTO v_count
+    FROM public.grounds
+    WHERE owner_id = p_owner_id
+      AND location_id = p_location_id::uuid
+      AND category = p_category;
+
+    v_display_name := initcap(p_category) || ' ' || (v_count + 1);
+
     INSERT INTO public.grounds (
-        owner_id, location_id, name, category, description,
-        price_per_hour, weekend_price, opening_time, closing_time
-        , operating_days, slot_duration
+        owner_id, location_id, name, category,
+        price_per_hour, weekend_price, opening_time, closing_time,
+        operating_days, slot_duration
     )
     VALUES (
-        p_owner_id, p_location_id::uuid, p_name, p_category, p_description,
-        p_price_per_hour, p_weekend_price, p_opening_time::time, p_closing_time::time
-        , p_operating_days, p_slot_duration
+        p_owner_id, p_location_id::uuid, v_display_name, p_category,
+        p_price_per_hour, p_weekend_price, p_opening_time::time, p_closing_time::time,
+        p_operating_days, p_slot_duration
     )
     RETURNING to_json(grounds.*) INTO result;
     RETURN result;
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT) TO anon;
-GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT) TO authenticated;
 
 -- ============================================================
 -- 9. Ground Images: Insert images (bypasses RLS for Firebase Auth)
@@ -365,9 +374,7 @@ GRANT EXECUTE ON FUNCTION public.replace_ground_images(TEXT, TEXT[]) TO authenti
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.update_ground(
     p_ground_id TEXT,
-    p_name TEXT,
     p_category TEXT,
-    p_description TEXT,
     p_price_per_hour INT,
     p_weekend_price INT,
     p_opening_time TEXT,
@@ -380,11 +387,29 @@ RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
 AS $$
+DECLARE
+    v_owner_id TEXT;
+    v_location_id UUID;
+    v_count INT;
+    v_display_name TEXT;
 BEGIN
+    -- Get current owner and location
+    SELECT owner_id, location_id INTO v_owner_id, v_location_id
+    FROM public.grounds WHERE id = p_ground_id::uuid;
+
+    -- Auto-generate name based on new category
+    SELECT COUNT(*) INTO v_count
+    FROM public.grounds
+    WHERE owner_id = v_owner_id
+      AND location_id = v_location_id
+      AND category = p_category
+      AND id != p_ground_id::uuid;
+
+    v_display_name := initcap(p_category) || ' ' || (v_count + 1);
+
     UPDATE public.grounds
-    SET name = p_name,
+    SET name = v_display_name,
         category = p_category,
-        description = p_description,
         price_per_hour = p_price_per_hour,
         weekend_price = p_weekend_price,
         opening_time = p_opening_time::time,
@@ -396,8 +421,8 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, BOOLEAN) TO anon;
-GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, BOOLEAN) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, BOOLEAN) TO anon;
+GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, BOOLEAN) TO authenticated;
 
 -- ============================================================
 -- 12. Slots: Generate slots for a ground (bypasses RLS for Firebase Auth)
@@ -414,6 +439,7 @@ CREATE OR REPLACE FUNCTION public.generate_ground_slots(
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET statement_timeout = '120s'
 AS $$
 DECLARE
     v_open_hour INT;
