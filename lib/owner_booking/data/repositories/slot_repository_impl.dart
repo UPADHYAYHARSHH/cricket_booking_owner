@@ -43,30 +43,21 @@ class SlotRepositoryImpl implements SlotRepository {
     required String period,
     String? note,
   }) async {
-    final data = {
-      'ground_id': groundId,
-      'slot_time': slotTime,
-      'amount': price,
-      'status': 'confirmed',
-      'sport_name': sportName,
-      'period': period,
-      'checked_in': false,
-    };
-    
-    if (note != null && note.trim().isNotEmpty) {
-      data['notes'] = note.trim();
-    }
-
-    final result = await _supabase
-        .from('bookings')
-        .insert(data)
-        .select()
-        .single();
-    return Map<String, dynamic>.from(result);
+    final result = await _supabase.rpc('save_owner_booking', params: {
+      'p_ground_id': groundId,
+      'p_slot_time': slotTime,
+      'p_amount': price,
+      'p_sport_name': sportName,
+      'p_period': period,
+      'p_notes': (note != null && note.trim().isNotEmpty) ? note.trim() : null,
+    });
+    return Map<String, dynamic>.from(result as Map);
   }
 
   @override
   Future<void> deleteOwnerBooking(String bookingId) async {
-    await _supabase.from('bookings').delete().eq('id', bookingId);
+    await _supabase.rpc('delete_owner_booking', params: {
+      'p_booking_id': bookingId,
+    });
   }
 }
