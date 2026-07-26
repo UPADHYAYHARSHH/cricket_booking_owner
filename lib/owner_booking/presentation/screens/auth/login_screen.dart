@@ -86,7 +86,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Navigator.pushNamed(context, '/email-verification');
         }
 
-        if (state is AuthLocationRequired ||
+        if (state is AuthLocationRequired || state is AuthGroundRequired ||
             state is AuthPendingApproval ||
             state is AuthStep1Required ||
             state is AuthStep2Required ||

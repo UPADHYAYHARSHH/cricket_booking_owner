@@ -3,17 +3,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/auth_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/owner_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/location_repository.dart';
+import 'package:turfpro_owner/owner_booking/domain/repositories/ground_repository.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository _authRepository;
   final OwnerRepository _ownerRepository;
   final LocationRepository _locationRepository;
+  final GroundRepository _groundRepository;
 
   AuthCubit(
     this._authRepository,
     this._ownerRepository,
     this._locationRepository,
+    this._groundRepository,
   ) : super(AuthInitial());
 
   Future<void> init() async {
@@ -328,6 +331,18 @@ class AuthCubit extends Cubit<AuthState> {
 
       // Already approved — go to dashboard
       if (d?['status'] == 'approved') {
+        final locations = await _locationRepository.getOwnerLocations(userId);
+        if (locations.isEmpty) {
+          emit(AuthLocationRequired());
+          return;
+        }
+        
+        final grounds = await _groundRepository.getOwnerGrounds(userId);
+        if (grounds.isEmpty) {
+          emit(AuthGroundRequired(locations.first['id'].toString()));
+          return;
+        }
+
         emit(AuthSuccess());
         return;
       }

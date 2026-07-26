@@ -34,7 +34,7 @@ class EmailVerificationScreen extends StatelessWidget {
           );
         }
 
-        if (state is AuthLocationRequired ||
+        if (state is AuthLocationRequired || state is AuthGroundRequired ||
             state is AuthPendingApproval ||
             state is AuthStep1Required ||
             state is AuthStep2Required ||

@@ -127,7 +127,11 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
     if (!mounted) return;
     setState(() => _isSaving = false);
 
-    Navigator.pop(context, newLocationId);
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context, newLocationId);
+    } else {
+      Navigator.pushReplacementNamed(context, '/splash');
+    }
   }
 
   @override

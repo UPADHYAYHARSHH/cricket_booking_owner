@@ -31,6 +31,9 @@ class PendingApprovalScreen extends StatelessWidget {
           Navigator.pushNamedAndRemoveUntil(context, '/onboarding/step1', (route) => false);
         } else if (state is AuthLocationRequired) {
            Navigator.pushNamedAndRemoveUntil(context, '/add-location', (route) => false);
+        } else if (state is AuthGroundRequired) {
+          // Let splash handle it
+          Navigator.pushNamedAndRemoveUntil(context, '/splash', (route) => false);
         } else if (state is AuthUnauthenticated) {
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         } else if (state is AuthError) {

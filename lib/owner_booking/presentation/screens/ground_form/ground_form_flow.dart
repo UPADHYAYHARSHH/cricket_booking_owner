@@ -86,7 +86,11 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
                   : const Text('It will be reviewed within 24–48 hours.'),
               autoCloseDuration: const Duration(seconds: 4),
             );
-            Navigator.pop(context);
+            if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            } else {
+              Navigator.pushReplacementNamed(context, '/splash');
+            }
           }
         },
         child: PopScope(

@@ -29,6 +29,11 @@ class AuthStep3Required extends AuthState {}
 
 class AuthLocationRequired extends AuthState {}
 
+class AuthGroundRequired extends AuthState {
+  final String locationId;
+  AuthGroundRequired(this.locationId);
+}
+
 class AuthPendingApproval extends AuthState {}
 
 class AuthRejected extends AuthState {

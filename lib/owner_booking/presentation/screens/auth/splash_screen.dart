@@ -5,6 +5,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.d
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:toastification/toastification.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_flow.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -41,6 +42,14 @@ class _SplashScreenState extends State<SplashScreen> {
           clearAndGo('/onboarding/step2');
         } else if (state is AuthStep3Required) {
           clearAndGo('/onboarding/step3');
+        } else if (state is AuthGroundRequired) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => GroundFormFlow(locationId: state.locationId),
+            ),
+            (r) => false,
+          );
         } else if (state is AuthPendingApproval) {
           clearAndGo('/pending-approval');
         } else if (state is AuthError) {

@@ -92,7 +92,7 @@ class _OtpScreenState extends State<OtpScreen> {
       listenWhen: (previous, current) => ModalRoute.of(context)?.isCurrent == true,
       listener: (context, state) {
         debugPrint("DEBUG: OtpScreen received state: $state");
-        if (state is AuthLocationRequired || state is AuthPendingApproval) {
+        if (state is AuthLocationRequired || state is AuthGroundRequired || state is AuthPendingApproval) {
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/splash',

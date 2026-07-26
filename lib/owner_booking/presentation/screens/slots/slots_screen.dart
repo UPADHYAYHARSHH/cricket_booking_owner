@@ -270,7 +270,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
                   ),
                   const SizedBox(width: AppSizes.sm),
                   AppText(
-                    text: "Court ${index + 1} — ${ground['name']}",
+                    text: "${ground['name']}",
                     color: isSelected
                         ? AppColors.white
                         : AppColors.textPrimaryLight,
@@ -427,7 +427,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
     final groundIndex = state.grounds.indexWhere(
       (g) => g['id'] == state.selectedGroundId,
     );
-    final courtName = groundIndex != -1 ? "COURT ${groundIndex + 1}" : "";
+    final courtName = groundIndex != -1 ? (state.grounds[groundIndex]['name'] as String? ?? '').toUpperCase() : "";
     final dateStr = DateFormat(
       'EEE, MMM d',
     ).format(state.selectedDate).toUpperCase();
