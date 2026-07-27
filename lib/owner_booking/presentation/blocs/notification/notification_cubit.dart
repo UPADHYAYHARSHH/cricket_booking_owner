@@ -35,4 +35,22 @@ class NotificationCubit extends Cubit<NotificationState> {
       emit(NotificationError(e.toString()));
     }
   }
+
+  Future<void> deleteNotification(String notificationId, String userId) async {
+    try {
+      await _notificationRepository.deleteNotification(notificationId);
+      await fetchNotifications(userId);
+    } catch (e) {
+      emit(NotificationError(e.toString()));
+    }
+  }
+
+  Future<void> deleteAllNotifications(String userId) async {
+    try {
+      await _notificationRepository.deleteAllNotifications(userId);
+      await fetchNotifications(userId);
+    } catch (e) {
+      emit(NotificationError(e.toString()));
+    }
+  }
 }

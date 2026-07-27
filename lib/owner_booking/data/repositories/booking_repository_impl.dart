@@ -14,7 +14,6 @@ class BookingRepositoryImpl implements BookingRepository {
         .from('grounds')
         .select('id, name, location_id, locations!inner(documents_verified, is_active, deleted_at)')
         .eq('owner_id', ownerId)
-        .eq('locations.documents_verified', true)
         .eq('locations.is_active', true)
         .filter('locations.deleted_at', 'is', null);
     return List<Map<String, dynamic>>.from(response);
@@ -117,7 +116,6 @@ class BookingRepositoryImpl implements BookingRepository {
         .select(
             '*, grounds!inner(name, category, location_id, owner_id, locations!inner(documents_verified, is_active, deleted_at))')
         .eq('grounds.owner_id', ownerId)
-        .eq('grounds.locations.documents_verified', true)
         .eq('grounds.locations.is_active', true)
         .filter('grounds.locations.deleted_at', 'is', null)
         .order('created_at', ascending: false);

@@ -34,4 +34,18 @@ class NotificationRepository {
         .from('notifications')
         .update({'is_read': true}).eq('user_id', userId).eq('is_read', false);
   }
+
+  Future<void> deleteNotification(String notificationId) async {
+    await _supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+  }
+
+  Future<void> deleteAllNotifications(String userId) async {
+    await _supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId);
+  }
 }

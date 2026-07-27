@@ -80,18 +80,52 @@ class _NotificationScreenState extends State<NotificationScreen> {
           weight: FontWeight.w600,
         ),
         actions: [
-          TextButton(
-            onPressed: () {
-              final userId = FirebaseAuth.instance.currentUser?.uid;
-              if (userId != null) {
-                context.read<NotificationCubit>().markAllAsRead(userId);
+          BlocBuilder<NotificationCubit, NotificationState>(
+            builder: (context, state) {
+              if (state is! NotificationLoaded || state.notifications.isEmpty) {
+                return const SizedBox();
               }
+
+              return PopupMenuButton<String>(
+                onSelected: (value) {
+                  final userId = FirebaseAuth.instance.currentUser?.uid;
+                  if (userId != null) {
+                    if (value == 'mark_read') {
+                      context.read<NotificationCubit>().markAllAsRead(userId);
+                    } else if (value == 'clear_all') {
+                      context.read<NotificationCubit>().deleteAllNotifications(userId);
+                    }
+                  }
+                },
+                icon: const Icon(Icons.more_vert, color: AppColors.white),
+                itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'mark_read',
+                    child: Row(
+                      children: [
+                        Icon(Icons.done_all, size: 20),
+                        SizedBox(width: 12),
+                        Text("Mark all as read"),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem(
+                    value: 'clear_all',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_sweep,
+                            size: 20, color: AppColors.error),
+                        SizedBox(width: 12),
+                        Text("Clear all",
+                            style: TextStyle(color: AppColors.error)),
+                      ],
+                    ),
+                  ),
+                ],
+              );
             },
-            child: const Text(
-              'Mark all read',
-              style: TextStyle(color: AppColors.white, fontSize: 13),
-            ),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: BlocBuilder<NotificationCubit, NotificationState>(
@@ -137,20 +171,33 @@ class _NotificationScreenState extends State<NotificationScreen> {
 
                   return Dismissible(
                     key: Key(notification['id'].toString()),
-                    direction: DismissDirection.endToStart,
-                    background: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      color: Colors.red,
-                      child: const Icon(Icons.delete, color: Colors.white),
-                    ),
-                    confirmDismiss: (_) async {
+                    direction: DismissDirection.horizontal,
+                    background: _buildSwipeBackground(context,
+                        alignment: Alignment.centerLeft,
+                        color: AppColors.primaryDarkGreen,
+                        icon: Icons.done,
+                        label: "Read"),
+                    secondaryBackground: _buildSwipeBackground(context,
+                        alignment: Alignment.centerRight,
+                        color: AppColors.error,
+                        icon: Icons.delete_outline,
+                        label: "Delete"),
+                    confirmDismiss: (direction) async {
                       final userId = FirebaseAuth.instance.currentUser?.uid;
                       if (userId != null) {
-                        context.read<NotificationCubit>().markAsRead(
-                          notification['id'].toString(),
-                          userId,
-                        );
+                        if (direction == DismissDirection.startToEnd) {
+                          context.read<NotificationCubit>().markAsRead(
+                                notification['id'].toString(),
+                                userId,
+                              );
+                          return false; // Don't actually dismiss the item, let Cubit refresh it
+                        } else if (direction == DismissDirection.endToStart) {
+                          context.read<NotificationCubit>().deleteNotification(
+                                notification['id'].toString(),
+                                userId,
+                              );
+                          return true;
+                        }
                       }
                       return false;
                     },
@@ -247,5 +294,33 @@ class _NotificationScreenState extends State<NotificationScreen> {
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     if (diff.inDays < 7) return '${diff.inDays}d ago';
     return DateFormat('MMM d, yyyy').format(dateTime);
+  }
+
+  Widget _buildSwipeBackground(BuildContext context,
+      {required Alignment alignment,
+      required Color color,
+      required IconData icon,
+      required String label}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      alignment: alignment,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white, size: 24),
+          const SizedBox(height: 4),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
   }
 }

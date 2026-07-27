@@ -18,4 +18,9 @@ abstract class GroundRepository {
     required String groundId,
     required Map<String, dynamic> data,
   });
+
+  Future<void> toggleGroundAvailability({
+    required String groundId,
+    required bool isAvailable,
+  });
 }

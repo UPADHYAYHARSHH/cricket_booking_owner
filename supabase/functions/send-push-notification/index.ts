@@ -20,7 +20,7 @@ serve(async (req) => {
     // 1. Fetch the notification row
     const { data: notification, error: notifError } = await supabase
       .from("notifications")
-      .select("user_id, title, body, type, data")
+      .select("user_id, title, message, type, data")
       .eq("id", notification_id)
       .single();
 
@@ -73,7 +73,7 @@ serve(async (req) => {
                 token: row.token,
                 notification: {
                   title: notification.title,
-                  body: notification.body,
+                  body: notification.message,
                 },
                 data: {
                   type: notification.type ?? "",
@@ -92,7 +92,7 @@ serve(async (req) => {
                     aps: {
                       alert: {
                         title: notification.title,
-                        body: notification.body,
+                        body: notification.message,
                       },
                       sound: "default",
                     },

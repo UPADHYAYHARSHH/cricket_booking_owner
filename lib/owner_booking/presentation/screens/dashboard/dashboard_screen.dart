@@ -20,6 +20,7 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widge
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/stat_card.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/today_booking_card.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/revenue/revenue_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/sport/sport_cubit.dart' as turf_sport;
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -156,7 +157,10 @@ class _DashboardScreenState extends State<DashboardScreen>
               return RefreshIndicator(
                 color: AppColors.primaryDarkGreen,
                 onRefresh: () async {
-                  await context.read<DashboardCubit>().fetchDashboardData();
+                  final sportCubit = context.read<turf_sport.SportCubit>();
+                  final dashboardCubit = context.read<DashboardCubit>();
+                  await sportCubit.fetchSports();
+                  await dashboardCubit.fetchDashboardData();
                 },
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),

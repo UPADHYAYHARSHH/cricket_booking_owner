@@ -27,7 +27,7 @@ class _Step1SportsState extends State<Step1Sports> with TickerProviderStateMixin
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_initialized) return;
-    _selectedSport = context.read<GroundFormCubit>().data.category;
+    _selectedSport = context.read<GroundFormCubit>().data.category.toLowerCase();
     _initialized = true;
   }
 

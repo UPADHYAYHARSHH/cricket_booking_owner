@@ -46,9 +46,9 @@ class GroundCubit extends Cubit<GroundState> {
     String? locationId,
   }) async {
     try {
-      await _groundRepository.updateGround(
+      await _groundRepository.toggleGroundAvailability(
         groundId: groundId,
-        data: {'is_available': isAvailable},
+        isAvailable: isAvailable,
       );
       if (locationId != null) {
         await fetchGroundsForLocation(locationId);

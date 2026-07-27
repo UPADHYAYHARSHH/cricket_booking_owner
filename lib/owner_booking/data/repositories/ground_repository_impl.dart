@@ -8,13 +8,24 @@ class GroundRepositoryImpl implements GroundRepository {
 
   @override
   Future<List<Map<String, dynamic>>> getOwnerGrounds(String ownerId) async {
+    List<String> activeSportIdentifiers = [];
+    try {
+      final sportsResponse = await _supabase.from('sports').select('slug, name').eq('is_active', true);
+      for (var s in sportsResponse as List) {
+        if (s['slug'] != null) activeSportIdentifiers.add(s['slug'].toString().toLowerCase());
+        if (s['name'] != null) activeSportIdentifiers.add(s['name'].toString().toLowerCase());
+      }
+    } catch (e) {
+      // Ignore
+    }
+
     final response = await _supabase
         .from('grounds')
         .select('*, ground_images(image_url)')
         .eq('owner_id', ownerId)
         .order('created_at', ascending: false);
 
-    return (response as List).map<Map<String, dynamic>>((e) {
+    final grounds = (response as List).map<Map<String, dynamic>>((e) {
       return {
         ...e as Map<String, dynamic>,
         'imageUrl':
@@ -24,19 +35,51 @@ class GroundRepositoryImpl implements GroundRepository {
             : 'https://placehold.co/600x400/0B8457/FFFFFF/png?text=${Uri.encodeComponent(e['name'] ?? 'Ground')}',
       };
     }).toList();
+
+    if (activeSportIdentifiers.isNotEmpty) {
+      return grounds.where((g) {
+        final category = g['category']?.toString().toLowerCase() ?? '';
+        final groundType = g['ground_type']?.toString().toLowerCase() ?? '';
+        final categories = (g['categories'] as List?)?.map((e) => e.toString().toLowerCase()).toList() ?? [];
+        
+        bool hasMatch = activeSportIdentifiers.contains(category) || 
+                        activeSportIdentifiers.contains(groundType);
+                        
+        for (var c in categories) {
+          if (activeSportIdentifiers.contains(c)) {
+            hasMatch = true;
+            break;
+          }
+        }
+        return hasMatch;
+      }).toList();
+    }
+    
+    return grounds;
   }
 
   @override
   Future<List<Map<String, dynamic>>> getGroundsForLocation(
     String locationId,
   ) async {
+    List<String> activeSportIdentifiers = [];
+    try {
+      final sportsResponse = await _supabase.from('sports').select('slug, name').eq('is_active', true);
+      for (var s in sportsResponse as List) {
+        if (s['slug'] != null) activeSportIdentifiers.add(s['slug'].toString().toLowerCase());
+        if (s['name'] != null) activeSportIdentifiers.add(s['name'].toString().toLowerCase());
+      }
+    } catch (e) {
+      // Ignore
+    }
+
     final response = await _supabase
         .from('grounds')
         .select('*, ground_images(image_url)')
         .eq('location_id', locationId)
         .order('created_at', ascending: false);
 
-    return (response as List).map<Map<String, dynamic>>((e) {
+    final grounds = (response as List).map<Map<String, dynamic>>((e) {
       return {
         ...e as Map<String, dynamic>,
         'imageUrl':
@@ -46,6 +89,27 @@ class GroundRepositoryImpl implements GroundRepository {
             : 'https://placehold.co/600x400/0B8457/FFFFFF/png?text=${Uri.encodeComponent(e['name'] ?? 'Ground')}',
       };
     }).toList();
+
+    if (activeSportIdentifiers.isNotEmpty) {
+      return grounds.where((g) {
+        final category = g['category']?.toString().toLowerCase() ?? '';
+        final groundType = g['ground_type']?.toString().toLowerCase() ?? '';
+        final categories = (g['categories'] as List?)?.map((e) => e.toString().toLowerCase()).toList() ?? [];
+        
+        bool hasMatch = activeSportIdentifiers.contains(category) || 
+                        activeSportIdentifiers.contains(groundType);
+                        
+        for (var c in categories) {
+          if (activeSportIdentifiers.contains(c)) {
+            hasMatch = true;
+            break;
+          }
+        }
+        return hasMatch;
+      }).toList();
+    }
+    
+    return grounds;
   }
 
   @override
@@ -95,6 +159,20 @@ class GroundRepositoryImpl implements GroundRepository {
         'p_operating_days': data['operating_days'] ?? <String>[],
         'p_slot_duration': data['slot_duration'] ?? '1 Hour',
         'p_is_available': data['is_available'] ?? true,
+      },
+    );
+  }
+
+  @override
+  Future<void> toggleGroundAvailability({
+    required String groundId,
+    required bool isAvailable,
+  }) async {
+    await _supabase.rpc(
+      'toggle_ground_availability',
+      params: {
+        'p_ground_id': groundId,
+        'p_is_available': isAvailable,
       },
     );
   }
