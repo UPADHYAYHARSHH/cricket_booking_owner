@@ -288,12 +288,30 @@ class _SlotsScreenState extends State<SlotsScreen> {
 
   Widget _buildDateSelector(SlotLoaded state) {
     final today = DateTime.now();
-    final lastDay = DateTime(today.year, today.month + 1, 0);
-    final daysInMonth = lastDay.day;
     final dates = List.generate(
-      daysInMonth,
-      (i) => DateTime(today.year, today.month, i + 1),
+      30,
+      (i) => DateTime(today.year, today.month, today.day + i),
     );
+
+    final groundIndex = state.grounds.indexWhere(
+      (g) => g['id'] == state.selectedGroundId,
+    );
+    final selectedGround = groundIndex != -1 ? state.grounds[groundIndex] : <String, dynamic>{};
+    
+    dynamic rawOperatingDays = selectedGround['operating_days'];
+    List<String> operatingDays = [];
+    if (rawOperatingDays is List) {
+      operatingDays = rawOperatingDays.map((e) => e.toString().toLowerCase()).toList();
+    } else if (rawOperatingDays is String) {
+      final cleaned = rawOperatingDays.replaceAll('{', '').replaceAll('}', '').replaceAll('"', '');
+      if (cleaned.isNotEmpty) {
+        operatingDays = cleaned.split(',').map((e) => e.trim().toLowerCase()).toList();
+      }
+    }
+
+    debugPrint("GROUND ID: ${state.selectedGroundId}");
+    debugPrint("RAW OPERATING DAYS: $rawOperatingDays");
+    debugPrint("PARSED OPERATING DAYS: $operatingDays");
 
     int selectedIndex = dates.indexWhere(
       (d) => _isSameDay(d, state.selectedDate),
@@ -341,10 +359,14 @@ class _SlotsScreenState extends State<SlotsScreen> {
           final date = dates[index];
           final isSelected = _isSameDay(date, state.selectedDate);
           final isToday = _isSameDay(date, DateTime.now());
+          final dayStr = DateFormat('EEE').format(date).toLowerCase();
+          final isOperatingDay = operatingDays.isEmpty || operatingDays.contains(dayStr);
 
           return GestureDetector(
-            onTap: () => context.read<SlotCubit>().selectDate(date),
-            child: AnimatedContainer(
+            onTap: isOperatingDay ? () => context.read<SlotCubit>().selectDate(date) : null,
+            child: Opacity(
+              opacity: isOperatingDay ? 1.0 : 0.4,
+              child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: 56,
               decoration: BoxDecoration(
@@ -413,6 +435,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
                     const SizedBox(height: 5),
                 ],
               ),
+            ),
             ),
           );
         },
@@ -519,6 +542,56 @@ class _SlotsScreenState extends State<SlotsScreen> {
   }
 
   Widget _buildGroupedSlotGrid(BuildContext context, SlotLoaded state) {
+    if (state.isLoadingSlots) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: AppSizes.md),
+            for (int i = 0; i < 3; i++) ...[
+              Shimmer.fromColors(
+                baseColor: AppColors.borderLight,
+                highlightColor: AppColors.bgLight,
+                child: Container(
+                  width: 140,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: AppColors.white,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSizes.lg),
+              Shimmer.fromColors(
+                baseColor: AppColors.borderLight,
+                highlightColor: AppColors.bgLight,
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 2.2,
+                    crossAxisSpacing: AppSizes.md,
+                    mainAxisSpacing: AppSizes.md,
+                  ),
+                  itemCount: 4,
+                  itemBuilder: (_, _) => Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSizes.xl),
+            ]
+          ],
+        ),
+      );
+    }
+
     // Group slots by time period
     final Map<String, List<VirtualSlot>> grouped = {};
     for (final slot in state.slots) {

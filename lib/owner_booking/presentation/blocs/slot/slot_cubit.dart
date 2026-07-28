@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
@@ -84,7 +85,7 @@ class SlotCubit extends Cubit<SlotState> {
   Future<void> selectDate(DateTime date) async {
     if (state is SlotLoaded) {
       final currentState = state as SlotLoaded;
-      emit(SlotLoading());
+      emit(currentState.copyWith(isLoadingSlots: true));
       await fetchSlotsForDate(
         groundId: currentState.selectedGroundId,
         date: date,
@@ -97,7 +98,7 @@ class SlotCubit extends Cubit<SlotState> {
   Future<void> selectGround(String groundId) async {
     if (state is SlotLoaded) {
       final currentState = state as SlotLoaded;
-      emit(SlotLoading());
+      emit(currentState.copyWith(isLoadingSlots: true));
       await fetchSlotsForDate(
         groundId: groundId,
         date: currentState.selectedDate,
@@ -192,8 +193,14 @@ class SlotCubit extends Cubit<SlotState> {
   }
 
   void _rebuildSlots() {
+    print('RAW BOOKINGS FROM DB: ${_latestBookings.length}');
+    for (var b in _latestBookings) {
+      print('Booking ID: ${b['id']} | Status: ${b['status']} | Time: ${b['slot_time']} | Ground: ${b['ground_id']}');
+    }
+
     final bookingsForDate = _latestBookings.where((b) {
-      if (b['status'] != 'confirmed' && b['status'] != 'paid') return false;
+      final status = b['status']?.toString().toLowerCase();
+      if (status != 'confirmed' && status != 'paid' && status != 'booked' && status != 'pending') return false;
       final slotTimeStr = b['slot_time'];
       if (slotTimeStr == null) return false;
       try {
@@ -205,6 +212,8 @@ class SlotCubit extends Cubit<SlotState> {
         return false;
       }
     }).toList();
+    
+    print('BOOKINGS FOR SELECTED DATE: ${bookingsForDate.length}');
 
     // Determine price based on weekday/weekend
     final isWeekend =
@@ -246,13 +255,38 @@ class SlotCubit extends Cubit<SlotState> {
           .cast<Map<String, dynamic>?>()
           .firstWhere((b) {
             if (b == null) return false;
+            
+            // Check standard single-slot booking time
             final bookingTime = DateTime.parse(b['slot_time']).toLocal();
-            return bookingTime.hour == vSlot.startTime.hour &&
-                bookingTime.minute == vSlot.startTime.minute;
+            if (bookingTime.hour == vSlot.startTime.hour &&
+                bookingTime.minute == vSlot.startTime.minute) {
+              return true;
+            }
+            
+            // Check multi-slot user app booking format in period (e.g. "...|7:00 AM,8:00 AM")
+            final periodStr = b['period']?.toString() ?? '';
+            if (periodStr.contains('|')) {
+              final parts = periodStr.split('|');
+              if (parts.length > 1) {
+                final timesStr = parts[1];
+                final times = timesStr.split(',');
+                for (final t in times) {
+                  try {
+                    final parsed = DateFormat('h:mm a').parse(t.trim());
+                    if (parsed.hour == vSlot.startTime.hour &&
+                        parsed.minute == vSlot.startTime.minute) {
+                      return true;
+                    }
+                  } catch (_) {}
+                }
+              }
+            }
+            
+            return false;
           }, orElse: () => null);
 
       if (matchingBooking != null) {
-        final isOwner = matchingBooking['user_id'] == null;
+        final isOwner = matchingBooking['user_id'] == null || matchingBooking['user_id'].toString().isEmpty;
 
         if (isOwner) {
           virtualSlots[i] = VirtualSlot(

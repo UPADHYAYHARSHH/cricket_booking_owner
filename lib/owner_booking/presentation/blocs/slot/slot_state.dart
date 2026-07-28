@@ -18,6 +18,7 @@ class SlotLoaded extends SlotState {
   final int blockedCount;
   final int totalSlots;
   final int todayRevenue;
+  final bool isLoadingSlots;
 
   SlotLoaded({
     required this.venueName,
@@ -29,6 +30,7 @@ class SlotLoaded extends SlotState {
     required this.blockedCount,
     required this.totalSlots,
     required this.todayRevenue,
+    this.isLoadingSlots = false,
   });
 
   SlotLoaded copyWith({
@@ -41,6 +43,7 @@ class SlotLoaded extends SlotState {
     int? blockedCount,
     int? totalSlots,
     int? todayRevenue,
+    bool? isLoadingSlots,
   }) {
     return SlotLoaded(
       venueName: venueName ?? this.venueName,
@@ -52,6 +55,7 @@ class SlotLoaded extends SlotState {
       blockedCount: blockedCount ?? this.blockedCount,
       totalSlots: totalSlots ?? this.totalSlots,
       todayRevenue: todayRevenue ?? this.todayRevenue,
+      isLoadingSlots: isLoadingSlots ?? this.isLoadingSlots,
     );
   }
 }

@@ -19,7 +19,7 @@ class SlotRepositoryImpl implements SlotRepository {
   Future<List<Map<String, dynamic>>> getOwnerGrounds(String ownerId) async {
     final response = await _supabase
         .from('grounds')
-        .select('id, name, location_id, category, ground_type, opening_time, closing_time, slot_duration, price_per_hour, weekend_price, created_at')
+        .select('id, name, location_id, category, ground_type, opening_time, closing_time, slot_duration, price_per_hour, weekend_price, created_at, operating_days')
         .eq('owner_id', ownerId)
         .order('created_at', ascending: true);
     return List<Map<String, dynamic>>.from(response);

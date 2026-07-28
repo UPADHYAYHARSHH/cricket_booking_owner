@@ -308,7 +308,7 @@ BEGIN
       AND location_id = p_location_id::uuid
       AND category = p_category;
 
-    v_display_name := initcap(p_category) || ' ' || (v_count + 1);
+    v_display_name := initcap(replace(p_category, '_', ' ')) || ' ' || (v_count + 1);
 
     INSERT INTO public.grounds (
         owner_id, location_id, name, category,
@@ -555,69 +555,68 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.generate_ground_slots(TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT[]) TO anon;
 GRANT EXECUTE ON FUNCTION public.generate_ground_slots(TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT[]) TO authenticated;
-- -   R u n   t h i s   i n   y o u r   S u p a b a s e   S Q L   E d i t o r  
-  
- - -   1 .   C r e a t e   a   d e d i c a t e d   R P C   f o r   t o g g l i n g   a v a i l a b i l i t y   s o   w e   d o n ' t   w i p e   o u t   o t h e r   f i e l d s  
- C R E A T E   O R   R E P L A C E   F U N C T I O N   p u b l i c . t o g g l e _ g r o u n d _ a v a i l a b i l i t y (  
-         p _ g r o u n d _ i d   T E X T ,  
-         p _ i s _ a v a i l a b l e   B O O L E A N  
- )  
- R E T U R N S   v o i d  
- L A N G U A G E   p l p g s q l  
- S E C U R I T Y   D E F I N E R  
- A S   $ $  
- B E G I N  
-         U P D A T E   p u b l i c . g r o u n d s  
-         S E T   i s _ a v a i l a b l e   =   p _ i s _ a v a i l a b l e  
-         W H E R E   i d   =   p _ g r o u n d _ i d : : u u i d ;  
- E N D ;  
- $ $ ;  
-  
- G R A N T   E X E C U T E   O N   F U N C T I O N   p u b l i c . t o g g l e _ g r o u n d _ a v a i l a b i l i t y ( T E X T ,   B O O L E A N )   T O   a n o n ;  
- G R A N T   E X E C U T E   O N   F U N C T I O N   p u b l i c . t o g g l e _ g r o u n d _ a v a i l a b i l i t y ( T E X T ,   B O O L E A N )   T O   a u t h e n t i c a t e d ;  
-  
- - -   2 .   U p d a t e   t h e   r e g i s t e r _ g r o u n d   R P C   t o   e n s u r e   i s _ a v a i l a b l e   d e f a u l t s   t o   T R U E  
- C R E A T E   O R   R E P L A C E   F U N C T I O N   p u b l i c . r e g i s t e r _ g r o u n d (  
-         p _ o w n e r _ i d   T E X T ,  
-         p _ l o c a t i o n _ i d   T E X T ,  
-         p _ c a t e g o r y   T E X T ,  
-         p _ p r i c e _ p e r _ h o u r   I N T ,  
-         p _ w e e k e n d _ p r i c e   I N T ,  
-         p _ o p e n i n g _ t i m e   T E X T ,  
-         p _ c l o s i n g _ t i m e   T E X T ,  
-         p _ o p e r a t i n g _ d a y s   T E X T [ ]   D E F A U L T   A R R A Y [ ' M o n ' , ' T u e ' , ' W e d ' , ' T h u ' , ' F r i ' , ' S a t ' , ' S u n ' ] ,  
-         p _ s l o t _ d u r a t i o n   T E X T   D E F A U L T   ' 1   H o u r '  
- )  
- R E T U R N S   J S O N  
- L A N G U A G E   p l p g s q l  
- S E C U R I T Y   D E F I N E R  
- A S   $ $  
- D E C L A R E  
-         r e s u l t   J S O N ;  
-         v _ c o u n t   I N T ;  
-         v _ d i s p l a y _ n a m e   T E X T ;  
- B E G I N  
-         - -   A u t o - g e n e r a t e   n a m e :   " C r i c k e t   1 " ,   " V o l l e y b a l l   2 " ,   e t c .  
-         S E L E C T   C O U N T ( * )   I N T O   v _ c o u n t  
-         F R O M   p u b l i c . g r o u n d s  
-         W H E R E   o w n e r _ i d   =   p _ o w n e r _ i d  
-             A N D   l o c a t i o n _ i d   =   p _ l o c a t i o n _ i d : : u u i d  
-             A N D   c a t e g o r y   =   p _ c a t e g o r y ;  
-  
-         v _ d i s p l a y _ n a m e   : =   i n i t c a p ( p _ c a t e g o r y )   | |   '   '   | |   ( v _ c o u n t   +   1 ) ;  
-  
-         I N S E R T   I N T O   p u b l i c . g r o u n d s   (  
-                 o w n e r _ i d ,   l o c a t i o n _ i d ,   n a m e ,   c a t e g o r y ,  
-                 p r i c e _ p e r _ h o u r ,   w e e k e n d _ p r i c e ,   o p e n i n g _ t i m e ,   c l o s i n g _ t i m e ,  
-                 o p e r a t i n g _ d a y s ,   s l o t _ d u r a t i o n ,   i s _ a v a i l a b l e  
-         )  
-         V A L U E S   (  
-                 p _ o w n e r _ i d ,   p _ l o c a t i o n _ i d : : u u i d ,   v _ d i s p l a y _ n a m e ,   p _ c a t e g o r y ,  
-                 p _ p r i c e _ p e r _ h o u r ,   p _ w e e k e n d _ p r i c e ,   p _ o p e n i n g _ t i m e : : t i m e ,   p _ c l o s i n g _ t i m e : : t i m e ,  
-                 p _ o p e r a t i n g _ d a y s ,   p _ s l o t _ d u r a t i o n ,   T R U E  
-         )  
-         R E T U R N I N G   t o _ j s o n ( g r o u n d s . * )   I N T O   r e s u l t ;  
-         R E T U R N   r e s u l t ;  
- E N D ;  
- $ $ ;  
- 
+-- Run this in your Supabase SQL Editor
+
+-- 1. Create a dedicated RPC for toggling availability so we don't wipe out other fields
+CREATE OR REPLACE FUNCTION public.toggle_ground_availability(
+    p_ground_id TEXT,
+    p_is_available BOOLEAN
+)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+    UPDATE public.grounds
+    SET is_available = p_is_available
+    WHERE id = p_ground_id::uuid;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.toggle_ground_availability(TEXT, BOOLEAN) TO anon;
+GRANT EXECUTE ON FUNCTION public.toggle_ground_availability(TEXT, BOOLEAN) TO authenticated;
+
+-- 2. Update the register_ground RPC to ensure is_available defaults to TRUE
+CREATE OR REPLACE FUNCTION public.register_ground(
+    p_owner_id TEXT,
+    p_location_id TEXT,
+    p_category TEXT,
+    p_price_per_hour INT,
+    p_weekend_price INT,
+    p_opening_time TEXT,
+    p_closing_time TEXT,
+    p_operating_days TEXT[] DEFAULT ARRAY['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    p_slot_duration TEXT DEFAULT '1 Hour'
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    result JSON;
+    v_count INT;
+    v_display_name TEXT;
+BEGIN
+    -- Auto-generate name: "Cricket 1", "Volleyball 2", etc.
+    SELECT COUNT(*) INTO v_count
+    FROM public.grounds
+    WHERE owner_id = p_owner_id
+      AND location_id = p_location_id::uuid
+      AND category = p_category;
+
+    v_display_name := initcap(replace(p_category, '_', ' ')) || ' ' || (v_count + 1);
+
+    INSERT INTO public.grounds (
+        owner_id, location_id, name, category,
+        price_per_hour, weekend_price, opening_time, closing_time,
+        operating_days, slot_duration, is_available
+    )
+    VALUES (
+        p_owner_id, p_location_id::uuid, v_display_name, p_category,
+        p_price_per_hour, p_weekend_price, p_opening_time::time, p_closing_time::time,
+        p_operating_days, p_slot_duration, TRUE
+    )
+    RETURNING to_json(grounds.*) INTO result;
+    RETURN result;
+END;
+$$;
