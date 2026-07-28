@@ -192,26 +192,18 @@ class SlotCubit extends Cubit<SlotState> {
   }
 
   void _rebuildSlots() {
-    final dateStartStr = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-    ).toIso8601String();
-    final dateEndStr = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      23,
-      59,
-      59,
-    ).toIso8601String();
-
     final bookingsForDate = _latestBookings.where((b) {
       if (b['status'] != 'confirmed' && b['status'] != 'paid') return false;
-      final slotTime = b['slot_time'];
-      if (slotTime == null) return false;
-      return slotTime.compareTo(dateStartStr) >= 0 &&
-          slotTime.compareTo(dateEndStr) <= 0;
+      final slotTimeStr = b['slot_time'];
+      if (slotTimeStr == null) return false;
+      try {
+        final slotDate = DateTime.parse(slotTimeStr).toLocal();
+        return slotDate.year == _selectedDate.year &&
+               slotDate.month == _selectedDate.month &&
+               slotDate.day == _selectedDate.day;
+      } catch (_) {
+        return false;
+      }
     }).toList();
 
     // Determine price based on weekday/weekend
@@ -229,13 +221,12 @@ class SlotCubit extends Cubit<SlotState> {
       );
       if (nextSlotTime.isAfter(_slotEnd)) break;
 
-      final isPeak = currentSlotTime.hour >= 18 && currentSlotTime.hour <= 21;
       virtualSlots.add(
         VirtualSlot(
           startTime: currentSlotTime,
           endTime: nextSlotTime,
-          status: isPeak ? SlotStatus.peak : SlotStatus.open,
-          price: isPeak ? basePrice + 100 : basePrice,
+          status: SlotStatus.open,
+          price: basePrice,
         ),
       );
       currentSlotTime = nextSlotTime;
@@ -345,6 +336,7 @@ class SlotCubit extends Cubit<SlotState> {
       final inserted = await _slotRepository.insertOwnerBooking(
         groundId: _selectedGroundId,
         slotTime: slotTimeIso,
+        localStartTime: startTime,
         price: price,
         sportName: sportName,
         period: period,
@@ -398,7 +390,12 @@ class SlotCubit extends Cubit<SlotState> {
           .where((b) => b['id'] != bookingId)
           .toList();
       _rebuildSlots();
-      await _slotRepository.deleteOwnerBooking(bookingId);
+      await _slotRepository.deleteOwnerBooking(
+        bookingId: bookingId,
+        groundId: _selectedGroundId,
+        localStartTime: DateTime.parse(removed['slot_time']).toLocal(),
+        defaultPrice: _defaultPrice,
+      );
     } catch (e) {
       // Rollback
       if (removed.isNotEmpty) {

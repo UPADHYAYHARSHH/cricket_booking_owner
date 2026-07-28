@@ -38,6 +38,7 @@ class SlotRepositoryImpl implements SlotRepository {
   Future<Map<String, dynamic>> insertOwnerBooking({
     required String groundId,
     required String slotTime,
+    required DateTime localStartTime,
     required int price,
     required String sportName,
     required String period,
@@ -51,13 +52,43 @@ class SlotRepositoryImpl implements SlotRepository {
       'p_period': period,
       'p_notes': (note != null && note.trim().isNotEmpty) ? note.trim() : null,
     });
+    
+    // Sync to slots table for the Booking App
+    final formattedDate = "${localStartTime.year}-${localStartTime.month.toString().padLeft(2, '0')}-${localStartTime.day.toString().padLeft(2, '0')}";
+    final formattedStartTime = "${localStartTime.hour.toString().padLeft(2, '0')}:${localStartTime.minute.toString().padLeft(2, '0')}:00";
+    
+    await _supabase.rpc('upsert_slot', params: {
+      'p_ground_id': groundId,
+      'p_date': formattedDate,
+      'p_start_time': formattedStartTime,
+      'p_status': 'booked',
+      'p_price': price,
+    });
+
     return Map<String, dynamic>.from(result as Map);
   }
 
   @override
-  Future<void> deleteOwnerBooking(String bookingId) async {
+  Future<void> deleteOwnerBooking({
+    required String bookingId,
+    required String groundId,
+    required DateTime localStartTime,
+    required int defaultPrice,
+  }) async {
     await _supabase.rpc('delete_owner_booking', params: {
       'p_booking_id': bookingId,
+    });
+    
+    // Sync to slots table for the Booking App
+    final formattedDate = "${localStartTime.year}-${localStartTime.month.toString().padLeft(2, '0')}-${localStartTime.day.toString().padLeft(2, '0')}";
+    final formattedStartTime = "${localStartTime.hour.toString().padLeft(2, '0')}:${localStartTime.minute.toString().padLeft(2, '0')}:00";
+    
+    await _supabase.rpc('upsert_slot', params: {
+      'p_ground_id': groundId,
+      'p_date': formattedDate,
+      'p_start_time': formattedStartTime,
+      'p_status': 'available',
+      'p_price': defaultPrice,
     });
   }
 }

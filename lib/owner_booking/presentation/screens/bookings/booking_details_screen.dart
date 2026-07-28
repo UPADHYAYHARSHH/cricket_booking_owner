@@ -31,6 +31,240 @@ class BookingDetailsScreen extends StatelessWidget {
         .join(' ');
   }
 
+  void _showUnblockDialog(BuildContext context, String dateStr, String timeStr, String? blockReason, String bookingId) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: "Unblock Slot",
+      barrierColor: AppColors.black.withValues(alpha: 0.45),
+      transitionDuration: const Duration(milliseconds: 280),
+      pageBuilder: (ctx, anim1, anim2) => const SizedBox.shrink(),
+      transitionBuilder: (ctx, anim, secondaryAnim, child) {
+        final curved = CurvedAnimation(parent: anim, curve: Curves.easeOutBack);
+        return Opacity(
+          opacity: anim.value.clamp(0.0, 1.0),
+          child: Transform.scale(
+            scale: 0.85 + (curved.value.clamp(0.0, 1.2) * 0.15),
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.white,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusXxl),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
+                      blurRadius: 30,
+                      offset: const Offset(0, 12),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.xl,
+                        AppSizes.xxl,
+                        AppSizes.xl,
+                        AppSizes.xl,
+                      ),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            AppColors.textSecondaryLight,
+                            Color(0xFF78909C),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(AppSizes.radiusXxl),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSizes.lg),
+                            decoration: BoxDecoration(
+                              color: AppColors.white.withValues(alpha: 0.18),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.lock_open_rounded,
+                              color: AppColors.white,
+                              size: 30,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.md),
+                          const Text(
+                            "Unblock This Slot",
+                            style: TextStyle(
+                              color: AppColors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.xs),
+                          Text(
+                            dateStr,
+                            style: TextStyle(
+                              color: AppColors.white.withValues(alpha: 0.85),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.xl,
+                        AppSizes.xl,
+                        AppSizes.xl,
+                        AppSizes.sm,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSizes.lg),
+                            decoration: BoxDecoration(
+                              color: AppColors.bgLight,
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusLg,
+                              ),
+                              border: Border.all(color: AppColors.borderLight),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.access_time_filled_rounded,
+                                  size: 20,
+                                  color: AppColors.textSecondaryLight,
+                                ),
+                                const SizedBox(width: AppSizes.sm + 2),
+                                Expanded(
+                                  child: Text(
+                                    timeStr,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: AppColors.textPrimaryLight,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSizes.lg),
+                          Text(
+                            "Reason: ${blockReason ?? 'Booked by owner'}\n\nMake this slot available for booking again?",
+                            style: const TextStyle(
+                              fontSize: 12.5,
+                              color: AppColors.textSecondaryLight,
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSizes.xl,
+                        AppSizes.sm,
+                        AppSizes.xl,
+                        AppSizes.xl,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: AppSizes.lg - 2,
+                                ),
+                                side: const BorderSide(
+                                  color: AppColors.borderLight,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusMd,
+                                  ),
+                                ),
+                              ),
+                              onPressed: () => Navigator.of(ctx).pop(),
+                              child: const Text(
+                                "Cancel",
+                                style: TextStyle(
+                                  color: AppColors.textSecondaryLight,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSizes.md),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: AppSizes.lg - 2,
+                                ),
+                                backgroundColor: AppColors.primaryDarkGreen,
+                                foregroundColor: AppColors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusMd,
+                                  ),
+                                ),
+                              ),
+                              onPressed: () async {
+                                Navigator.of(ctx).pop();
+                                await context
+                                    .read<SlotCubit>()
+                                    .unbookOwnerSlot(bookingId);
+                                if (context.mounted) {
+                                  toastification.show(
+                                    context: context,
+                                    title: const Text("Slot Unblocked"),
+                                    type: ToastificationType.success,
+                                    autoCloseDuration: const Duration(seconds: 3),
+                                  );
+                                  Navigator.pop(context);
+                                }
+                              },
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.lock_open_rounded, size: 18),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    "Unblock",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final status = (booking['status'] ?? 'pending').toString();
@@ -506,16 +740,7 @@ class BookingDetailsScreen extends StatelessWidget {
                       height: AppSizes.buttonHeightLg,
                       child: ElevatedButton(
                         onPressed: () {
-                          context
-                              .read<SlotCubit>()
-                              .unbookOwnerSlot(booking['id'].toString());
-                          toastification.show(
-                            context: context,
-                            title: const Text("Slot Unblocked"),
-                            type: ToastificationType.success,
-                            autoCloseDuration: const Duration(seconds: 3),
-                          );
-                          Navigator.pop(context);
+                          _showUnblockDialog(context, dateFormatted, timeFormatted, booking['notes']?.toString(), booking['id'].toString());
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.surfaceLight,

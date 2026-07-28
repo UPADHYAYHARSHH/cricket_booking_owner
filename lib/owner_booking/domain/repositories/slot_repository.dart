@@ -8,11 +8,17 @@ abstract class SlotRepository {
   Future<Map<String, dynamic>> insertOwnerBooking({
     required String groundId,
     required String slotTime,
+    required DateTime localStartTime,
     required int price,
     required String sportName,
     required String period,
     String? note,
   });
 
-  Future<void> deleteOwnerBooking(String bookingId);
+  Future<void> deleteOwnerBooking({
+    required String bookingId,
+    required String groundId,
+    required DateTime localStartTime,
+    required int defaultPrice,
+  });
 }
