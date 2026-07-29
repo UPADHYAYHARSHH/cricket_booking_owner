@@ -433,11 +433,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                           title: "Bank & Payout Settings",
                           onTap: _showComingSoon,
                         ),
-                        _SettingsItem(
-                          icon: Icons.notifications_outlined,
-                          title: "Notifications",
-                          onTap: () => Navigator.pushNamed(context, '/notifications'),
-                        ),
+
                         _SettingsItem(
                           icon: Icons.card_membership_outlined,
                           title: "Subscription & Plan",

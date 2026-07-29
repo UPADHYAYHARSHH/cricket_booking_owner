@@ -183,6 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 onLocationSelected: (locationId) => context
                                     .read<DashboardCubit>()
                                     .selectLocation(locationId),
+                                onNotificationTap: () => Navigator.pushNamed(context, '/notifications'),
                               ),
                               const SizedBox(height: 100),
                             ],
