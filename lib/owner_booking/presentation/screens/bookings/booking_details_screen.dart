@@ -286,7 +286,7 @@ class BookingDetailsScreen extends StatelessWidget {
     final periodFromDb = booking['period']?.toString() ?? '';
     final String timeFormatted;
     if (periodFromDb.isNotEmpty) {
-      timeFormatted = periodFromDb;
+      timeFormatted = periodFromDb.split('|').first;
     } else if (slotTime != null) {
       timeFormatted =
           "${DateFormat('h:mm a').format(slotTime)} – ${DateFormat('h:mm a').format(slotTime.add(const Duration(hours: 1)))}";
