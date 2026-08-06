@@ -4,6 +4,7 @@ import 'package:turfpro_owner/owner_booking/domain/repositories/auth_repository.
 import 'package:turfpro_owner/owner_booking/domain/repositories/owner_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/location_repository.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/ground_repository.dart';
+import 'package:turfpro_owner/common/services/notification_service.dart';
 import 'auth_state.dart';
 
 class AuthCubit extends Cubit<AuthState> {
@@ -214,6 +215,7 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> logout() async {
+    await NotificationService.clearFcmToken();
     await _authRepository.logout();
     emit(AuthUnauthenticated());
   }
@@ -343,6 +345,7 @@ class AuthCubit extends Cubit<AuthState> {
           return;
         }
 
+        await NotificationService.initialize();
         emit(AuthSuccess());
         return;
       }

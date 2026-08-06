@@ -1,4 +1,4 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 
 /// Fetches and caches app-wide configuration from the `app_config` Supabase
 /// table. Call [load] once at startup after Supabase is initialized.
@@ -51,45 +51,37 @@ class AppConfigService {
   /// Silently keeps defaults on any error so the app works offline.
   Future<void> load() async {
     try {
-      final rows = await Supabase.instance.client
-          .from('app_config')
-          .select('key, value');
+      final remoteConfig = FirebaseRemoteConfig.instance;
+      
+      await remoteConfig.setDefaults({
+        'platform_fee': 25.0,
+        'commission_rate': 0.0,
+        'commission_is_percentage': true,
+        'owner_app_maintenance': false,
+        'owner_android_min_version': '',
+        'owner_ios_min_version': '',
+        'owner_android_store_url': '',
+        'owner_ios_store_url': '',
+      });
 
-      for (final row in (rows as List<dynamic>)) {
-        final key = row['key']?.toString();
-        final raw = row['value']?.toString();
-        if (key == null || raw == null) continue;
+      await remoteConfig.setConfigSettings(RemoteConfigSettings(
+        fetchTimeout: const Duration(seconds: 10),
+        minimumFetchInterval: const Duration(hours: 1),
+      ));
 
-        switch (key) {
-          case 'platform_fee':
-            _platformFee = double.tryParse(raw) ?? _platformFee;
-            break;
-          case 'commission_rate':
-            _commissionRate = double.tryParse(raw) ?? _commissionRate;
-            break;
-          case 'commission_is_percentage':
-            _commissionIsPercentage = raw == 'true' || raw == '1';
-            break;
-          case 'android_min_version':
-            _androidMinVersion = raw;
-            break;
-          case 'ios_min_version':
-            _iosMinVersion = raw;
-            break;
-          case 'android_store_url':
-            _androidStoreUrl = raw;
-            break;
-          case 'ios_store_url':
-            _iosStoreUrl = raw;
-            break;
-          case 'owner_app_maintenance':
-            _ownerAppMaintenance = raw == 'true' || raw == '1';
-            break;
-          // Add new config keys here as the table grows.
-        }
-      }
+      await remoteConfig.fetchAndActivate();
+
+      _platformFee = remoteConfig.getDouble('platform_fee');
+      _commissionRate = remoteConfig.getDouble('commission_rate');
+      _commissionIsPercentage = remoteConfig.getBool('commission_is_percentage');
+      _ownerAppMaintenance = remoteConfig.getBool('is_owner_under_maintenance');
+      _androidMinVersion = remoteConfig.getString('owner_android_min_version');
+      _iosMinVersion = remoteConfig.getString('owner_ios_min_version');
+      _androidStoreUrl = remoteConfig.getString('owner_android_store_url');
+      _iosStoreUrl = remoteConfig.getString('owner_ios_store_url');
+      
     } catch (_) {
-      // Keep defaults — app remains functional without a DB connection.
+      // Keep defaults — app remains functional offline.
     }
   }
 }

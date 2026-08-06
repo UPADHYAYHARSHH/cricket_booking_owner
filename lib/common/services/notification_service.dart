@@ -157,4 +157,24 @@ class NotificationService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_fcmTokenKey);
   }
+
+  static Future<void> clearFcmToken() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(_fcmTokenKey);
+
+      if (user != null && token != null) {
+        await Supabase.instance.client
+            .from('fcm_tokens')
+            .delete()
+            .match({'user_id': user.uid, 'token': token});
+      }
+
+      await prefs.remove(_fcmTokenKey);
+      debugPrint("DEBUG: [NotificationService] FCM token cleared");
+    } catch (e) {
+      debugPrint("DEBUG: [NotificationService] Failed to clear token: $e");
+    }
+  }
 }
