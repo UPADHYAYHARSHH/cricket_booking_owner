@@ -147,6 +147,7 @@ class NotificationService {
         'token': token,
         'platform': platform,
         'last_used_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
       }, onConflict: 'user_id,token');
     } catch (e) {
       debugPrint("Owner App - Failed to update token in Supabase: $e");
