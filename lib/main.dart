@@ -32,6 +32,7 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/locations/locat
 import 'package:turfpro_owner/owner_booking/presentation/screens/auth/pending_approval_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/notification_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/notification/notification_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/maintenance/maintenance_screen.dart';
 
 // Background message handler
 @pragma('vm:entry-point')
@@ -114,6 +115,7 @@ class MyApp extends StatelessWidget {
               create: (_) => di.getIt<NotificationCubit>(),
               child: const NotificationScreen(),
             ),
+            '/maintenance': (context) => const MaintenanceScreen(),
           },
         ),
       ),

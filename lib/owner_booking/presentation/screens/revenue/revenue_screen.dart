@@ -9,6 +9,7 @@ import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_state.dart';
 import 'package:turfpro_owner/owner_booking/presentation/widgets/location_dropdown.dart';
+import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 import 'revenue_analytics.dart';
 
 enum _Period { weekly, monthly, custom }
@@ -42,6 +43,7 @@ class _RevenueScreenState extends State<RevenueScreen>
   @override
   void initState() {
     super.initState();
+    _selectedLocationId = SharedPrefsService.instance.selectedLocationId;
     context.read<RevenueCubit>().fetchRevenueData();
     _staggerController = AnimationController(
       vsync: this,
@@ -212,8 +214,10 @@ class _RevenueScreenState extends State<RevenueScreen>
                     child: LocationDropdown(
                       locations: loaded.locations,
                       selectedLocationId: _selectedLocationId,
-                      onSelected: (id) =>
-                          setState(() => _selectedLocationId = id),
+                      onSelected: (id) {
+                        setState(() => _selectedLocationId = id);
+                        SharedPrefsService.instance.setSelectedLocationId(id);
+                      },
                     ),
                   )),
                 ),

@@ -16,7 +16,11 @@ class SharedPrefsService {
     return _prefs.getString(_kSelectedLocationId);
   }
 
-  Future<void> setSelectedLocationId(String locationId) async {
-    await _prefs.setString(_kSelectedLocationId, locationId);
+  Future<void> setSelectedLocationId(String? locationId) async {
+    if (locationId == null) {
+      await _prefs.remove(_kSelectedLocationId);
+    } else {
+      await _prefs.setString(_kSelectedLocationId, locationId);
+    }
   }
 }

@@ -30,8 +30,8 @@ class DashboardCubit extends Cubit<DashboardState> {
     return super.close();
   }
 
-  Future<void> fetchDashboardData({String? locationId}) async {
-    _selectedLocationId = locationId;
+  Future<void> fetchDashboardData() async {
+    _selectedLocationId = SharedPrefsService.instance.selectedLocationId;
     emit(DashboardLoading());
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -196,9 +196,8 @@ class DashboardCubit extends Cubit<DashboardState> {
 
   void selectLocation(String? locationId) {
     if (locationId == _selectedLocationId) return;
-    if (locationId != null) {
-      SharedPrefsService.instance.setSelectedLocationId(locationId);
-    }
-    fetchDashboardData(locationId: locationId);
+    _selectedLocationId = locationId;
+    SharedPrefsService.instance.setSelectedLocationId(locationId);
+    fetchDashboardData();
   }
 }

@@ -12,6 +12,7 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/gro
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/locations_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/widgets/ground_card.dart';
 import 'package:turfpro_owner/owner_booking/presentation/widgets/location_dropdown.dart';
+import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 
 /// The "Grounds" tab: pick a location from the dropdown (or leave it on
 /// "All Locations") and see the grounds for that selection. Location
@@ -30,6 +31,7 @@ class _GroundsScreenState extends State<GroundsScreen> {
   @override
   void initState() {
     super.initState();
+    _selectedLocationId = SharedPrefsService.instance.selectedLocationId;
     context.read<LocationCubit>().fetchOwnerLocations();
     _fetchGrounds();
   }
@@ -44,6 +46,7 @@ class _GroundsScreenState extends State<GroundsScreen> {
 
   void _onLocationSelected(String? locationId) {
     setState(() => _selectedLocationId = locationId);
+    SharedPrefsService.instance.setSelectedLocationId(locationId);
     _fetchGrounds();
   }
 

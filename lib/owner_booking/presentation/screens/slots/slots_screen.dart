@@ -288,10 +288,6 @@ class _SlotsScreenState extends State<SlotsScreen> {
 
   Widget _buildDateSelector(SlotLoaded state) {
     final today = DateTime.now();
-    final dates = List.generate(
-      30,
-      (i) => DateTime(today.year, today.month, today.day + i),
-    );
 
     final groundIndex = state.grounds.indexWhere(
       (g) => g['id'] == state.selectedGroundId,
@@ -312,6 +308,14 @@ class _SlotsScreenState extends State<SlotsScreen> {
     debugPrint("GROUND ID: ${state.selectedGroundId}");
     debugPrint("RAW OPERATING DAYS: $rawOperatingDays");
     debugPrint("PARSED OPERATING DAYS: $operatingDays");
+
+    final dates = List.generate(
+      30,
+      (i) => DateTime(today.year, today.month, today.day + i),
+    ).where((date) {
+      final dayStr = DateFormat('EEE').format(date).toLowerCase();
+      return operatingDays.isEmpty || operatingDays.contains(dayStr);
+    }).toList();
 
     int selectedIndex = dates.indexWhere(
       (d) => _isSameDay(d, state.selectedDate),

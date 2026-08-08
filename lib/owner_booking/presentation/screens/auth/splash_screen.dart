@@ -6,6 +6,7 @@ import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_flow.dart';
+import 'package:turfpro_owner/common/services/app_config_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,6 +19,13 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+    // Check maintenance mode first
+    if (AppConfigService.instance.ownerAppMaintenance) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/maintenance');
+      });
+      return;
+    }
     // Trigger auth check
     context.read<AuthCubit>().init();
   }

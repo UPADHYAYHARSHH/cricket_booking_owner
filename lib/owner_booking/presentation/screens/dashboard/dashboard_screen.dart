@@ -64,7 +64,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     if (needsUpdate) {
       _showForceUpdateDialog(context);
     } else if (AppConfigService.instance.ownerAppMaintenance) {
-      _showMaintenanceDialog(context);
+      Navigator.pushReplacementNamed(context, '/maintenance');
     }
   }
 
@@ -107,13 +107,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  void _showMaintenanceDialog(BuildContext ctx) {
-    showDialog<void>(
-      context: ctx,
-      barrierDismissible: false,
-      builder: (_) => const _MaintenanceDialog(),
-    );
-  }
 
   Widget _buildStaggeredChild(int index, Widget child) {
     final start = (index * 0.15).clamp(0.0, 1.0);
@@ -495,126 +488,6 @@ class _ForceUpdateDialog extends StatelessWidget {
                     size: 14,
                     weight: FontWeight.w500,
                     color: AppColors.textSecondaryLight,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MaintenanceDialog extends StatefulWidget {
-  const _MaintenanceDialog();
-
-  @override
-  State<_MaintenanceDialog> createState() => _MaintenanceDialogState();
-}
-
-class _MaintenanceDialogState extends State<_MaintenanceDialog>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-  late final Animation<double> _scale;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1400),
-    )..repeat(reverse: true);
-    _scale = Tween<double>(
-      begin: 0.92,
-      end: 1.08,
-    ).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  void _closeApp() {
-    if (Platform.isAndroid) {
-      SystemNavigator.pop();
-    } else {
-      exit(0);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return PopScope(
-      canPop: false,
-      child: Dialog(
-        backgroundColor: AppColors.surfaceLight,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 36, 28, 28),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ScaleTransition(
-                scale: _scale,
-                child: Container(
-                  width: 88,
-                  height: 88,
-                  decoration: BoxDecoration(
-                    color: AppColors.statusPendingBg,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.accentOrange.withValues(alpha: 0.18),
-                        blurRadius: 20,
-                        spreadRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: const Center(
-                    child: HugeIcon(
-                      icon: HugeIcons.strokeRoundedTools,
-                      size: 40,
-                      color: AppColors.accentOrange,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              const AppText(
-                text: "Under Maintenance",
-                size: 20,
-                weight: FontWeight.bold,
-                align: TextAlign.center,
-              ),
-              const SizedBox(height: 10),
-              AppText(
-                text: "We're working hard to improve your experience.\nPlease check back soon.",
-                size: 13,
-                color: AppColors.textSecondaryLight,
-                align: TextAlign.center,
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _closeApp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryDarkGreen,
-                    foregroundColor: AppColors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const AppText(
-                    text: "Close App",
-                    size: 15,
-                    weight: FontWeight.w600,
-                    color: AppColors.white,
                   ),
                 ),
               ),
