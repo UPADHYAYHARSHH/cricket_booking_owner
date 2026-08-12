@@ -140,15 +140,30 @@ class NotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_fcmTokenKey, token);
 
-      // Upsert into fcm_tokens table
+      // Check if token already exists to bypass strict unique constraints on upsert
       final platform = kIsWeb ? 'web' : defaultTargetPlatform.name;
-      await Supabase.instance.client.from('fcm_tokens').upsert({
-        'user_id': user.uid,
-        'token': token,
-        'platform': platform,
-        'last_used_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id,token');
+      final existingTokens = await Supabase.instance.client
+          .from('fcm_tokens')
+          .select('id')
+          .eq('token', token)
+          .limit(1);
+
+      if (existingTokens.isNotEmpty) {
+        await Supabase.instance.client.from('fcm_tokens').update({
+          'user_id': user.uid,
+          'platform': platform,
+          'last_used_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('token', token);
+      } else {
+        await Supabase.instance.client.from('fcm_tokens').insert({
+          'user_id': user.uid,
+          'token': token,
+          'platform': platform,
+          'last_used_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      }
     } catch (e) {
       debugPrint("Owner App - Failed to update token in Supabase: $e");
     }
