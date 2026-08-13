@@ -10,6 +10,8 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location
 import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_state.dart';
 import 'package:turfpro_owner/owner_booking/presentation/widgets/amenities_picker.dart';
 import 'package:turfpro_owner/owner_booking/presentation/widgets/city_search_field.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/locations/map_picker_screen.dart';
 
 /// Single-screen form to add/edit a venue Location (address/city/GPS,
 /// amenities). Amenities live here rather than per-Ground since they're
@@ -75,6 +77,39 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
     _latCtrl.dispose();
     _lngCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _openMapPicker() async {
+    final lat = double.tryParse(_latCtrl.text.trim());
+    final lng = double.tryParse(_lngCtrl.text.trim());
+    LatLng? initialLocation;
+    if (lat != null && lng != null) {
+      initialLocation = LatLng(lat, lng);
+    }
+    
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => MapPickerScreen(
+          initialLocation: initialLocation,
+        ),
+      ),
+    );
+
+    if (result != null) {
+      final selectedLocation = result['location'] as LatLng?;
+      final selectedAddress = result['address'] as String?;
+
+      if (selectedLocation != null) {
+        setState(() {
+          _latCtrl.text = selectedLocation.latitude.toStringAsFixed(6);
+          _lngCtrl.text = selectedLocation.longitude.toStringAsFixed(6);
+          if (selectedAddress != null && selectedAddress.isNotEmpty) {
+            _addressCtrl.text = selectedAddress;
+          }
+        });
+      }
+    }
   }
 
   Future<void> _onSave() async {
@@ -267,7 +302,19 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
                     ),
                   ],
                 ),
-                const AppSizedBox(height: AppSizes.xxl + 4),
+                const AppSizedBox(height: AppSizes.sm),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: _openMapPicker,
+                    icon: const Icon(Icons.map, color: AppColors.primaryDarkGreen),
+                    label: const Text(
+                      'Pick on Map',
+                      style: TextStyle(color: AppColors.primaryDarkGreen, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+                const AppSizedBox(height: AppSizes.xxl),
                 _label('AMENITIES'),
                 const AppSizedBox(height: AppSizes.xs),
                 const AppText(
