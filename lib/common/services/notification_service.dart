@@ -142,13 +142,30 @@ class NotificationService {
 
       // Upsert into fcm_tokens table
       final platform = kIsWeb ? 'web' : defaultTargetPlatform.name;
-      await Supabase.instance.client.from('fcm_tokens').upsert({
-        'user_id': user.uid,
-        'token': token,
-        'platform': platform,
-        'last_used_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'user_id,token');
+      final nowUtc = DateTime.now().toUtc().toIso8601String();
+      
+      final existingToken = await Supabase.instance.client
+          .from('fcm_tokens')
+          .select('id')
+          .eq('token', token)
+          .maybeSingle();
+
+      if (existingToken != null) {
+        await Supabase.instance.client.from('fcm_tokens').update({
+          'user_id': user.uid,
+          'platform': platform,
+          'last_used_at': nowUtc,
+          'updated_at': nowUtc,
+        }).eq('id', existingToken['id']);
+      } else {
+        await Supabase.instance.client.from('fcm_tokens').insert({
+          'user_id': user.uid,
+          'token': token,
+          'platform': platform,
+          'last_used_at': nowUtc,
+          'updated_at': nowUtc,
+        });
+      }
     } catch (e) {
       debugPrint("Owner App - Failed to update token in Supabase: $e");
     }
