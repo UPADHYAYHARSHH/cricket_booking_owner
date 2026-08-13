@@ -39,16 +39,17 @@ class NotificationService {
   }
 
   static Future<void> _requestPermissions() async {
-    NotificationSettings settings = await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
+    NotificationSettings settings = await FirebaseMessaging.instance
+        .requestPermission(alert: true, badge: true, sound: true);
+    debugPrint(
+      'Owner App - User granted permission: ${settings.authorizationStatus}',
     );
-    debugPrint('Owner App - User granted permission: ${settings.authorizationStatus}');
   }
 
   static Future<void> _initializeLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -140,10 +141,10 @@ class NotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_fcmTokenKey, token);
 
-      // Upsert into fcm_tokens table
+      // Check if token already exists to bypass strict unique constraints on upsert
       final platform = kIsWeb ? 'web' : defaultTargetPlatform.name;
       final nowUtc = DateTime.now().toUtc().toIso8601String();
-      
+
       final existingToken = await Supabase.instance.client
           .from('fcm_tokens')
           .select('id')
@@ -151,12 +152,15 @@ class NotificationService {
           .maybeSingle();
 
       if (existingToken != null) {
-        await Supabase.instance.client.from('fcm_tokens').update({
-          'user_id': user.uid,
-          'platform': platform,
-          'last_used_at': nowUtc,
-          'updated_at': nowUtc,
-        }).eq('id', existingToken['id']);
+        await Supabase.instance.client
+            .from('fcm_tokens')
+            .update({
+              'user_id': user.uid,
+              'platform': platform,
+              'last_used_at': nowUtc,
+              'updated_at': nowUtc,
+            })
+            .eq('id', existingToken['id']);
       } else {
         await Supabase.instance.client.from('fcm_tokens').insert({
           'user_id': user.uid,
@@ -183,10 +187,10 @@ class NotificationService {
       final token = prefs.getString(_fcmTokenKey);
 
       if (user != null && token != null) {
-        await Supabase.instance.client
-            .from('fcm_tokens')
-            .delete()
-            .match({'user_id': user.uid, 'token': token});
+        await Supabase.instance.client.from('fcm_tokens').delete().match({
+          'user_id': user.uid,
+          'token': token,
+        });
       }
 
       await prefs.remove(_fcmTokenKey);

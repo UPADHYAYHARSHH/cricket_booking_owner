@@ -10,10 +10,10 @@ class QrCrypto {
 
   // Shared encryption key (32 bytes for AES-256)
   // In production, this should be stored securely (e.g., in environment variables)
-  static const String _keyString = 'TurfPro2026SecureKeyForQR12345678';
+  static const String _keyString = 'TurfPro2026SecureKeyForQR1234567';
 
   // Initialization Vector (16 bytes for AES)
-  static const String _ivString = 'TurfProIV2026!!';
+  static const String _ivString = 'TurfProIV2026!!!';
 
   static Key get _key => Key.fromUtf8(_keyString);
   static IV get _iv => IV.fromUtf8(_ivString);

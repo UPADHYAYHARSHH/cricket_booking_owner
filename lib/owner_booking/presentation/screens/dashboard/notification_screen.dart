@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -29,41 +30,49 @@ class _NotificationScreenState extends State<NotificationScreen> {
     }
   }
 
-  IconData _iconForType(String? type) {
+  _NotificationConfig _getNotificationConfig(String? type) {
     switch (type) {
       case 'location_approved':
-        return Icons.check_circle_outline;
+        return _NotificationConfig(
+          icon: HugeIcons.strokeRoundedCheckmarkBadge01,
+          color: AppColors.primaryDarkGreen,
+        );
       case 'location_rejected':
-        return Icons.cancel_outlined;
+        return _NotificationConfig(
+          icon: HugeIcons.strokeRoundedCancel01,
+          color: Colors.red,
+        );
       case 'booking_checked_in':
-        return Icons.qr_code_scanner;
+        return _NotificationConfig(
+          icon: HugeIcons.strokeRoundedQrCode01,
+          color: Colors.blue,
+        );
       case 'booking_confirmed':
-        return Icons.event_available_outlined;
+        return _NotificationConfig(
+          icon: HugeIcons.strokeRoundedCalendar01,
+          color: AppColors.primaryDarkGreen,
+        );
       case 'booking_cancelled':
-        return Icons.event_busy_outlined;
+        return _NotificationConfig(
+          icon: HugeIcons.strokeRoundedCalendar01,
+          color: Colors.red,
+        );
       case 'payment_received':
-        return Icons.payments_outlined;
+        return _NotificationConfig(
+          icon: HugeIcons.strokeRoundedCreditCard,
+          color: AppColors.goldenYellow,
+        );
+      case 'announcement':
+      case 'promotion':
+        return _NotificationConfig(
+          icon: HugeIcons.strokeRoundedMegaphone01,
+          color: Colors.purple.shade600,
+        );
       default:
-        return Icons.notifications_outlined;
-    }
-  }
-
-  Color _colorForType(String? type) {
-    switch (type) {
-      case 'location_approved':
-        return AppColors.primaryDarkGreen;
-      case 'location_rejected':
-        return Colors.red;
-      case 'booking_checked_in':
-        return Colors.blue;
-      case 'booking_confirmed':
-        return AppColors.primaryDarkGreen;
-      case 'booking_cancelled':
-        return Colors.red;
-      case 'payment_received':
-        return AppColors.goldenYellow;
-      default:
-        return AppColors.textSecondaryLight;
+        return _NotificationConfig(
+          icon: HugeIcons.strokeRoundedNotification01,
+          color: AppColors.primaryDarkGreen,
+        );
     }
   }
 
@@ -201,79 +210,106 @@ class _NotificationScreenState extends State<NotificationScreen> {
                       }
                       return false;
                     },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: isRead
-                            ? AppColors.white
-                            : AppColors.primaryDarkGreen.withValues(alpha:0.04),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isRead
-                              ? AppColors.borderLight
-                              : AppColors.primaryDarkGreen.withValues(alpha:0.2),
-                        ),
-                      ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: _colorForType(type).withValues(alpha:0.1),
-                              shape: BoxShape.circle,
+                    child: Builder(
+                      builder: (context) {
+                        final config = _getNotificationConfig(type);
+                        final theme = Theme.of(context);
+                        return AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: !isRead
+                                ? config.color.withOpacity(
+                                    theme.brightness == Brightness.dark ? 0.15 : 0.08)
+                                : theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: !isRead
+                                  ? config.color.withOpacity(0.2)
+                                  : theme.dividerColor.withOpacity(0.1),
+                              width: 1,
                             ),
-                            child: Icon(
-                              _iconForType(type),
-                              size: 20,
-                              color: _colorForType(type),
-                            ),
+                            boxShadow: [
+                              if (isRead)
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.03),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: config.color.withOpacity(0.12),
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: HugeIcon(
+                                  icon: config.icon,
+                                  color: config.color,
+                                  size: 22,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Expanded(
-                                      child: AppText(
-                                        text: notification['title'] ?? 'Notification',
-                                        size: 14,
-                                        weight: isRead ? FontWeight.w500 : FontWeight.w700,
-                                      ),
-                                    ),
-                                    if (!isRead)
-                                      Container(
-                                        width: 8,
-                                        height: 8,
-                                        decoration: const BoxDecoration(
-                                          color: AppColors.primaryDarkGreen,
-                                          shape: BoxShape.circle,
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Expanded(
+                                          child: AppText(
+                                            text: notification['title'] ?? 'Notification',
+                                            size: 15,
+                                            weight: !isRead ? FontWeight.w800 : FontWeight.w600,
+                                            color: theme.colorScheme.onSurface,
+                                          ),
                                         ),
-                                      ),
+                                        if (createdAt != null)
+                                          AppText(
+                                            text: _formatTime(createdAt),
+                                            size: 11,
+                                            color: theme.colorScheme.onSurface.withOpacity(0.4),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    AppText(
+                                      text: notification['message'] ?? '',
+                                      size: 13,
+                                      color: theme.colorScheme.onSurface
+                                          .withOpacity(!isRead ? 0.9 : 0.6),
+                                      weight: !isRead ? FontWeight.w500 : FontWeight.w400,
+                                    ),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
-                                AppText(
-                                  text: notification['message'] ?? '',
-                                  size: 13,
-                                  color: AppColors.textSecondaryLight,
-                                ),
-                                if (createdAt != null) ...[
-                                  const SizedBox(height: 6),
-                                  AppText(
-                                    text: _formatTime(createdAt),
-                                    size: 11,
-                                    color: AppColors.textSecondaryLight.withValues(alpha:0.7),
+                              ),
+                              if (!isRead)
+                                Container(
+                                  margin: const EdgeInsets.only(left: 12, top: 4),
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    color: config.color,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: config.color.withOpacity(0.4),
+                                        blurRadius: 6,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ],
-                            ),
+                                ),
+                            ],
                           ),
-                        ],
-                      ),
+                        );
+                      }
                     ),
                   );
                 },
@@ -323,4 +359,11 @@ class _NotificationScreenState extends State<NotificationScreen> {
       ),
     );
   }
+}
+
+class _NotificationConfig {
+  final dynamic icon;
+  final Color color;
+
+  _NotificationConfig({required this.icon, required this.color});
 }
