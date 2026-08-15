@@ -596,6 +596,45 @@ class _SlotsScreenState extends State<SlotsScreen> {
       );
     }
 
+    // Check if the current day is operating day
+    final groundIndex = state.grounds.indexWhere(
+      (g) => g['id'] == state.selectedGroundId,
+    );
+    final selectedGround = groundIndex != -1 ? state.grounds[groundIndex] : <String, dynamic>{};
+    
+    dynamic rawOperatingDays = selectedGround['operating_days'];
+    List<String> operatingDays = [];
+    if (rawOperatingDays is List) {
+      operatingDays = rawOperatingDays.map((e) => e.toString().toLowerCase()).toList();
+    } else if (rawOperatingDays is String) {
+      final cleaned = rawOperatingDays.replaceAll('{', '').replaceAll('}', '').replaceAll('"', '');
+      if (cleaned.isNotEmpty) {
+        operatingDays = cleaned.split(',').map((e) => e.trim().toLowerCase()).toList();
+      }
+    }
+
+    final dayStr = DateFormat('EEE').format(state.selectedDate).toLowerCase();
+    final isOperatingDay = operatingDays.isEmpty || operatingDays.contains(dayStr);
+
+    if (!isOperatingDay) {
+      return Padding(
+        padding: const EdgeInsets.all(48.0),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.event_busy, size: 48, color: AppColors.textSecondaryLight.withValues(alpha: 0.5)),
+              const SizedBox(height: 16),
+              AppText(
+                text: "Ground is closed on this day.",
+                color: AppColors.textSecondaryLight,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     // Group slots by time period
     final Map<String, List<VirtualSlot>> grouped = {};
     for (final slot in state.slots) {

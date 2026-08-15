@@ -24,6 +24,7 @@ import 'package:turfpro_owner/owner_booking/data/repositories/sport_repository.d
 import 'package:turfpro_owner/owner_booking/data/repositories/notification_repository.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/sport/sport_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/notification/notification_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_form_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -74,6 +75,9 @@ Future<void> init() async {
   );
   getIt.registerLazySingleton<LocationCubit>(
     () => LocationCubit(getIt<LocationRepository>()),
+  );
+  getIt.registerFactory<LocationFormCubit>(
+    () => LocationFormCubit(getIt<LocationRepository>()),
   );
   getIt.registerLazySingleton<SlotCubit>(
     () => SlotCubit(getIt<SlotRepository>()),

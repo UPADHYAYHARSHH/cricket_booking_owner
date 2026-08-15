@@ -306,6 +306,7 @@ class AuthCubit extends Cubit<AuthState> {
         address: address,
         city: city,
         description: description,
+        privacyPolicy: '',
         googleMapsLink: googleMapsLink,
         latitude: latitude,
         longitude: longitude,
