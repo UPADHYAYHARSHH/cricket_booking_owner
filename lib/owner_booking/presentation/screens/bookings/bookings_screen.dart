@@ -11,7 +11,10 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_state.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
-
+import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_state.dart';
+import 'package:turfpro_owner/owner_booking/presentation/widgets/location_dropdown.dart';
+import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
 
@@ -26,6 +29,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
   void initState() {
     super.initState();
     context.read<BookingsCubit>().fetchBookings();
+    context.read<LocationCubit>().fetchOwnerLocations();
   }
 
   @override
@@ -79,36 +83,57 @@ class _BookingsScreenState extends State<BookingsScreen> {
               AppSizes.lg,
               AppSizes.xl,
             ),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: AppText(
-                    text: "Bookings",
-                    size: 22,
-                    weight: FontWeight.w700,
-                    color: AppColors.white,
-                  ),
-                ),
-                BlocBuilder<BookingsCubit, BookingsState>(
-                  builder: (context, state) {
-                    final count = state is BookingsLoaded
-                        ? state.filteredBookings.length
-                        : 0;
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.2),
-                        borderRadius:
-                            BorderRadius.circular(AppSizes.radiusFull),
-                      ),
+                Row(
+                  children: [
+                    Expanded(
                       child: AppText(
-                        text: "$count",
-                        size: 14,
+                        text: "Bookings",
+                        size: 22,
                         weight: FontWeight.w700,
                         color: AppColors.white,
                       ),
-                    );
+                    ),
+                    BlocBuilder<BookingsCubit, BookingsState>(
+                      builder: (context, state) {
+                        final count = state is BookingsLoaded
+                            ? state.filteredBookings.length
+                            : 0;
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: AppColors.white.withValues(alpha: 0.2),
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusFull),
+                          ),
+                          child: AppText(
+                            text: "$count",
+                            size: 14,
+                            weight: FontWeight.w700,
+                            color: AppColors.white,
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSizes.md),
+                BlocBuilder<LocationCubit, LocationState>(
+                  builder: (context, locState) {
+                    if (locState is LocationLoaded) {
+                      return LocationDropdown(
+                        locations: locState.locations.cast<Map<String, dynamic>>(),
+                        selectedLocationId: SharedPrefsService.instance.selectedLocationId,
+                        onSelected: (id) {
+                          SharedPrefsService.instance.setSelectedLocationId(id);
+                          setState(() {});
+                          context.read<BookingsCubit>().fetchBookings();
+                        },
+                      );
+                    }
+                    return const SizedBox.shrink();
                   },
                 ),
               ],

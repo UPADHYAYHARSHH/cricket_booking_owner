@@ -20,17 +20,15 @@ class LocationDropdown extends StatelessWidget {
   });
 
   static String titleFor(Map<String, dynamic> location) {
-    final address = location['address'] as String?;
-    if (address != null && address.isNotEmpty) return address;
-    return (location['city'] as String?) ?? 'Location';
+    final name = location['name'] as String?;
+    if (name != null && name.isNotEmpty) return name;
+    return '---';
   }
 
   static String? subtitleFor(Map<String, dynamic> location) {
-    final city = location['city'] as String?;
     final address = location['address'] as String?;
-    if (city == null || city.isEmpty) return null;
-    if (address == null || address.isEmpty || address == city) return null;
-    return city;
+    if (address != null && address.isNotEmpty) return address;
+    return null;
   }
 
   void _openPicker(BuildContext context) {

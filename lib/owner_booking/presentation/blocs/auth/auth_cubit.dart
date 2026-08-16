@@ -303,6 +303,7 @@ class AuthCubit extends Cubit<AuthState> {
       // Create the first venue location (same fields as Add Location)
       await _locationRepository.registerLocation(
         ownerId: user.uid,
+        name: venueName,
         address: address,
         city: city,
         description: description,

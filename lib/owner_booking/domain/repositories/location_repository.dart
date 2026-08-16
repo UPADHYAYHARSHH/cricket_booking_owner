@@ -3,6 +3,7 @@ abstract class LocationRepository {
 
   Future<String> registerLocation({
     required String ownerId,
+    required String name,
     required String address,
     required String city,
     required String description,

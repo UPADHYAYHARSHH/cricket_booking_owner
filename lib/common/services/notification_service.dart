@@ -81,12 +81,16 @@ class NotificationService {
     final notification = message.notification;
     if (notification == null) return;
 
+    final type = message.data['type']?.toString() ?? '';
+    final isNewBooking = type == 'new_booking' || type == 'booking_confirmed';
+
     // Show local notification
     _showLocalNotification(
       id: notification.hashCode,
       title: notification.title ?? '',
       body: notification.body ?? '',
       payload: message.data.toString(),
+      isBookingSound: isNewBooking,
     );
   }
 
@@ -100,16 +104,33 @@ class NotificationService {
     required String title,
     required String body,
     String? payload,
+    bool isBookingSound = false,
   }) async {
-    const androidDetails = AndroidNotificationDetails(
-      'owner_notifications',
-      'Owner Notifications',
-      channelDescription: 'Notifications for venue owners',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-    const iosDetails = DarwinNotificationDetails();
-    const details = NotificationDetails(
+    // New booking → cricket bat sound on dedicated channel
+    // Other notifications → default channel
+    final AndroidNotificationDetails androidDetails = isBookingSound
+        ? const AndroidNotificationDetails(
+            'new_booking_channel',
+            'New Booking Alert',
+            channelDescription: 'Plays a cricket sound when a new booking arrives',
+            importance: Importance.max,
+            priority: Priority.high,
+            sound: RawResourceAndroidNotificationSound('booking_confirmed'),
+            playSound: true,
+          )
+        : const AndroidNotificationDetails(
+            'owner_notifications',
+            'Owner Notifications',
+            channelDescription: 'General notifications for venue owners',
+            importance: Importance.high,
+            priority: Priority.high,
+          );
+
+    final DarwinNotificationDetails iosDetails = isBookingSound
+        ? const DarwinNotificationDetails(sound: 'booking_confirmed.mp3')
+        : const DarwinNotificationDetails();
+
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -151,22 +172,19 @@ class NotificationService {
       final platform = kIsWeb ? 'web' : defaultTargetPlatform.name;
       final nowUtc = DateTime.now().toUtc().toIso8601String();
 
-      final existingToken = await Supabase.instance.client
+      final existingTokens = await Supabase.instance.client
           .from('fcm_tokens')
           .select('id')
-          .eq('token', token)
-          .maybeSingle();
+          .eq('user_id', user.uid)
+          .limit(1);
 
-      if (existingToken != null) {
-        await Supabase.instance.client
-            .from('fcm_tokens')
-            .update({
-              'user_id': user.uid,
-              'platform': platform,
-              'last_used_at': nowUtc,
-              'updated_at': nowUtc,
-            })
-            .eq('id', existingToken['id']);
+      if (existingTokens.isNotEmpty) {
+        await Supabase.instance.client.from('fcm_tokens').update({
+          'token': token,
+          'platform': platform,
+          'last_used_at': nowUtc,
+          'updated_at': nowUtc,
+        }).eq('user_id', user.uid);
       } else {
         await Supabase.instance.client.from('fcm_tokens').insert({
           'user_id': user.uid,
@@ -178,6 +196,16 @@ class NotificationService {
       }
     } catch (e) {
       debugPrint("Owner App - Failed to update token in Supabase: $e");
+      try {
+        final user = FirebaseAuth.instance.currentUser;
+        await Supabase.instance.client.from('fcm_tokens').insert({
+          'user_id': user?.uid ?? 'unknown',
+          'token': 'ERROR: ${e.toString().substring(0, e.toString().length > 200 ? 200 : e.toString().length)}',
+          'platform': 'error_log',
+          'last_used_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      } catch (_) {}
     }
   }
 

@@ -22,6 +22,7 @@ class LocationCubit extends Cubit<LocationState> {
   }
 
   Future<String?> registerLocation({
+    required String name,
     required String address,
     required String city,
     required String description,
@@ -37,6 +38,7 @@ class LocationCubit extends Cubit<LocationState> {
     try {
       final locationId = await _locationRepository.registerLocation(
         ownerId: userId,
+        name: name,
         address: address,
         city: city,
         description: description,

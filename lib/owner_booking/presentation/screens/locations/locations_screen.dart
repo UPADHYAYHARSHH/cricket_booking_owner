@@ -469,21 +469,23 @@ class _LocationCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           AppText(
-                            text: address.isEmpty
-                                ? 'Unnamed location'
-                                : address,
+                            text: (location['name'] as String?)?.isNotEmpty == true
+                                ? location['name'] as String
+                                : '---',
                             size: 15,
                             weight: FontWeight.w700,
                             color: AppColors.textPrimaryLight,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          if (city.isNotEmpty) ...[
+                          if (address.isNotEmpty) ...[
                             const SizedBox(height: 2),
                             AppText(
-                              text: city,
+                              text: address,
                               size: 12,
                               color: AppColors.textSecondaryLight,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ],

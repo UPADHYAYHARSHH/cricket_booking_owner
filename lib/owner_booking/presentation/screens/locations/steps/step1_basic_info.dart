@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_form_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/locations/map_picker_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/widgets/city_search_field.dart';
 
 class Step1BasicInfo extends StatefulWidget {
@@ -15,6 +17,7 @@ class Step1BasicInfo extends StatefulWidget {
 
 class Step1BasicInfoState extends State<Step1BasicInfo> {
   final formKey = GlobalKey<FormState>();
+  late final TextEditingController nameCtrl;
   late final TextEditingController addressCtrl;
   late final TextEditingController descriptionCtrl;
   late final TextEditingController privacyPolicyCtrl;
@@ -29,6 +32,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
   void initState() {
     super.initState();
     final data = context.read<LocationFormCubit>().data;
+    nameCtrl = TextEditingController(text: data.name);
     addressCtrl = TextEditingController(text: data.address);
     descriptionCtrl = TextEditingController(text: data.description);
     privacyPolicyCtrl = TextEditingController(text: data.privacyPolicy);
@@ -40,6 +44,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
 
   @override
   void dispose() {
+    nameCtrl.dispose();
     addressCtrl.dispose();
     descriptionCtrl.dispose();
     privacyPolicyCtrl.dispose();
@@ -58,6 +63,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
     
     final cubit = context.read<LocationFormCubit>();
     cubit.updateData(cubit.data.copyWith(
+      name: nameCtrl.text.trim(),
       address: addressCtrl.text.trim(),
       description: descriptionCtrl.text.trim(),
       privacyPolicy: privacyPolicyCtrl.text.trim(),
@@ -76,6 +82,16 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          _label('LOCATION NAME *'),
+          _field(
+            nameCtrl,
+            hint: 'E.g. TurfPro Arena',
+            icon: Icons.store_outlined,
+            validator: (v) => (v == null || v.trim().isEmpty)
+                ? 'Name is required'
+                : null,
+          ),
+          const SizedBox(height: AppSizes.xxl),
           _label('FULL ADDRESS *'),
           _field(
             addressCtrl,
@@ -95,12 +111,15 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
             icon: Icons.description_outlined,
           ),
           const SizedBox(height: AppSizes.xxl),
-          _label('RULES & PRIVACY POLICY'),
+          _label('RULES & PRIVACY POLICY *'),
           _field(
             privacyPolicyCtrl,
             hint: 'List out the rules, cancellation, and privacy policies...',
             maxLines: 4,
             icon: Icons.policy_outlined,
+            validator: (v) => (v == null || v.trim().isEmpty)
+                ? 'Rules & Privacy Policy is required'
+                : null,
           ),
           const SizedBox(height: AppSizes.xxl),
           _label('CITY *'),
@@ -117,7 +136,93 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
             icon: Icons.link,
           ),
           const SizedBox(height: AppSizes.xxl),
-          _label('GPS COORDINATES (Optional)'),
+          _label('GPS COORDINATES *'),
+          const SizedBox(height: 4),
+          // Map picker button
+          GestureDetector(
+            onTap: () async {
+              final result = await Navigator.push<LatLng>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => MapPickerScreen(
+                    initialLatitude: double.tryParse(latCtrl.text) ?? 0.0,
+                    initialLongitude: double.tryParse(lngCtrl.text) ?? 0.0,
+                  ),
+                ),
+              );
+              if (result != null) {
+                setState(() {
+                  latCtrl.text = result.latitude.toStringAsFixed(6);
+                  lngCtrl.text = result.longitude.toStringAsFixed(6);
+                });
+              }
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: AppColors.primaryDarkGreen.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                border: Border.all(
+                  color: AppColors.primaryDarkGreen.withValues(alpha: 0.3),
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryDarkGreen,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.map_rounded,
+                        color: Colors.white, size: 18),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          latCtrl.text.isNotEmpty && lngCtrl.text.isNotEmpty
+                              ? 'Location Pinned ✓'
+                              : 'Pick Location on Map',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.primaryDarkGreen,
+                          ),
+                        ),
+                        if (latCtrl.text.isNotEmpty && lngCtrl.text.isNotEmpty)
+                          Text(
+                            '${latCtrl.text}, ${lngCtrl.text}',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondaryLight,
+                            ),
+                          )
+                        else
+                          Text(
+                            'Tap to open map and drop a pin on your venue',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondaryLight,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: AppColors.primaryDarkGreen,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSizes.md),
+          // Manual lat/lng fields as fallback
           Row(
             children: [
               Expanded(

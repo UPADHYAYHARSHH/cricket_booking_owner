@@ -24,6 +24,7 @@ class LocationRepositoryImpl implements LocationRepository {
   @override
   Future<String> registerLocation({
     required String ownerId,
+    required String name,
     required String address,
     required String city,
     required String description,
@@ -37,6 +38,7 @@ class LocationRepositoryImpl implements LocationRepository {
         .from('locations')
         .insert({
           'owner_id': ownerId,
+          'name': name,
           'address': address,
           'city': city,
           'description': description,

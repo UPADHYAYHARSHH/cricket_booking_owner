@@ -28,6 +28,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   int _monthlyBookings = 0;
   double _monthlyRevenue = 0;
   String _occupancy = "0%";
+  
+  double _locationRating = 0.0;
+  int _locationReviewsCount = 0;
 
   StreamSubscription<List<Map<String, dynamic>>>? _bookingsSubscription;
 
@@ -138,9 +141,18 @@ class _ProfileScreenState extends State<ProfileScreen>
             });
       }
 
+      final locationRes = await Supabase.instance.client
+          .from('locations')
+          .select('rating, total_reviews')
+          .eq('owner_id', userId)
+          .limit(1)
+          .maybeSingle();
+
       if (mounted) {
         setState(() {
           _ownerDetails = ownerRes;
+          _locationRating = locationRes?['rating'] != null ? (locationRes!['rating'] as num).toDouble() : 0.0;
+          _locationReviewsCount = locationRes?['total_reviews'] ?? 0;
           _isLoading = false;
         });
         _fadeController.forward();
@@ -655,7 +667,9 @@ class _ProfileScreenState extends State<ProfileScreen>
                 _buildVenueDetailRow(
                   Icons.star_outline,
                   "Rating",
-                  "4.7 (38 reviews)",
+                  _locationReviewsCount > 0 
+                    ? "${_locationRating.toStringAsFixed(1)} ($_locationReviewsCount reviews)" 
+                    : "No reviews yet",
                 ),
               ],
             ),

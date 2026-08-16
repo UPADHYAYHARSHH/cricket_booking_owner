@@ -57,6 +57,7 @@ class LocationFormCubit extends Cubit<LocationFormState> {
         // Add: insert new location.
         locId = await _repo.registerLocation(
           ownerId: userId,
+          name: _data.name,
           address: _data.address,
           city: _data.city,
           description: _data.description,

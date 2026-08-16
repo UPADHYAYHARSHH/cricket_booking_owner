@@ -2,6 +2,7 @@ class LocationFormData {
   final String? locationId;
   
   // Step 1: Basic Info
+  final String name;
   final String address;
   final String city;
   final String description;
@@ -21,6 +22,7 @@ class LocationFormData {
 
   LocationFormData({
     this.locationId,
+    required this.name,
     required this.address,
     required this.city,
     required this.description,
@@ -37,6 +39,7 @@ class LocationFormData {
 
   factory LocationFormData.empty() {
     return LocationFormData(
+      name: '',
       address: '',
       city: '',
       description: '',
@@ -62,6 +65,7 @@ class LocationFormData {
 
     return LocationFormData(
       locationId: map['id']?.toString(),
+      name: map['name']?.toString() ?? '',
       address: map['address']?.toString() ?? '',
       city: map['city']?.toString() ?? '',
       description: map['description']?.toString() ?? '',
@@ -79,6 +83,7 @@ class LocationFormData {
 
   LocationFormData copyWith({
     String? locationId,
+    String? name,
     String? address,
     String? city,
     String? description,
@@ -94,6 +99,7 @@ class LocationFormData {
   }) {
     return LocationFormData(
       locationId: locationId ?? this.locationId,
+      name: name ?? this.name,
       address: address ?? this.address,
       city: city ?? this.city,
       description: description ?? this.description,
@@ -111,6 +117,7 @@ class LocationFormData {
 
   Map<String, dynamic> toUpdateMap() {
     return {
+      'name': name,
       'address': address,
       'city': city,
       'description': description,
