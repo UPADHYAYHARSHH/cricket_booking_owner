@@ -1,4 +1,4 @@
-import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Fetches and caches app-wide configuration from the `app_config` Supabase
 /// table. Call [load] once at startup after Supabase is initialized.
@@ -51,35 +51,37 @@ class AppConfigService {
   /// Silently keeps defaults on any error so the app works offline.
   Future<void> load() async {
     try {
-      final remoteConfig = FirebaseRemoteConfig.instance;
-      
-      await remoteConfig.setDefaults({
-        'platform_fee': 25.0,
-        'commission_rate': 0.0,
-        'commission_is_percentage': true,
-        'owner_app_maintenance': false,
-        'owner_android_min_version': '',
-        'owner_ios_min_version': '',
-        'owner_android_store_url': '',
-        'owner_ios_store_url': '',
-      });
-
-      await remoteConfig.setConfigSettings(RemoteConfigSettings(
-        fetchTimeout: const Duration(seconds: 10),
-        minimumFetchInterval: const Duration(hours: 1),
-      ));
-
-      await remoteConfig.fetchAndActivate();
-
-      _platformFee = remoteConfig.getDouble('platform_fee');
-      _commissionRate = remoteConfig.getDouble('commission_rate');
-      _commissionIsPercentage = remoteConfig.getBool('commission_is_percentage');
-      _ownerAppMaintenance = remoteConfig.getBool('is_owner_under_maintenance');
-      _androidMinVersion = remoteConfig.getString('owner_android_min_version');
-      _iosMinVersion = remoteConfig.getString('owner_ios_min_version');
-      _androidStoreUrl = remoteConfig.getString('owner_android_store_url');
-      _iosStoreUrl = remoteConfig.getString('owner_ios_store_url');
-      
+      final rows = await Supabase.instance.client.from('app_config').select('key, value');
+      for (final row in rows as List<dynamic>) {
+        final key = row['key']?.toString();
+        final val = row['value']?.toString() ?? '';
+        switch (key) {
+          case 'platform_fee':
+            _platformFee = double.tryParse(val) ?? 25.0;
+            break;
+          case 'commission_rate':
+            _commissionRate = double.tryParse(val) ?? 0.0;
+            break;
+          case 'commission_is_percentage':
+            _commissionIsPercentage = val == 'true' || val == '1';
+            break;
+          case 'owner_app_maintenance':
+            _ownerAppMaintenance = val == 'true' || val == '1';
+            break;
+          case 'android_min_version':
+            _androidMinVersion = val;
+            break;
+          case 'ios_min_version':
+            _iosMinVersion = val;
+            break;
+          case 'android_store_url':
+            _androidStoreUrl = val;
+            break;
+          case 'ios_store_url':
+            _iosStoreUrl = val;
+            break;
+        }
+      }
     } catch (_) {
       // Keep defaults — app remains functional offline.
     }
