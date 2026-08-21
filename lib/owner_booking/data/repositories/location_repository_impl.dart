@@ -13,7 +13,7 @@ class LocationRepositoryImpl implements LocationRepository {
   Future<List<Map<String, dynamic>>> getOwnerLocations(String ownerId) async {
     final response = await _supabase
         .from('locations')
-        .select()
+        .select('*, location_images(image_url)')
         .eq('owner_id', ownerId)
         .isFilter('deleted_at', null)
         .order('created_at', ascending: false);

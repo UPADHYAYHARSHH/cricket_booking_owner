@@ -84,8 +84,8 @@ class LocationFormCubit extends Cubit<LocationFormState> {
 
       await _repo.updateLocation(locationId: locId, data: {
         'property_status': _data.propertyStatus,
-        ? 'property_document_url': propDocUrl,
-        ? 'noc_url': nocUrl,
+        if (propDocUrl != null) 'property_document_url': propDocUrl,
+        if (nocUrl != null) 'noc_url': nocUrl,
       });
 
       // Handle Images
