@@ -43,6 +43,21 @@ class GroundFormLayout extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  AppText(
+                    text: title,
+                    size: 24,
+                    color: Theme.of(context).colorScheme.onSurface,
+                    weight: FontWeight.w700,
+                  ),
+                  if (subtitle.isNotEmpty) ...[
+                    const SizedBox(height: AppSizes.xs),
+                    AppText(
+                      text: subtitle,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ],
+                  const SizedBox(height: AppSizes.xl),
                   child,
                   const SizedBox(height: AppSizes.xxxxl),
                   _buildButtons(context),
@@ -136,21 +151,6 @@ class GroundFormLayout extends StatelessWidget {
               );
             }),
           ),
-          const SizedBox(height: AppSizes.sm),
-          AppText(
-            text: title,
-            size: 20,
-            color: AppColors.white,
-            weight: FontWeight.w700,
-          ),
-          if (subtitle.isNotEmpty) ...[
-            const SizedBox(height: 2),
-            AppText(
-              text: subtitle,
-              size: 12,
-              color: AppColors.white.withValues(alpha: 0.7),
-            ),
-          ],
         ],
       ),
     );
