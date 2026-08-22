@@ -60,7 +60,6 @@ class _RevenueCardState extends State<RevenueCard>
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFF348F5E), Color(0xFF1B4332)],
@@ -111,101 +110,104 @@ class _RevenueCardState extends State<RevenueCard>
               },
             ),
             // Content
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppText(
-                        text: "Today's Earnings",
-                        color: AppColors.white.withValues(alpha: 0.75),
-                        size: 13,
-                        weight: FontWeight.w500,
-                      ),
-                      const SizedBox(height: 10),
-                      AppText(
-                        text: widget.amount,
-                        color: AppColors.white,
-                        size: 32,
-                        weight: FontWeight.bold,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (_isNumeric) ...[
-                                  Icon(
-                                    _isNegative
-                                        ? Icons.arrow_downward_rounded
-                                        : Icons.arrow_upward_rounded,
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AppText(
+                          text: "Today's Earnings",
+                          color: AppColors.white.withValues(alpha: 0.75),
+                          size: 13,
+                          weight: FontWeight.w500,
+                        ),
+                        const SizedBox(height: 10),
+                        AppText(
+                          text: widget.amount,
+                          color: AppColors.white,
+                          size: 32,
+                          weight: FontWeight.bold,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.white.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_isNumeric) ...[
+                                    Icon(
+                                      _isNegative
+                                          ? Icons.arrow_downward_rounded
+                                          : Icons.arrow_upward_rounded,
+                                      color: trendColor,
+                                      size: 12,
+                                    ),
+                                    const SizedBox(width: 2),
+                                  ],
+                                  AppText(
+                                    text: widget.percentageChange,
                                     color: trendColor,
-                                    size: 12,
+                                    size: 11,
+                                    weight: FontWeight.w700,
                                   ),
-                                  const SizedBox(width: 2),
                                 ],
-                                AppText(
-                                  text: widget.percentageChange,
-                                  color: trendColor,
-                                  size: 11,
-                                  weight: FontWeight.w700,
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: AppText(
-                              text: "vs yesterday · ${widget.bookingsCount} bookings",
-                              color: AppColors.white.withValues(alpha: 0.7),
-                              size: 11,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: AppText(
+                                text: "vs yesterday · ${widget.bookingsCount} bookings",
+                                color: AppColors.white.withValues(alpha: 0.7),
+                                size: 11,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: AppColors.white.withValues(alpha: 0.12),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Center(
+                          child: HugeIcon(
+                            icon: HugeIcons.strokeRoundedMoneyBag01,
+                            color: AppColors.white,
+                            size: 22.0,
                           ),
-                        ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: AppColors.white.withValues(alpha: 0.6),
+                        size: 20,
                       ),
                     ],
                   ),
-                ),
-                Column(
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.white.withValues(alpha: 0.12),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: HugeIcon(
-                          icon: HugeIcons.strokeRoundedMoneyBag01,
-                          color: AppColors.white,
-                          size: 22.0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: AppColors.white.withValues(alpha: 0.6),
-                      size: 20,
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
