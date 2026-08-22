@@ -59,15 +59,13 @@ class GroundCard extends StatelessWidget {
               child: Stack(
                 children: [
                   GroundImageCarousel(
-                    images: images,
+                    images: images.isEmpty && imageUrl != null ? [imageUrl] : images,
                     fallbackImageUrl: imageUrl ?? '',
                     height: 180,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(AppSizes.radiusXl),
                     ),
                   ),
-                        )
-                      : _ImagePlaceholder(name: name, category: category),
                   // Gradient Overlay
                   Positioned.fill(
                     child: DecoratedBox(
