@@ -87,6 +87,25 @@ class _BookingsScreenState extends State<BookingsScreen> {
               children: [
                 Row(
                   children: [
+                    if (Navigator.of(context).canPop())
+                      Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                            ),
+                            child: const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: AppColors.white,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ),
                     Expanded(
                       child: AppText(
                         text: "Bookings",

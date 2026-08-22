@@ -423,6 +423,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         _SettingsItem(
                           icon: Icons.person_outline,
                           title: "Edit Profile",
+                          isLast: true,
                           onTap: () async {
                             await Navigator.push(
                               context,
@@ -434,28 +435,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                             );
                             if (mounted) _fetchProfileData();
                           },
-                        ),
-                        _SettingsItem(
-                          icon: Icons.group_outlined,
-                          title: "Manage Staff / Managers",
-                          onTap: _showComingSoon,
-                        ),
-                        _SettingsItem(
-                          icon: Icons.account_balance_outlined,
-                          title: "Bank & Payout Settings",
-                          onTap: _showComingSoon,
-                        ),
-
-                        _SettingsItem(
-                          icon: Icons.card_membership_outlined,
-                          title: "Subscription & Plan",
-                          onTap: _showComingSoon,
-                        ),
-                        _SettingsItem(
-                          icon: Icons.lock_outline,
-                          title: "Privacy & Data",
-                          onTap: _showComingSoon,
-                          isLast: true,
                         ),
                       ]),
                       const SizedBox(height: AppSizes.xxl),
