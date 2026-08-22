@@ -127,6 +127,8 @@ class _GroundsScreenState extends State<GroundsScreen> {
                   SliverAppBar(
                     automaticallyImplyLeading: false,
                     backgroundColor: Colors.transparent,
+                    surfaceTintColor: Colors.transparent,
+                    scrolledUnderElevation: 0,
                     elevation: 0,
                     pinned: true,
                     expandedHeight: locations.length > 1 ? 140.0 : 64.0,
@@ -265,6 +267,7 @@ class _GroundsScreenState extends State<GroundsScreen> {
                         }, childCount: state.grounds.length),
                       ),
                     ),
+                  const SliverToBoxAdapter(child: SizedBox(height: 100)),
                 ],
               );
             },
