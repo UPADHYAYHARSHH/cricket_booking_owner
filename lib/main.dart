@@ -75,31 +75,8 @@ void main() async {
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  StreamSubscription<bool>? _maintenanceSub;
-
-  @override
-  void initState() {
-    super.initState();
-    _maintenanceSub = AppConfigService.instance.maintenanceModeStream.listen((isMaintenance) {
-      if (isMaintenance) {
-        navigatorKey.currentState?.pushNamedAndRemoveUntil('/maintenance', (route) => false);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _maintenanceSub?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,6 +100,18 @@ class _MyAppState extends State<MyApp> {
           theme: AppColors.getLightTheme(),
           darkTheme: AppColors.getDarkTheme(),
           themeMode: ThemeMode.light,
+          builder: (context, child) {
+            return StreamBuilder<bool>(
+              initialData: AppConfigService.instance.ownerAppMaintenance,
+              stream: AppConfigService.instance.maintenanceModeStream,
+              builder: (context, snapshot) {
+                if (snapshot.data == true) {
+                  return const MaintenanceScreen();
+                }
+                return child ?? const SizedBox.shrink();
+              },
+            );
+          },
           initialRoute: '/splash',
           routes: {
             '/splash': (context) => const SplashScreen(),
