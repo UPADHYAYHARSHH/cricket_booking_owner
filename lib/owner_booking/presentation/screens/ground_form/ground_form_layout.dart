@@ -61,10 +61,10 @@ class GroundFormLayout extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
-        top: topPadding + AppSizes.lg,
-        bottom: AppSizes.xl,
-        left: AppSizes.xxl,
-        right: AppSizes.xxl,
+        top: topPadding + AppSizes.sm,
+        bottom: AppSizes.md,
+        left: AppSizes.lg,
+        right: AppSizes.lg,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -76,13 +76,12 @@ class GroundFormLayout extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Glass back button + flow label
           Row(
             children: [
               GestureDetector(
                 onTap: onBack,
                 child: Container(
-                  padding: const EdgeInsets.all(AppSizes.sm),
+                  padding: const EdgeInsets.all(AppSizes.xs),
                   decoration: BoxDecoration(
                     color: AppColors.white.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppSizes.radiusSm),
@@ -95,16 +94,23 @@ class GroundFormLayout extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSizes.md),
+              Expanded(
+                child: AppText(
+                  text: isEdit ? 'Edit Ground' : 'Add New Ground',
+                  size: 15,
+                  color: AppColors.white.withValues(alpha: 0.9),
+                  weight: FontWeight.w600,
+                ),
+              ),
               AppText(
-                text: isEdit ? 'Edit Ground' : 'Add New Ground',
-                size: 15,
+                text: 'Step $currentStep / $kGroundFormTotalSteps',
+                size: 12,
                 color: AppColors.white.withValues(alpha: 0.8),
                 weight: FontWeight.w500,
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.lg),
-          // Animated progress bar
+          const SizedBox(height: AppSizes.md),
           Row(
             children: List.generate(kGroundFormTotalSteps, (index) {
               final isCompleted = index < currentStep;
@@ -113,7 +119,7 @@ class GroundFormLayout extends StatelessWidget {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 400),
                   curve: Curves.easeInOut,
-                  height: isCurrent ? 5 : 4,
+                  height: isCurrent ? 4 : 3,
                   margin: const EdgeInsets.symmetric(horizontal: 2),
                   decoration: BoxDecoration(
                     gradient: isCompleted
@@ -130,26 +136,21 @@ class GroundFormLayout extends StatelessWidget {
               );
             }),
           ),
-          const SizedBox(height: AppSizes.lg),
-          AppText(
-            text: 'Step $currentStep of $kGroundFormTotalSteps',
-            size: 13,
-            color: AppColors.white.withValues(alpha: 0.7),
-            weight: FontWeight.w500,
-          ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: AppSizes.sm),
           AppText(
             text: title,
-            size: 26,
+            size: 20,
             color: AppColors.white,
             weight: FontWeight.w700,
           ),
-          const SizedBox(height: AppSizes.xs),
-          AppText(
-            text: subtitle,
-            size: 13,
-            color: AppColors.white.withValues(alpha: 0.7),
-          ),
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            AppText(
+              text: subtitle,
+              size: 12,
+              color: AppColors.white.withValues(alpha: 0.7),
+            ),
+          ],
         ],
       ),
     );
