@@ -44,7 +44,7 @@ class AppConfigService {
               schema: 'public',
               table: 'app_config',
               callback: (payload) async {
-                debugPrint('?? CONFIG UPDATED: \');
+                debugPrint('?? CONFIG UPDATED: ${payload.newRecord}');
                 await _fetchValues();
                 _maintenanceController.add(_ownerAppMaintenance);
               },
@@ -52,7 +52,7 @@ class AppConfigService {
             .subscribe();
       }
     } catch (e, stack) {
-      debugPrint('? OWNER CONFIG INITIALIZATION FAILED: \');
+      debugPrint('? OWNER CONFIG INITIALIZATION FAILED: $e');
       debugPrint(stack.toString());
     }
   }
@@ -92,7 +92,7 @@ class AppConfigService {
       }
       debugPrint('?? FETCH OWNER CONFIG SUCCESS');
     } catch (e) {
-      debugPrint('? FETCH OWNER CONFIG FAILED: \');
+      debugPrint('? FETCH OWNER CONFIG FAILED: $e');
     }
   }
 }
