@@ -73,7 +73,7 @@ class AppConfigService {
           case 'commission_is_percentage':
             _commissionIsPercentage = val == 'true' || val == '1';
             break;
-          case 'is_owner_under_maintenance':
+          case 'owner_app_maintenance':
             _ownerAppMaintenance = val == 'true' || val == '1';
             break;
           case 'owner_android_min_version':
