@@ -253,9 +253,10 @@ class _GroundsScreenState extends State<GroundsScreen> {
                           
                           // Extract images from location
                           List<String> locImages = [];
-                          if (_selectedLocationId != null && locations.isNotEmpty) {
+                          final groundLocationId = ground['location_id'] as String?;
+                          if (groundLocationId != null && locations.isNotEmpty) {
                             try {
-                              final loc = locations.firstWhere((l) => l['id'] == _selectedLocationId);
+                              final loc = locations.firstWhere((l) => l['id'] == groundLocationId);
                               if (loc['location_images'] != null) {
                                 final imgs = loc['location_images'] as List;
                                 locImages = imgs.map((e) => e['image_url'].toString()).toList();
