@@ -249,8 +249,20 @@ class _GroundsScreenState extends State<GroundsScreen> {
                       padding: const EdgeInsets.all(AppSizes.xl),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate((context, index) {
-                          final ground =
-                              state.grounds[index] as Map<String, dynamic>;
+                          final ground = state.grounds[index] as Map<String, dynamic>;
+                          
+                          // Extract images from location
+                          List<String> locImages = [];
+                          if (_selectedLocationId != null && locations.isNotEmpty) {
+                            try {
+                              final loc = locations.firstWhere((l) => l['id'] == _selectedLocationId);
+                              if (loc['location_images'] != null) {
+                                final imgs = loc['location_images'] as List;
+                                locImages = imgs.map((e) => e['image_url'].toString()).toList();
+                              }
+                            } catch (_) {}
+                          }
+
                           return _StaggeredGroundCard(
                             index: index,
                             child: Padding(
@@ -259,6 +271,7 @@ class _GroundsScreenState extends State<GroundsScreen> {
                               ),
                               child: GroundCard(
                                 ground: ground,
+                                images: locImages,
                                 onEdit: () => _openEditFlow(ground),
                                 onAvailabilityChanged: (value) => context
                                     .read<GroundCubit>()

@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:turfpro_owner/owner_booking/presentation/widgets/ground_image_carousel.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -10,12 +11,14 @@ import 'package:turfpro_owner/common/widgets/app_text.dart';
 /// lists an owner's grounds (single location or all locations).
 class GroundCard extends StatelessWidget {
   final Map<String, dynamic> ground;
+  final List<String> images;
   final VoidCallback onEdit;
   final ValueChanged<bool> onAvailabilityChanged;
 
   const GroundCard({
     super.key,
     required this.ground,
+    this.images = const [],
     required this.onEdit,
     required this.onAvailabilityChanged,
   });
@@ -55,14 +58,14 @@ class GroundCard extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  imageUrl != null
-                      ? Image.network(
-                          imageUrl,
-                          height: 180,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) =>
-                              _ImagePlaceholder(name: name, category: category),
+                  GroundImageCarousel(
+                    images: images,
+                    fallbackImageUrl: imageUrl ?? '',
+                    height: 180,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(AppSizes.radiusXl),
+                    ),
+                  ),
                         )
                       : _ImagePlaceholder(name: name, category: category),
                   // Gradient Overlay
