@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -72,8 +73,33 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  StreamSubscription<bool>? _maintenanceSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _maintenanceSub = AppConfigService.instance.maintenanceModeStream.listen((isMaintenance) {
+      if (isMaintenance) {
+        navigatorKey.currentState?.pushNamedAndRemoveUntil('/maintenance', (route) => false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _maintenanceSub?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,6 +117,7 @@ class MyApp extends StatelessWidget {
       ],
       child: ToastificationWrapper(
         child: MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'TurfPro Owner',
           debugShowCheckedModeBanner: false,
           theme: AppColors.getLightTheme(),
