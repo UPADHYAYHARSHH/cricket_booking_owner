@@ -61,10 +61,10 @@ class GroundFormLayout extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
-        top: topPadding + AppSizes.lg,
-        bottom: AppSizes.xl,
-        left: AppSizes.xxl,
-        right: AppSizes.xxl,
+        top: topPadding + AppSizes.xs,
+        bottom: AppSizes.md,
+        left: AppSizes.lg,
+        right: AppSizes.lg,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -103,7 +103,7 @@ class GroundFormLayout extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AppSizes.md),
           // Animated progress bar
           Row(
             children: List.generate(kGroundFormTotalSteps, (index) {
@@ -130,7 +130,7 @@ class GroundFormLayout extends StatelessWidget {
               );
             }),
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AppSizes.sm),
           AppText(
             text: 'Step $currentStep of $kGroundFormTotalSteps',
             size: 13,
@@ -140,7 +140,7 @@ class GroundFormLayout extends StatelessWidget {
           const SizedBox(height: AppSizes.xs),
           AppText(
             text: title,
-            size: 26,
+            size: 22,
             color: AppColors.white,
             weight: FontWeight.w700,
           ),
