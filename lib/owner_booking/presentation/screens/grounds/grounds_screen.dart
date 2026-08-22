@@ -126,27 +126,33 @@ class _GroundsScreenState extends State<GroundsScreen> {
                 slivers: [
                   SliverAppBar(
                     automaticallyImplyLeading: false,
-                    backgroundColor: Colors.transparent,
+                    backgroundColor: AppColors.primaryDarkGreen,
                     surfaceTintColor: Colors.transparent,
                     scrolledUnderElevation: 0,
                     elevation: 0,
                     pinned: true,
-                    expandedHeight: locations.length > 1 ? 140.0 : 64.0,
-                    flexibleSpace: FlexibleSpaceBar(
-                      titlePadding: EdgeInsets.only(
-                        left: AppSizes.lg,
-                        bottom: locations.length > 1 ? 16 : 0,
-                      ),
-                      title: locations.length > 1
-                          ? null
-                          : const AppText(
-                              text: 'Grounds',
-                              size: 18,
-                              weight: FontWeight.w700,
-                              color: AppColors.white,
+                    expandedHeight: locations.length > 1 ? 140.0 : null,
+                    title: locations.length > 1
+                        ? null
+                        : const AppText(
+                            text: 'Grounds',
+                            size: 18,
+                            weight: FontWeight.w700,
+                            color: AppColors.white,
+                          ),
+                    flexibleSpace: locations.length > 1
+                        ? FlexibleSpaceBar(
+                            background: _buildGreenHeader(context, locations),
+                          )
+                        : Container(
+                            decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [AppColors.primaryDarkGreen, Color(0xFF0FA968)],
+                              ),
                             ),
-                      background: _buildGreenHeader(context, locations),
-                    ),
+                          ),
                     actions: [
                       IconButton(
                         tooltip: 'Add ground',
