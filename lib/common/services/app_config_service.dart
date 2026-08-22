@@ -36,21 +36,24 @@ class AppConfigService {
       await _fetchValues();
       _maintenanceController.add(_ownerAppMaintenance);
 
-      if (!kIsWeb) {
-        Supabase.instance.client
-            .channel('public:app_config')
-            .onPostgresChanges(
-              event: PostgresChangeEvent.all,
-              schema: 'public',
-              table: 'app_config',
-              callback: (payload) async {
-                debugPrint('?? CONFIG UPDATED: ${payload.newRecord}');
-                await _fetchValues();
-                _maintenanceController.add(_ownerAppMaintenance);
-              },
-            )
-            .subscribe();
-      }
+      Supabase.instance.client
+          .channel('public:app_config')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'app_config',
+            callback: (payload) async {
+              debugPrint('🚀 CONFIG UPDATED: ${payload.newRecord}');
+              await _fetchValues();
+              _maintenanceController.add(_ownerAppMaintenance);
+            },
+          )
+          .subscribe((status, [error]) {
+            debugPrint('🚀 REALTIME STATUS: $status');
+            if (error != null) {
+              debugPrint('❌ REALTIME ERROR: $error');
+            }
+          });
     } catch (e, stack) {
       debugPrint('? OWNER CONFIG INITIALIZATION FAILED: $e');
       debugPrint(stack.toString());
