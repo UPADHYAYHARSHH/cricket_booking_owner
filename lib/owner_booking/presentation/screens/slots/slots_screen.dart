@@ -72,6 +72,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
                                 const SizedBox(height: AppSizes.xxl),
                                 _buildSummaryCard(state),
                                 const SizedBox(height: AppSizes.xxl),
+                                const SizedBox(height: 100), // Extra spacing for floating bottom nav
                               ],
                             ),
                           ),
