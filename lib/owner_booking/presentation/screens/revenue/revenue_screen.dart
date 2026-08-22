@@ -339,10 +339,10 @@ class _HeroHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top + 16,
+        top: MediaQuery.of(context).padding.top + 12,
         left: 20,
         right: 20,
-        bottom: 28,
+        bottom: 20,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -381,37 +381,46 @@ class _HeroHeader extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 28),
-
-          // Total revenue hero number
-          AppText(
-            text: 'Total Earnings',
-            color: AppColors.white.withValues(alpha: 0.7),
-            size: 13,
-            weight: FontWeight.w500,
-          ),
-          const SizedBox(height: 8),
-          AppText(
-            text: '₹${revenue.toInt()}',
-            color: AppColors.white,
-            size: 36,
-            weight: FontWeight.bold,
-          ),
-          const SizedBox(height: 20),
-
-          // Mini stats row
+          const SizedBox(height: 16),
           Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _MiniStat(
-                icon: Icons.receipt_long_rounded,
-                label: 'Bookings',
-                value: '$count',
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppText(
+                      text: 'Total Earnings',
+                      color: AppColors.white.withValues(alpha: 0.7),
+                      size: 13,
+                      weight: FontWeight.w500,
+                    ),
+                    const SizedBox(height: 4),
+                    AppText(
+                      text: '₹${revenue.toInt()}',
+                      color: AppColors.white,
+                      size: 32,
+                      weight: FontWeight.bold,
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 20),
-              _MiniStat(
-                icon: Icons.trending_up_rounded,
-                label: 'Avg Value',
-                value: '₹${avg.toInt()}',
+              // Mini stats on the right
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  _MiniStat(
+                    icon: Icons.receipt_long_rounded,
+                    label: 'Bookings',
+                    value: '$count',
+                  ),
+                  const SizedBox(height: 8),
+                  _MiniStat(
+                    icon: Icons.trending_up_rounded,
+                    label: 'Avg Value',
+                    value: '₹${avg.toInt()}',
+                  ),
+                ],
               ),
             ],
           ),
