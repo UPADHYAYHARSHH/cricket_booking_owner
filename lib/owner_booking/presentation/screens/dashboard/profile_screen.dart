@@ -181,15 +181,6 @@ class _ProfileScreenState extends State<ProfileScreen>
     return "₹${amount.toStringAsFixed(0)}";
   }
 
-  void _showComingSoon() {
-    toastification.show(
-      context: context,
-      type: ToastificationType.info,
-      title: const Text("Coming Soon"),
-      autoCloseDuration: const Duration(seconds: 2),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -462,38 +453,13 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                         ),
                         _SettingsItem(
-                          icon: Icons.edit_location_alt_outlined,
-                          title: "Edit Venue Details",
-                          onTap: _showComingSoon,
-                        ),
-                        _SettingsItem(
-                          icon: Icons.sports_tennis_outlined,
-                          title: "Manage Courts / Grounds",
-                          onTap: _showComingSoon,
-                        ),
-                        _SettingsItem(
                           icon: Icons.sports_baseball_outlined,
                           title: "Update Amenities",
+                          isLast: true,
                           onTap: () => Navigator.pushNamed(
                             context,
                             '/amenities-settings',
                           ),
-                        ),
-                        _SettingsItem(
-                          icon: Icons.price_change_outlined,
-                          title: "Adjust Pricing",
-                          onTap: _showComingSoon,
-                        ),
-                        _SettingsItem(
-                          icon: Icons.event_busy_outlined,
-                          title: "Holiday / Closure Schedule",
-                          onTap: _showComingSoon,
-                        ),
-                        _SettingsItem(
-                          icon: Icons.rule_outlined,
-                          title: "Booking Rules",
-                          onTap: _showComingSoon,
-                          isLast: true,
                         ),
                       ]),
                       const SizedBox(height: AppSizes.xxl),
@@ -603,25 +569,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                   size: 15,
                   weight: FontWeight.w700,
                   color: AppColors.white,
-                ),
-                GestureDetector(
-                  onTap: _showComingSoon,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                    ),
-                    child: const AppText(
-                      text: "Edit",
-                      size: 12,
-                      color: AppColors.white,
-                      weight: FontWeight.w600,
-                    ),
-                  ),
                 ),
               ],
             ),
