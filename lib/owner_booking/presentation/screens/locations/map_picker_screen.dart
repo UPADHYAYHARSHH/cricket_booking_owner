@@ -249,7 +249,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             right: 16,
             bottom: 32,
             child: ElevatedButton(
-              onPressed: () => Navigator.pop(context, _pickedLocation),
+              onPressed: () => Navigator.pop(context, {
+                'location': _pickedLocation,
+                'address': _address,
+              }),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryDarkGreen,
                 foregroundColor: Colors.white,

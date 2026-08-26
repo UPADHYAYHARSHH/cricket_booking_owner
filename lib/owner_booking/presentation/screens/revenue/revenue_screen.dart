@@ -8,8 +8,10 @@ import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_state.dart';
-import 'package:turfpro_owner/owner_booking/presentation/widgets/location_dropdown.dart';
+
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
+import '../../blocs/location/location_cubit.dart';
+import '../../blocs/location/location_state.dart';
 import 'revenue_analytics.dart';
 
 enum _Period { weekly, monthly, custom }
@@ -207,20 +209,7 @@ class _RevenueScreenState extends State<RevenueScreen>
                   avg: avg,
                 ))),
 
-                // Location Dropdown
-                SliverToBoxAdapter(
-                  child: _stagger(1, Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-                    child: LocationDropdown(
-                      locations: loaded.locations,
-                      selectedLocationId: _selectedLocationId,
-                      onSelected: (id) {
-                        setState(() => _selectedLocationId = id);
-                        SharedPrefsService.instance.setSelectedLocationId(id);
-                      },
-                    ),
-                  )),
-                ),
+
 
                 // Period Toggle
                 SliverToBoxAdapter(
@@ -373,11 +362,46 @@ class _HeroHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const AppText(
-                text: 'Revenue',
-                size: 20,
-                weight: FontWeight.w700,
-                color: AppColors.white,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const AppText(
+                      text: 'Revenue',
+                      size: 20,
+                      weight: FontWeight.w700,
+                      color: AppColors.white,
+                    ),
+                    const SizedBox(height: 2),
+                    BlocBuilder<LocationCubit, LocationState>(
+                      builder: (context, locState) {
+                        String locName = "All Locations";
+                        if (locState is LocationLoaded) {
+                          final selectedId = SharedPrefsService.instance.selectedLocationId;
+                          if (selectedId != null) {
+                            try {
+                              final loc = locState.locations.firstWhere((l) => l['id'] == selectedId);
+                              if (loc['name'] != null && loc['name'].toString().isNotEmpty) {
+                                locName = loc['name'];
+                              }
+                            } catch (_) {}
+                          }
+                        }
+                        return Row(
+                          children: [
+                            Icon(Icons.location_on_outlined, size: 12, color: AppColors.white.withValues(alpha: 0.8)),
+                            const SizedBox(width: 4),
+                            AppText(
+                              text: locName,
+                              size: 12,
+                              color: AppColors.white.withValues(alpha: 0.8),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -1083,9 +1107,7 @@ class _RevenueSkeleton extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
       children: [
-        // Location dropdown skeleton
-        block(48),
-        const SizedBox(height: 20),
+
         // Summary cards skeleton
         Row(
           children: [

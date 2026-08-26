@@ -11,10 +11,10 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_state.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_cubit.dart';
-import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_state.dart';
-import 'package:turfpro_owner/owner_booking/presentation/widgets/location_dropdown.dart';
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
+
+import '../../blocs/location/location_cubit.dart';
+import '../../blocs/location/location_state.dart';
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
 
@@ -29,7 +29,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
   void initState() {
     super.initState();
     context.read<BookingsCubit>().fetchBookings();
-    context.read<LocationCubit>().fetchOwnerLocations();
   }
 
   @override
@@ -107,11 +106,44 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         ),
                       ),
                     Expanded(
-                      child: AppText(
-                        text: "Bookings",
-                        size: 22,
-                        weight: FontWeight.w700,
-                        color: AppColors.white,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          AppText(
+                            text: "Bookings",
+                            size: 22,
+                            weight: FontWeight.w700,
+                            color: AppColors.white,
+                          ),
+                          const SizedBox(height: 4),
+                          BlocBuilder<LocationCubit, LocationState>(
+                            builder: (context, locState) {
+                              String locName = "All Locations";
+                              if (locState is LocationLoaded) {
+                                final selectedId = SharedPrefsService.instance.selectedLocationId;
+                                if (selectedId != null) {
+                                  try {
+                                    final loc = locState.locations.firstWhere((l) => l['id'] == selectedId);
+                                    if (loc['name'] != null && loc['name'].toString().isNotEmpty) {
+                                      locName = loc['name'];
+                                    }
+                                  } catch (_) {}
+                                }
+                              }
+                              return Row(
+                                children: [
+                                  Icon(Icons.location_on_outlined, size: 12, color: AppColors.white.withValues(alpha: 0.8)),
+                                  const SizedBox(width: 4),
+                                  AppText(
+                                    text: locName,
+                                    size: 12,
+                                    color: AppColors.white.withValues(alpha: 0.8),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     ),
                     BlocBuilder<BookingsCubit, BookingsState>(
@@ -137,23 +169,6 @@ class _BookingsScreenState extends State<BookingsScreen> {
                       },
                     ),
                   ],
-                ),
-                const SizedBox(height: AppSizes.md),
-                BlocBuilder<LocationCubit, LocationState>(
-                  builder: (context, locState) {
-                    if (locState is LocationLoaded) {
-                      return LocationDropdown(
-                        locations: locState.locations.cast<Map<String, dynamic>>(),
-                        selectedLocationId: SharedPrefsService.instance.selectedLocationId,
-                        onSelected: (id) {
-                          SharedPrefsService.instance.setSelectedLocationId(id);
-                          setState(() {});
-                          context.read<BookingsCubit>().fetchBookings();
-                        },
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
                 ),
               ],
             ),

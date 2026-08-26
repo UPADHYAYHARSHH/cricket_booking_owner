@@ -29,7 +29,6 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
   final _venueNameCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
-  final _mapsCtrl = TextEditingController();
   final _latCtrl = TextEditingController();
   final _lngCtrl = TextEditingController();
 
@@ -49,7 +48,6 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
     _venueNameCtrl.dispose();
     _addressCtrl.dispose();
     _descriptionCtrl.dispose();
-    _mapsCtrl.dispose();
     _latCtrl.dispose();
     _lngCtrl.dispose();
     super.dispose();
@@ -72,7 +70,6 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
       if (mounted && data != null) {
         _venueNameCtrl.text = data['venue_name'] ?? '';
         _addressCtrl.text = data['address'] ?? '';
-        _mapsCtrl.text = data['google_maps_link'] ?? '';
         final lat = (data['latitude'] as num?)?.toDouble() ?? 0.0;
         final lng = (data['longitude'] as num?)?.toDouble() ?? 0.0;
         _latCtrl.text = lat != 0.0 ? lat.toString() : '';
@@ -105,7 +102,7 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
       address: _addressCtrl.text.trim(),
       city: city,
       description: _descriptionCtrl.text.trim(),
-      googleMapsLink: _mapsCtrl.text.trim(),
+      googleMapsLink: '',
       latitude: double.tryParse(_latCtrl.text.trim()) ?? 0.0,
       longitude: double.tryParse(_lngCtrl.text.trim()) ?? 0.0,
       amenities: _selectedAmenities.toList(),
@@ -244,14 +241,6 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
                           key: _cityFieldKey,
                           initialCity: _initialCity,
                           onCityChanged: (city) => _cityValue = city ?? '',
-                        ),
-                        const SizedBox(height: AppSizes.xxl),
-
-                        _label('GOOGLE MAPS LINK (Optional)'),
-                        AppTextField(
-                          hint: 'Paste Google Maps URL here',
-                          controller: _mapsCtrl,
-                          prefixIcon: Icons.link,
                         ),
                         const SizedBox(height: AppSizes.xxl),
 

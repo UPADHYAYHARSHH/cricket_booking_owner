@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:toastification/toastification.dart';
 import 'package:intl/intl.dart';
@@ -12,6 +13,15 @@ import 'package:turfpro_owner/utils/auth_helper.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/bookings_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/locations_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/edit_owner_profile_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_state.dart';
+import 'package:turfpro_owner/owner_booking/presentation/widgets/location_dropdown.dart';
+import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -28,6 +38,8 @@ class _ProfileScreenState extends State<ProfileScreen>
   int _monthlyBookings = 0;
   double _monthlyRevenue = 0;
   String _occupancy = "0%";
+  int _activeCourtsCount = 0;
+  int _totalCourtsCount = 0;
   
   double _locationRating = 0.0;
   int _locationReviewsCount = 0;
@@ -96,15 +108,32 @@ class _ProfileScreenState extends State<ProfileScreen>
           .eq('id', userId)
           .maybeSingle();
 
-      final groundsRes = await Supabase.instance.client
+      final selectedLocId = SharedPrefsService.instance.selectedLocationId;
+
+      var groundsQuery = Supabase.instance.client
           .from('grounds')
-          .select('id')
+          .select('id, is_available')
           .eq('owner_id', userId);
+
+      if (selectedLocId != null) {
+        groundsQuery = groundsQuery.eq('location_id', selectedLocId);
+      }
+      
+      final groundsRes = await groundsQuery;
+
+      int activeCount = 0;
+      for (var g in groundsRes) {
+        if (g['is_available'] != false) activeCount++;
+      }
+      
+      _activeCourtsCount = activeCount;
+      _totalCourtsCount = groundsRes.length;
 
       final List<Object> groundIds = groundsRes
           .map((g) => g['id'] as Object)
           .toList();
 
+      await _bookingsSubscription?.cancel();
       if (groundIds.isNotEmpty) {
         final now = DateTime.now();
         final startOfMonth = DateTime(now.year, now.month, 1).toIso8601String();
@@ -139,20 +168,49 @@ class _ProfileScreenState extends State<ProfileScreen>
                 });
               }
             });
+      } else {
+        if (mounted) {
+          setState(() {
+            _monthlyBookings = 0;
+            _monthlyRevenue = 0;
+            _occupancy = "0%";
+          });
+        }
       }
 
-      final locationRes = await Supabase.instance.client
+      var locQuery = Supabase.instance.client
           .from('locations')
           .select('rating, total_reviews')
-          .eq('owner_id', userId)
-          .limit(1)
-          .maybeSingle();
+          .eq('owner_id', userId);
+          
+      if (selectedLocId != null) {
+        locQuery = locQuery.eq('id', selectedLocId);
+      }
+      
+      final locationRes = await locQuery;
+      
+      double avgRating = 0.0;
+      int totReviews = 0;
+      if (locationRes.isNotEmpty) {
+        double ratingSum = 0;
+        int ratingCount = 0;
+        for (var loc in locationRes) {
+          if (loc['rating'] != null) {
+            ratingSum += (loc['rating'] as num).toDouble();
+            ratingCount++;
+          }
+          if (loc['total_reviews'] != null) {
+            totReviews += (loc['total_reviews'] as num).toInt();
+          }
+        }
+        if (ratingCount > 0) avgRating = ratingSum / ratingCount;
+      }
 
       if (mounted) {
         setState(() {
           _ownerDetails = ownerRes;
-          _locationRating = locationRes?['rating'] != null ? (locationRes!['rating'] as num).toDouble() : 0.0;
-          _locationReviewsCount = locationRes?['total_reviews'] ?? 0;
+          _locationRating = avgRating;
+          _locationReviewsCount = totReviews;
           _isLoading = false;
         });
         _fadeController.forward();
@@ -215,12 +273,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         ? sportsList.join(', ')
         : 'No sports configured';
 
-    int activeCourts = 0;
-    sportsConfig.forEach((key, value) {
-      if (value is Map && value['num_courts'] != null) {
-        activeCourts += (value['num_courts'] as num).toInt();
-      }
-    });
 
     return Scaffold(
       backgroundColor: AppColors.bgLight,
@@ -373,7 +425,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   child: Column(
                     children: [
                       // Venue Card
-                      _buildVenueCard(venueName, sportsStr, activeCourts),
+                      _buildVenueCard(venueName, sportsStr, _totalCourtsCount),
                       const SizedBox(height: AppSizes.lg),
 
                       // Stats Row
@@ -432,6 +484,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                       // Venue Settings
                       _buildSettingsSection("Venue Settings", [
+
                         _SettingsItem(
                           icon: Icons.calendar_month_outlined,
                           title: "All Bookings",
@@ -441,6 +494,11 @@ class _ProfileScreenState extends State<ProfileScreen>
                               builder: (_) => const BookingsScreen(),
                             ),
                           ),
+                        ),
+                        _SettingsItem(
+                          icon: Icons.star_border,
+                          title: "User Ratings",
+                          onTap: () => Navigator.pushNamed(context, '/user-ratings'),
                         ),
                         _SettingsItem(
                           icon: Icons.location_on_outlined,
@@ -527,7 +585,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   // ── Venue Card ──
-  Widget _buildVenueCard(String venueName, String sportsStr, int activeCourts) {
+  Widget _buildVenueCard(String venueName, String sportsStr, int totalCourts) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceLight,
@@ -573,23 +631,109 @@ class _ProfileScreenState extends State<ProfileScreen>
               ],
             ),
           ),
+          BlocBuilder<LocationCubit, LocationState>(
+            builder: (context, locState) {
+              if (locState is LocationLoaded) {
+                if (locState.locations.length > 1) {
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(AppSizes.xl, AppSizes.xl, AppSizes.xl, 0),
+                    child: LocationDropdown(
+                      locations: locState.locations.cast<Map<String, dynamic>>(),
+                      selectedLocationId: SharedPrefsService.instance.selectedLocationId,
+                      onSelected: (id) {
+                        SharedPrefsService.instance.setSelectedLocationId(id);
+                        if (mounted) setState(() {});
+                        
+                        // Refresh global cubits
+                        try {
+                          context.read<DashboardCubit>().fetchDashboardData();
+                        } catch (_) {}
+                        try {
+                          context.read<BookingsCubit>().fetchBookings();
+                        } catch (_) {}
+                        try {
+                          context.read<GroundCubit>().fetchOwnerGrounds();
+                        } catch (_) {}
+                        try {
+                          context.read<SlotCubit>().fetchInitialData();
+                        } catch (_) {}
+                        try {
+                          context.read<RevenueCubit>().fetchRevenueData();
+                        } catch (_) {}
+                        
+                        // Re-fetch profile data to update local stats
+                        _fetchProfileData();
+                      },
+                    ),
+                  );
+                } else if (locState.locations.length == 1) {
+                  // Only 1 location, show static text matching the dropdown style
+                  final location = locState.locations.first;
+                  final title = LocationDropdown.titleFor(location);
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(AppSizes.xl, AppSizes.xl, AppSizes.xl, 0),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: Colors.grey.shade300),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF1F8F5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Center(
+                              child: HugeIcon(
+                                icon: HugeIcons.strokeRoundedLocation01,
+                                color: AppColors.primaryDarkGreen,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: AppText(
+                              text: title,
+                              size: 14,
+                              weight: FontWeight.w700,
+                              color: Colors.black87,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }
+              }
+              return const SizedBox.shrink();
+            },
+          ),
           // Details
           Padding(
             padding: const EdgeInsets.all(AppSizes.xl),
             child: Column(
               children: [
-                _buildVenueDetailRow(Icons.store_outlined, "Venue", venueName),
-                _buildVenueDetailRow(
-                  Icons.sports_outlined,
-                  "Sports",
-                  sportsStr,
-                ),
                 _buildVenueDetailRow(
                   Icons.grid_view_outlined,
                   "Courts",
-                  "$activeCourts active",
+                  "$_activeCourtsCount active (out of $_totalCourtsCount total)",
                 ),
-                _buildStatusRow("Status", "Live", true),
                 _buildVenueDetailRow(
                   Icons.star_outline,
                   "Rating",
@@ -800,13 +944,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                         ],
                       ),
                     ),
-                    Icon(
-                      Icons.chevron_right,
-                      size: 20,
-                      color: AppColors.textSecondaryLight.withValues(
-                        alpha: 0.5,
+                    if (item.customWidget != null)
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: item.customWidget!,
+                        ),
+                      )
+                    else
+                      Icon(
+                        Icons.chevron_right,
+                        size: 20,
+                        color: AppColors.textSecondaryLight.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -824,6 +976,7 @@ class _SettingsItem {
   final String? subtitle;
   final VoidCallback onTap;
   final bool isLast;
+  final Widget? customWidget;
 
   _SettingsItem({
     required this.icon,
@@ -831,5 +984,6 @@ class _SettingsItem {
     this.subtitle,
     required this.onTap,
     this.isLast = false,
+    this.customWidget,
   });
 }

@@ -8,9 +8,12 @@ import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_state.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_cubit.dart';
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_flow.dart';
+
+import '../../blocs/location/location_state.dart';
 
 class SlotsScreen extends StatefulWidget {
   const SlotsScreen({super.key});
@@ -202,10 +205,32 @@ class _SlotsScreenState extends State<SlotsScreen> {
                   color: AppColors.white,
                 ),
                 const SizedBox(height: AppSizes.xxs),
-                AppText(
-                  text: venueName,
-                  size: 13,
-                  color: AppColors.white.withValues(alpha: 0.75),
+                BlocBuilder<LocationCubit, LocationState>(
+                  builder: (context, locState) {
+                    String locName = "All Locations";
+                    if (locState is LocationLoaded) {
+                      final selectedId = SharedPrefsService.instance.selectedLocationId;
+                      if (selectedId != null) {
+                        try {
+                          final loc = locState.locations.firstWhere((l) => l['id'] == selectedId);
+                          if (loc['name'] != null && loc['name'].toString().isNotEmpty) {
+                            locName = loc['name'];
+                          }
+                        } catch (_) {}
+                      }
+                    }
+                    return Row(
+                      children: [
+                        Icon(Icons.location_on_outlined, size: 12, color: AppColors.white.withValues(alpha: 0.75)),
+                        const SizedBox(width: 4),
+                        AppText(
+                          text: locName,
+                          size: 13,
+                          color: AppColors.white.withValues(alpha: 0.75),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),

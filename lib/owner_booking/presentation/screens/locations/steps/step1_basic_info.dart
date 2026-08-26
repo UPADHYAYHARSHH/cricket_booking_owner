@@ -21,7 +21,6 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
   late final TextEditingController addressCtrl;
   late final TextEditingController descriptionCtrl;
   late final TextEditingController privacyPolicyCtrl;
-  late final TextEditingController mapsCtrl;
   late final TextEditingController latCtrl;
   late final TextEditingController lngCtrl;
   
@@ -36,7 +35,6 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
     addressCtrl = TextEditingController(text: data.address);
     descriptionCtrl = TextEditingController(text: data.description);
     privacyPolicyCtrl = TextEditingController(text: data.privacyPolicy);
-    mapsCtrl = TextEditingController(text: data.googleMapsLink);
     latCtrl = TextEditingController(text: data.latitude != 0.0 ? data.latitude.toString() : '');
     lngCtrl = TextEditingController(text: data.longitude != 0.0 ? data.longitude.toString() : '');
     cityValue = data.city;
@@ -48,7 +46,6 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
     addressCtrl.dispose();
     descriptionCtrl.dispose();
     privacyPolicyCtrl.dispose();
-    mapsCtrl.dispose();
     latCtrl.dispose();
     lngCtrl.dispose();
     super.dispose();
@@ -68,7 +65,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
       description: descriptionCtrl.text.trim(),
       privacyPolicy: privacyPolicyCtrl.text.trim(),
       city: city,
-      googleMapsLink: mapsCtrl.text.trim(),
+      googleMapsLink: '',
       latitude: double.tryParse(latCtrl.text.trim()) ?? 0.0,
       longitude: double.tryParse(lngCtrl.text.trim()) ?? 0.0,
     ));
@@ -129,19 +126,12 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
             onCityChanged: (city) => cityValue = city ?? '',
           ),
           const SizedBox(height: AppSizes.xxl),
-          _label('GOOGLE MAPS LINK (Optional)'),
-          _field(
-            mapsCtrl,
-            hint: 'Paste Google Maps URL here',
-            icon: Icons.link,
-          ),
-          const SizedBox(height: AppSizes.xxl),
           _label('GPS COORDINATES *'),
           const SizedBox(height: 4),
           // Map picker button
           GestureDetector(
             onTap: () async {
-              final result = await Navigator.push<LatLng>(
+              final result = await Navigator.push<Map<String, dynamic>>(
                 context,
                 MaterialPageRoute(
                   builder: (_) => MapPickerScreen(
@@ -152,8 +142,15 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
               );
               if (result != null) {
                 setState(() {
-                  latCtrl.text = result.latitude.toStringAsFixed(6);
-                  lngCtrl.text = result.longitude.toStringAsFixed(6);
+                  final LatLng loc = result['location'];
+                  latCtrl.text = loc.latitude.toStringAsFixed(6);
+                  lngCtrl.text = loc.longitude.toStringAsFixed(6);
+                  final String address = result['address'] ?? '';
+                  if (address.isNotEmpty && 
+                      address != 'Location selected' && 
+                      address != 'Move the pin to select your venue location') {
+                    addressCtrl.text = address;
+                  }
                 });
               }
             },

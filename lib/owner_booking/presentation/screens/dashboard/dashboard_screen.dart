@@ -22,6 +22,8 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widge
 import 'package:turfpro_owner/owner_booking/presentation/screens/revenue/revenue_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/sport/sport_cubit.dart' as turf_sport;
 
+import '../../blocs/location/location_cubit.dart';
+
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
@@ -38,6 +40,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   void initState() {
     super.initState();
     context.read<DashboardCubit>().fetchDashboardData();
+    context.read<LocationCubit>().fetchOwnerLocations();
     WidgetsBinding.instance.addPostFrameCallback((_) => _runStartupChecks());
 
     _staggerController = AnimationController(

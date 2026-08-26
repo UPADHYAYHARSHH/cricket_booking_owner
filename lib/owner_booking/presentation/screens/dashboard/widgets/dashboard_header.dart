@@ -64,6 +64,16 @@ class _DashboardHeaderState extends State<DashboardHeader>
     return "Good evening";
   }
 
+  String _getSelectedLocationName() {
+    if (widget.selectedLocationId == null) return "All Locations";
+    try {
+      final loc = widget.locations.firstWhere((l) => l['id'] == widget.selectedLocationId);
+      final name = loc['name'] as String?;
+      if (name != null && name.isNotEmpty) return name;
+    } catch (_) {}
+    return "All Locations";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -94,6 +104,18 @@ class _DashboardHeaderState extends State<DashboardHeader>
                         color: AppColors.white,
                         size: 20,
                         weight: FontWeight.w700,
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_outlined, size: 14, color: AppColors.white.withValues(alpha: 0.8)),
+                          const SizedBox(width: 4),
+                          AppText(
+                            text: _getSelectedLocationName(),
+                            color: AppColors.white.withValues(alpha: 0.8),
+                            size: 13,
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -139,14 +161,6 @@ class _DashboardHeaderState extends State<DashboardHeader>
                 ),
               ],
             ),
-            if (widget.locations.length > 1) ...[
-              const SizedBox(height: 20),
-              LocationDropdown(
-                locations: widget.locations,
-                selectedLocationId: widget.selectedLocationId,
-                onSelected: widget.onLocationSelected,
-              ),
-            ],
             const SizedBox(height: 20),
             Row(
               children: [

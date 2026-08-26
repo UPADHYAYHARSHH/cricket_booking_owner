@@ -34,6 +34,7 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/auth/pending_ap
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/notification_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/notification/notification_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/maintenance/maintenance_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/ratings/ratings_screen.dart';
 
 // Background message handler
 @pragma('vm:entry-point')
@@ -132,6 +133,7 @@ class MyApp extends StatelessWidget {
               child: const NotificationScreen(),
             ),
             '/maintenance': (context) => const MaintenanceScreen(),
+            '/user-ratings': (context) => const RatingsScreen(),
           },
         ),
       ),

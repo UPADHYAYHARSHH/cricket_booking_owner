@@ -11,7 +11,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_flow.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/locations_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/widgets/ground_card.dart';
-import 'package:turfpro_owner/owner_booking/presentation/widgets/location_dropdown.dart';
+
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 
 /// The "Grounds" tab: pick a location from the dropdown (or leave it on
@@ -131,28 +131,54 @@ class _GroundsScreenState extends State<GroundsScreen> {
                     scrolledUnderElevation: 0,
                     elevation: 0,
                     pinned: true,
-                    expandedHeight: locations.length > 1 ? 140.0 : null,
-                    title: locations.length > 1
-                        ? null
-                        : const AppText(
-                            text: 'Grounds',
-                            size: 18,
-                            weight: FontWeight.w700,
-                            color: AppColors.white,
-                          ),
-                    flexibleSpace: locations.length > 1
-                        ? FlexibleSpaceBar(
-                            background: _buildGreenHeader(context, locations),
-                          )
-                        : Container(
-                            decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [AppColors.primaryDarkGreen, Color(0xFF0FA968)],
-                              ),
-                            ),
-                          ),
+                    title: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const AppText(
+                          text: 'Grounds',
+                          size: 18,
+                          weight: FontWeight.w700,
+                          color: AppColors.white,
+                        ),
+                        Builder(
+                          builder: (context) {
+                            String locName = "All Locations";
+                            if (locationState is LocationLoaded) {
+                              final selectedId = SharedPrefsService.instance.selectedLocationId;
+                              if (selectedId != null) {
+                                try {
+                                  final loc = locationState.locations.firstWhere((l) => l['id'] == selectedId);
+                                  if (loc['name'] != null && loc['name'].toString().isNotEmpty) {
+                                    locName = loc['name'];
+                                  }
+                                } catch (_) {}
+                              }
+                            }
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.location_on_outlined, size: 12, color: AppColors.white.withValues(alpha: 0.8)),
+                                const SizedBox(width: 4),
+                                AppText(
+                                  text: locName,
+                                  size: 12,
+                                  color: AppColors.white.withValues(alpha: 0.8),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    flexibleSpace: Container(
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [AppColors.primaryDarkGreen, Color(0xFF0FA968)],
+                        ),
+                      ),
+                    ),
                     actions: [
                       IconButton(
                         tooltip: 'Add ground',
@@ -253,7 +279,7 @@ class _GroundsScreenState extends State<GroundsScreen> {
                           
                           // Extract images from location
                           List<String> locImages = [];
-                          final groundLocationId = ground['location_id'] as String?;
+                          final groundLocationId = ground['location_id'];
                           if (groundLocationId != null && locations.isNotEmpty) {
                             try {
                               final loc = locations.firstWhere((l) => l['id'] == groundLocationId);
@@ -328,12 +354,7 @@ class _GroundsScreenState extends State<GroundsScreen> {
                       weight: FontWeight.w800,
                       color: AppColors.white,
                     ),
-                    const SizedBox(height: AppSizes.lg),
-                    LocationDropdown(
-                      locations: locations,
-                      selectedLocationId: _selectedLocationId,
-                      onSelected: _onLocationSelected,
-                    ),
+
                   ],
                 ),
               )
