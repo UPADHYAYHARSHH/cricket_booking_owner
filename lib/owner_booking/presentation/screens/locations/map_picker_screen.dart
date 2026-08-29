@@ -22,55 +22,106 @@ class MapPickerScreen extends StatefulWidget {
 class _MapPickerScreenState extends State<MapPickerScreen> {
   final Completer<GoogleMapController> _controller = Completer();
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
 
   late LatLng _pickedLocation;
   String _address = 'Move the pin to select your venue location';
   bool _isLoadingAddress = false;
   bool _isLoadingLocation = false;
+  
+  // Search state
   bool _isSearching = false;
+  List<Map<String, dynamic>> _searchResults = [];
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _pickedLocation = LatLng(
+      widget.initialLatitude != 0.0 ? widget.initialLatitude : 20.5937,
+      widget.initialLongitude != 0.0 ? widget.initialLongitude : 78.9629,
+    );
+    
+    _searchFocusNode.addListener(() {
+      setState(() {}); // Re-build to show/hide dropdown
+      if (_searchFocusNode.hasFocus) {
+        // Optionally select all text when focused
+        _searchController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _searchController.text.length,
+        );
+      } else {
+        // Reset text to current address when losing focus
+        _searchController.text = _address;
+        _searchResults.clear();
+      }
+    });
+
+    if (widget.initialLatitude != 0.0) {
+      _reverseGeocode(_pickedLocation);
+    }
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
-  Future<void> _searchLocation() async {
-    final query = _searchController.text.trim();
-    if (query.isEmpty) return;
-
-    setState(() => _isSearching = true);
-    try {
-      final locations = await locationFromAddress(query);
-      if (locations.isNotEmpty && mounted) {
-        final loc = locations.first;
-        final newPos = LatLng(loc.latitude, loc.longitude);
-        
-        final ctrl = await _controller.future;
-        ctrl.animateCamera(CameraUpdate.newCameraPosition(
-          CameraPosition(target: newPos, zoom: 16),
-        ));
-
-        setState(() {
-          _pickedLocation = newPos;
-        });
-        _reverseGeocode(newPos);
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location not found')),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error finding location: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSearching = false);
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
+      return;
     }
+
+    _debounce = Timer(const Duration(milliseconds: 600), () async {
+      setState(() => _isSearching = true);
+      try {
+        final locations = await locationFromAddress(query);
+        List<Map<String, dynamic>> results = [];
+        
+        // Process top 5 locations to get their addresses
+        for (var loc in locations.take(5)) {
+           try {
+             final placemarks = await placemarkFromCoordinates(loc.latitude, loc.longitude);
+             if (placemarks.isNotEmpty) {
+               final p = placemarks.first;
+               final parts = [
+                 p.name,
+                 p.street,
+                 p.subLocality,
+                 p.locality,
+                 p.administrativeArea,
+               ].where((e) => e != null && e.isNotEmpty).toSet().join(', ');
+               
+               results.add({
+                 'address': parts.isNotEmpty ? parts : 'Unknown Location',
+                 'location': LatLng(loc.latitude, loc.longitude)
+               });
+             }
+           } catch (e) {
+             // Ignore individual reverse geocode failures
+           }
+        }
+        
+        if (mounted) {
+          setState(() => _searchResults = results);
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _searchResults = []);
+        }
+      } finally {
+        if (mounted) setState(() => _isSearching = false);
+      }
+    });
   }
 
   Future<void> _zoomIn() async {
@@ -81,18 +132,6 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   Future<void> _zoomOut() async {
     final ctrl = await _controller.future;
     ctrl.animateCamera(CameraUpdate.zoomOut());
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _pickedLocation = LatLng(
-      widget.initialLatitude != 0.0 ? widget.initialLatitude : 20.5937,
-      widget.initialLongitude != 0.0 ? widget.initialLongitude : 78.9629,
-    );
-    if (widget.initialLatitude != 0.0) {
-      _reverseGeocode(_pickedLocation);
-    }
   }
 
   Future<void> _reverseGeocode(LatLng pos) async {
@@ -107,10 +146,23 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           p.locality,
           p.administrativeArea,
         ].where((e) => e != null && e.isNotEmpty).join(', ');
-        setState(() => _address = parts.isNotEmpty ? parts : 'Location selected');
+        
+        setState(() {
+          _address = parts.isNotEmpty ? parts : 'Location selected';
+          if (!_searchFocusNode.hasFocus) {
+            _searchController.text = _address;
+          }
+        });
       }
     } catch (_) {
-      if (mounted) setState(() => _address = 'Location selected');
+      if (mounted) {
+        setState(() {
+          _address = 'Location selected';
+          if (!_searchFocusNode.hasFocus) {
+            _searchController.text = _address;
+          }
+        });
+      }
     } finally {
       if (mounted) setState(() => _isLoadingAddress = false);
     }
@@ -185,6 +237,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             zoomControlsEnabled: false,
             mapToolbarEnabled: false,
             onTap: (pos) async {
+              _searchFocusNode.unfocus();
               final ctrl = await _controller.future;
               final zoom = await ctrl.getZoomLevel();
               ctrl.animateCamera(CameraUpdate.newCameraPosition(
@@ -209,7 +262,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             ),
           ),
 
-          // ── Top App Bar ─────────────────────────────────────────────────
+          // ── Top App Bar & Search ────────────────────────────────────────
           Positioned(
             top: 0,
             left: 0,
@@ -222,6 +275,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                   children: [
                     Row(
                       children: [
+                        // Back Button
                         Material(
                           color: Colors.white,
                           elevation: 4,
@@ -237,89 +291,108 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
+                        // Unified Search Bar
                         Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.1),
-                                  blurRadius: 8,
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.location_on,
-                                    color: Colors.red, size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: _isLoadingAddress
-                                      ? const SizedBox(
-                                          height: 16,
-                                          width: 16,
-                                          child: CircularProgressIndicator(
-                                              strokeWidth: 2),
-                                        )
-                                      : Text(
-                                          _address,
-                                          style: const TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                ),
-                              ],
+                          child: Material(
+                            color: Colors.white,
+                            elevation: 4,
+                            shadowColor: Colors.black26,
+                            borderRadius: BorderRadius.circular(12),
+                            child: TextField(
+                              controller: _searchController,
+                              focusNode: _searchFocusNode,
+                              onChanged: _onSearchChanged,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Search for a location...',
+                                hintStyle: const TextStyle(fontWeight: FontWeight.normal),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                                prefixIcon: const Icon(Icons.search, color: Colors.red, size: 22),
+                                suffixIcon: _isLoadingAddress
+                                    ? const Padding(
+                                        padding: EdgeInsets.all(12),
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      )
+                                    : (_searchFocusNode.hasFocus && _searchController.text.isNotEmpty)
+                                        ? IconButton(
+                                            icon: const Icon(Icons.clear, size: 20),
+                                            onPressed: () {
+                                              _searchController.clear();
+                                              _onSearchChanged('');
+                                            },
+                                          )
+                                        : null,
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
-                    // Search bar
-                    Material(
-                      color: Colors.white,
-                      elevation: 4,
-                      shadowColor: Colors.black26,
-                      borderRadius: BorderRadius.circular(12),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                controller: _searchController,
-                                decoration: const InputDecoration(
-                                  hintText: 'Search location...',
-                                  border: InputBorder.none,
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.symmetric(vertical: 12),
-                                ),
-                                onSubmitted: (_) => _searchLocation(),
-                              ),
+                    
+                    // Search Results Dropdown
+                    if (_searchFocusNode.hasFocus && (_searchResults.isNotEmpty || _isSearching))
+                      Container(
+                        margin: const EdgeInsets.only(top: 8, left: 44),
+                        constraints: const BoxConstraints(maxHeight: 250),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
-                            if (_isSearching)
-                              const SizedBox(
-                                height: 16,
-                                width: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            else
-                              IconButton(
-                                icon: const Icon(Icons.search),
-                                onPressed: _searchLocation,
-                                constraints: const BoxConstraints(),
-                                padding: EdgeInsets.zero,
-                              ),
                           ],
                         ),
+                        child: _isSearching
+                            ? const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  ),
+                                ),
+                              )
+                            : ListView.separated(
+                                shrinkWrap: true,
+                                padding: EdgeInsets.zero,
+                                itemCount: _searchResults.length,
+                                separatorBuilder: (context, index) => const Divider(height: 1),
+                                itemBuilder: (context, index) {
+                                  final result = _searchResults[index];
+                                  return ListTile(
+                                    leading: const Icon(Icons.location_on, color: Colors.grey, size: 20),
+                                    title: Text(
+                                      result['address'],
+                                      style: const TextStyle(fontSize: 13),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    onTap: () async {
+                                      _searchFocusNode.unfocus();
+                                      final pos = result['location'] as LatLng;
+                                      
+                                      final ctrl = await _controller.future;
+                                      ctrl.animateCamera(CameraUpdate.newCameraPosition(
+                                        CameraPosition(target: pos, zoom: 16),
+                                      ));
+                                      
+                                      setState(() {
+                                        _pickedLocation = pos;
+                                        _searchController.text = result['address'];
+                                      });
+                                    },
+                                  );
+                                },
+                              ),
                       ),
-                    ),
                   ],
                 ),
               ),
