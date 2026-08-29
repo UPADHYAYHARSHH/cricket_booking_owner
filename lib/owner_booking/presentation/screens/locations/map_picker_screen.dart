@@ -21,11 +21,67 @@ class MapPickerScreen extends StatefulWidget {
 
 class _MapPickerScreenState extends State<MapPickerScreen> {
   final Completer<GoogleMapController> _controller = Completer();
+  final TextEditingController _searchController = TextEditingController();
 
   late LatLng _pickedLocation;
   String _address = 'Move the pin to select your venue location';
   bool _isLoadingAddress = false;
   bool _isLoadingLocation = false;
+  bool _isSearching = false;
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _searchLocation() async {
+    final query = _searchController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() => _isSearching = true);
+    try {
+      final locations = await locationFromAddress(query);
+      if (locations.isNotEmpty && mounted) {
+        final loc = locations.first;
+        final newPos = LatLng(loc.latitude, loc.longitude);
+        
+        final ctrl = await _controller.future;
+        ctrl.animateCamera(CameraUpdate.newCameraPosition(
+          CameraPosition(target: newPos, zoom: 16),
+        ));
+
+        setState(() {
+          _pickedLocation = newPos;
+        });
+        _reverseGeocode(newPos);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location not found')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error finding location: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSearching = false);
+    }
+  }
+
+  Future<void> _zoomIn() async {
+    final ctrl = await _controller.future;
+    ctrl.animateCamera(CameraUpdate.zoomIn());
+  }
+
+  Future<void> _zoomOut() async {
+    final ctrl = await _controller.future;
+    ctrl.animateCamera(CameraUpdate.zoomOut());
+  }
 
   @override
   void initState() {
@@ -128,6 +184,15 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             myLocationButtonEnabled: false,
             zoomControlsEnabled: false,
             mapToolbarEnabled: false,
+            onTap: (pos) async {
+              final ctrl = await _controller.future;
+              final zoom = await ctrl.getZoomLevel();
+              ctrl.animateCamera(CameraUpdate.newCameraPosition(
+                CameraPosition(target: pos, zoom: zoom),
+              ));
+              setState(() => _pickedLocation = pos);
+              _reverseGeocode(pos);
+            },
             onCameraMove: (pos) {
               _pickedLocation = pos.target;
             },
@@ -152,60 +217,105 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
+                    Row(
+                      children: [
+                        Material(
+                          color: Colors.white,
+                          elevation: 4,
+                          shadowColor: Colors.black26,
+                          borderRadius: BorderRadius.circular(12),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: () => Navigator.pop(context),
+                            child: const Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.1),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.location_on,
+                                    color: Colors.red, size: 18),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: _isLoadingAddress
+                                      ? const SizedBox(
+                                          height: 16,
+                                          width: 16,
+                                          child: CircularProgressIndicator(
+                                              strokeWidth: 2),
+                                        )
+                                      : Text(
+                                          _address,
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Search bar
                     Material(
                       color: Colors.white,
                       elevation: 4,
                       shadowColor: Colors.black26,
                       borderRadius: BorderRadius.circular(12),
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(12),
-                        onTap: () => Navigator.pop(context),
-                        child: const Padding(
-                          padding: EdgeInsets.all(10),
-                          child: Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 8,
-                            ),
-                          ],
-                        ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Row(
                           children: [
-                            const Icon(Icons.location_on,
-                                color: Colors.red, size: 18),
-                            const SizedBox(width: 8),
                             Expanded(
-                              child: _isLoadingAddress
-                                  ? const SizedBox(
-                                      height: 16,
-                                      width: 16,
-                                      child: CircularProgressIndicator(
-                                          strokeWidth: 2),
-                                    )
-                                  : Text(
-                                      _address,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: const InputDecoration(
+                                  hintText: 'Search location...',
+                                  border: InputBorder.none,
+                                  isDense: true,
+                                  contentPadding: EdgeInsets.symmetric(vertical: 12),
+                                ),
+                                onSubmitted: (_) => _searchLocation(),
+                              ),
                             ),
+                            if (_isSearching)
+                              const SizedBox(
+                                height: 16,
+                                width: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            else
+                              IconButton(
+                                icon: const Icon(Icons.search),
+                                onPressed: _searchLocation,
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
                           ],
                         ),
                       ),
@@ -213,6 +323,46 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                   ],
                 ),
               ),
+            ),
+          ),
+
+          // ── Zoom Buttons ───────────────────────────────────────────────
+          Positioned(
+            right: 16,
+            bottom: 180,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Material(
+                  color: Colors.white,
+                  elevation: 4,
+                  shadowColor: Colors.black26,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: _zoomIn,
+                    child: const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Icon(Icons.add, color: AppColors.primaryDarkGreen, size: 22),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Material(
+                  color: Colors.white,
+                  elevation: 4,
+                  shadowColor: Colors.black26,
+                  borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: _zoomOut,
+                    child: const Padding(
+                      padding: EdgeInsets.all(12),
+                      child: Icon(Icons.remove, color: AppColors.primaryDarkGreen, size: 22),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 

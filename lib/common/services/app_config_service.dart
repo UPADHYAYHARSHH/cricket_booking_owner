@@ -8,7 +8,7 @@ class AppConfigService {
   AppConfigService._();
   static final AppConfigService instance = AppConfigService._();
 
-  double _platformFee = 25.0;
+  double _platformFee = 0.0;
   double _commissionRate = 0.0;
   bool _commissionIsPercentage = true;
   bool _ownerAppMaintenance = false;
@@ -85,10 +85,10 @@ class AppConfigService {
   void _readFromFirebase(FirebaseRemoteConfig remoteConfig) {
     try {
       final keys = remoteConfig.getAll();
-      if (keys.containsKey('platform_fee')) {
+        if (keys.containsKey('platform_fee')) {
         _platformFee = remoteConfig.getDouble('platform_fee');
         if (_platformFee == 0) {
-          _platformFee = double.tryParse(remoteConfig.getString('platform_fee')) ?? 25.0;
+          _platformFee = double.tryParse(remoteConfig.getString('platform_fee')) ?? 0.0;
         }
       }
       if (keys.containsKey('commission_rate')) {
