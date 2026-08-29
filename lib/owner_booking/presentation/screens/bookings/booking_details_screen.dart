@@ -4,8 +4,8 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
-import 'package:turfpro_owner/common/constants/fee_constants.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
+import 'package:turfpro_owner/common/services/app_config_service.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
@@ -304,13 +304,21 @@ class BookingDetailsScreen extends StatelessWidget {
       displayId = fullId.length > 5 ? fullId.substring(0, 5).toUpperCase() : fullId.toUpperCase();
     }
 
-    // Amount — stored in rupees
+    // Amount & Fee Snapshot — stored in rupees per booking
+    final platformFee = (booking['platform_fee'] as num?)?.toDouble() ?? AppConfigService.instance.platformFee;
+    final commissionRate = (booking['commission_rate'] as num?)?.toDouble() ?? AppConfigService.instance.commissionRate;
+    final commissionIsPercentage = booking['commission_is_percentage'] != null 
+        ? (booking['commission_is_percentage'] == true) 
+        : AppConfigService.instance.commissionIsPercentage;
+
     final rawAmount = (booking['amount'] as num?) ?? (booking['total_amount'] as num?) ?? 0;
     final totalAmount = rawAmount.toDouble();
-    final commissionFee = kCommissionIsPercentage
-        ? totalAmount * kCommissionRate / 100
-        : kCommissionRate;
-    final groundRate = (totalAmount - kPlatformFee - commissionFee).clamp(0.0, double.infinity);
+    final baseAmount = (booking['base_amount'] as num?)?.toDouble() ?? (totalAmount - platformFee).clamp(0.0, totalAmount);
+
+    final commissionFee = commissionIsPercentage
+        ? baseAmount * commissionRate / 100
+        : commissionRate;
+    final groundRate = (booking['owner_earnings'] as num?)?.toDouble() ?? (baseAmount - commissionFee).clamp(0.0, baseAmount);
 
     // Player info
     final playerImage = booking['player_image']?.toString() ?? '';
@@ -632,14 +640,14 @@ class BookingDetailsScreen extends StatelessWidget {
                           const _RowDivider(),
                           _PaymentRow(
                             label: "Platform Fee",
-                            value: "– ₹${kPlatformFee.toStringAsFixed(0)}",
+                            value: "– ₹${platformFee.toStringAsFixed(0)}",
                             valueColor: AppColors.error,
                           ),
-                          if (kCommissionRate > 0) ...[
+                          if (commissionRate > 0) ...[
                             const _RowDivider(),
                             _PaymentRow(
-                              label: kCommissionIsPercentage
-                                  ? "Commission (${kCommissionRate.toStringAsFixed(kCommissionRate % 1 == 0 ? 0 : 1)}%)"
+                              label: commissionIsPercentage
+                                  ? "Commission (${commissionRate.toStringAsFixed(commissionRate % 1 == 0 ? 0 : 1)}%)"
                                   : "Commission Fee",
                               value:
                                   "– ₹${commissionFee.toStringAsFixed(0)}",

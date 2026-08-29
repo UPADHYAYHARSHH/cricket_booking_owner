@@ -1,5 +1,5 @@
 import 'package:intl/intl.dart';
-import 'package:turfpro_owner/common/constants/fee_constants.dart';
+import 'package:turfpro_owner/common/services/app_config_service.dart';
 
 /// A single labeled value used to feed a bar/pie chart.
 class RevenuePoint {
@@ -12,12 +12,20 @@ const _countedStatuses = {'confirmed', 'completed', 'paid'};
 
 /// Owner's net earn for a booking = gross minus platform fee minus commission.
 double _amountOf(Map<String, dynamic> booking) {
+  if (booking['owner_earnings'] != null) {
+    return (booking['owner_earnings'] as num).toDouble();
+  }
   final gross =
       ((booking['amount'] ?? booking['total_amount'] ?? 0) as num).toDouble();
-  final commissionFee = kCommissionIsPercentage
-      ? gross * kCommissionRate / 100
-      : kCommissionRate;
-  return (gross - kPlatformFee - commissionFee).clamp(0.0, double.infinity);
+  final pFee = (booking['platform_fee'] as num?)?.toDouble() ?? AppConfigService.instance.platformFee;
+  final cRate = (booking['commission_rate'] as num?)?.toDouble() ?? AppConfigService.instance.commissionRate;
+  final cIsPct = booking['commission_is_percentage'] != null
+      ? (booking['commission_is_percentage'] == true)
+      : AppConfigService.instance.commissionIsPercentage;
+
+  final base = (booking['base_amount'] as num?)?.toDouble() ?? (gross - pFee).clamp(0.0, gross);
+  final commFee = cIsPct ? base * (cRate / 100.0) : cRate;
+  return (base - commFee).clamp(0.0, base);
 }
 
 DateTime? _dateOf(Map<String, dynamic> booking) {
