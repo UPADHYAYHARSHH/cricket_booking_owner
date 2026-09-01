@@ -66,12 +66,14 @@ class BookingsCubit extends Cubit<BookingsState> {
           final allBookings = bookings.map((b) {
             final userData = userMap[b['user_id']];
             final uidStr = b['user_id']?.toString() ?? '';
+            final playerNameFromBooking = b['player_name']?.toString().isNotEmpty == true ? b['player_name'] : null;
+            final playerNameFromUser = userData?['full_name'] ?? userData?['name'];
+            print('[BookingsCubit] Booking $uidStr | Booking Name: $playerNameFromBooking | User Name: $playerNameFromUser');
+            
             return <String, dynamic>{
               ...b,
               'ground_name': groundMap[b['ground_id']] ?? 'Unknown Ground',
-              'player_name': userData?['full_name'] ??
-                  userData?['name'] ??
-                  'Customer (ID: ${uidStr.length > 4 ? uidStr.substring(0, 4) : uidStr})',
+              'player_name': playerNameFromBooking ?? playerNameFromUser ?? 'Customer',
               'player_image':
                   userData?['profile_image'] ?? userData?['avatar_url'],
               'member_since': userData?['created_at'],

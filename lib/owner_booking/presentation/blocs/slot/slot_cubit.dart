@@ -307,7 +307,7 @@ class SlotCubit extends Cubit<SlotState> {
             bookedPlayerName:
                 matchingBooking['player_name']?.toString().isNotEmpty == true
                 ? matchingBooking['player_name']
-                : 'Customer (ID: ${matchingBooking['user_id']?.toString().substring(0, 4) ?? '—'})',
+                : 'Customer',
             bookedPlayersCount: 8,
             bookingId: matchingBooking['id'],
             bookingDetails: matchingBooking,

@@ -6,7 +6,6 @@ import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_form_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/map_picker_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/widgets/city_search_field.dart';
 
 class Step1BasicInfo extends StatefulWidget {
   const Step1BasicInfo({super.key});
@@ -23,9 +22,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
   late final TextEditingController privacyPolicyCtrl;
   late final TextEditingController latCtrl;
   late final TextEditingController lngCtrl;
-  
-  final cityFieldKey = GlobalKey<CitySearchFieldState>();
-  String cityValue = '';
+  bool _isLocationFromMap = false;
 
   @override
   void initState() {
@@ -35,9 +32,13 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
     addressCtrl = TextEditingController(text: data.address);
     descriptionCtrl = TextEditingController(text: data.description);
     privacyPolicyCtrl = TextEditingController(text: data.privacyPolicy);
-    latCtrl = TextEditingController(text: data.latitude != 0.0 ? data.latitude.toString() : '');
-    lngCtrl = TextEditingController(text: data.longitude != 0.0 ? data.longitude.toString() : '');
-    cityValue = data.city;
+    latCtrl = TextEditingController(
+      text: data.latitude != 0.0 ? data.latitude.toString() : '',
+    );
+    lngCtrl = TextEditingController(
+      text: data.longitude != 0.0 ? data.longitude.toString() : '',
+    );
+    _isLocationFromMap = data.latitude != 0.0 && data.longitude != 0.0;
   }
 
   @override
@@ -53,22 +54,20 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
 
   bool validateAndSave() {
     if (!formKey.currentState!.validate()) return false;
-    final city = cityFieldKey.currentState?.selectedCity ?? cityValue;
-    if (city.isEmpty) {
-      return false; // Could show toast here
-    }
-    
+
     final cubit = context.read<LocationFormCubit>();
-    cubit.updateData(cubit.data.copyWith(
-      name: nameCtrl.text.trim(),
-      address: addressCtrl.text.trim(),
-      description: descriptionCtrl.text.trim(),
-      privacyPolicy: privacyPolicyCtrl.text.trim(),
-      city: city,
-      googleMapsLink: '',
-      latitude: double.tryParse(latCtrl.text.trim()) ?? 0.0,
-      longitude: double.tryParse(lngCtrl.text.trim()) ?? 0.0,
-    ));
+    cubit.updateData(
+      cubit.data.copyWith(
+        name: nameCtrl.text.trim(),
+        address: addressCtrl.text.trim(),
+        description: descriptionCtrl.text.trim(),
+        privacyPolicy: privacyPolicyCtrl.text.trim(),
+        city: '',
+        googleMapsLink: '',
+        latitude: double.tryParse(latCtrl.text.trim()) ?? 0.0,
+        longitude: double.tryParse(lngCtrl.text.trim()) ?? 0.0,
+      ),
+    );
     return true;
   }
 
@@ -84,46 +83,8 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
             nameCtrl,
             hint: 'E.g. TurfPro Arena',
             icon: Icons.store_outlined,
-            validator: (v) => (v == null || v.trim().isEmpty)
-                ? 'Name is required'
-                : null,
-          ),
-          const SizedBox(height: AppSizes.xxl),
-          _label('FULL ADDRESS *'),
-          _field(
-            addressCtrl,
-            hint: 'Plot 42, Prahlad Nagar, Near ISCON Cross Roads',
-            maxLines: 2,
-            icon: Icons.location_on_outlined,
-            validator: (v) => (v == null || v.trim().isEmpty)
-                ? 'Address is required'
-                : null,
-          ),
-          const SizedBox(height: AppSizes.xxl),
-          _label('DESCRIPTION'),
-          _field(
-            descriptionCtrl,
-            hint: 'Describe what makes this venue special...',
-            maxLines: 4,
-            icon: Icons.description_outlined,
-          ),
-          const SizedBox(height: AppSizes.xxl),
-          _label('RULES & PRIVACY POLICY *'),
-          _field(
-            privacyPolicyCtrl,
-            hint: 'List out the rules, cancellation, and privacy policies...',
-            maxLines: 4,
-            icon: Icons.policy_outlined,
-            validator: (v) => (v == null || v.trim().isEmpty)
-                ? 'Rules & Privacy Policy is required'
-                : null,
-          ),
-          const SizedBox(height: AppSizes.xxl),
-          _label('CITY *'),
-          CitySearchField(
-            key: cityFieldKey,
-            initialCity: cityValue.isNotEmpty ? cityValue : null,
-            onCityChanged: (city) => cityValue = city ?? '',
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Name is required' : null,
           ),
           const SizedBox(height: AppSizes.xxl),
           _label('GPS COORDINATES *'),
@@ -142,12 +103,13 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
               );
               if (result != null) {
                 setState(() {
+                  _isLocationFromMap = true;
                   final LatLng loc = result['location'];
                   latCtrl.text = loc.latitude.toStringAsFixed(6);
                   lngCtrl.text = loc.longitude.toStringAsFixed(6);
                   final String address = result['address'] ?? '';
-                  if (address.isNotEmpty && 
-                      address != 'Location selected' && 
+                  if (address.isNotEmpty &&
+                      address != 'Location selected' &&
                       address != 'Move the pin to select your venue location') {
                     addressCtrl.text = address;
                   }
@@ -173,8 +135,11 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
                       color: AppColors.primaryDarkGreen,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.map_rounded,
-                        color: Colors.white, size: 18),
+                    child: const Icon(
+                      Icons.map_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -227,6 +192,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
                   latCtrl,
                   hint: 'Latitude (e.g. 23.0225)',
                   icon: Icons.my_location,
+                  readOnly: _isLocationFromMap,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
@@ -238,12 +204,42 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
                   lngCtrl,
                   hint: 'Longitude (e.g. 72.5714)',
                   icon: Icons.explore_outlined,
+                  readOnly: _isLocationFromMap,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: AppSizes.xxl),
+          _label('FULL ADDRESS *'),
+          _field(
+            addressCtrl,
+            hint: 'Plot 42, Prahlad Nagar, Near ISCON Cross Roads',
+            maxLines: 2,
+            icon: Icons.location_on_outlined,
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'Address is required' : null,
+          ),
+          const SizedBox(height: AppSizes.xxl),
+          _label('DESCRIPTION'),
+          _field(
+            descriptionCtrl,
+            hint: 'Describe what makes this venue special...',
+            maxLines: 4,
+            icon: Icons.description_outlined,
+          ),
+          const SizedBox(height: AppSizes.xxl),
+          _label('RULES & PRIVACY POLICY *'),
+          _field(
+            privacyPolicyCtrl,
+            hint: 'List out the rules, cancellation, and privacy policies...',
+            maxLines: 4,
+            icon: Icons.policy_outlined,
+            validator: (v) => (v == null || v.trim().isEmpty)
+                ? 'Rules & Privacy Policy is required'
+                : null,
           ),
         ],
       ),
@@ -281,9 +277,11 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
     TextInputType? keyboardType,
     String? Function(String?)? validator,
     IconData? icon,
+    bool readOnly = false,
   }) {
     return TextFormField(
       controller: ctrl,
+      readOnly: readOnly,
       maxLines: maxLines,
       keyboardType: keyboardType,
       validator: validator,

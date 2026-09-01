@@ -153,11 +153,12 @@ class DashboardCubit extends Cubit<DashboardState> {
           final s = slot as Map<String, dynamic>;
           final userData = userMap[s['user_id']];
           final uidStr = s['user_id']?.toString() ?? '';
+          final playerNameFromBooking = s['player_name']?.toString().isNotEmpty == true ? s['player_name'] : null;
+          final playerNameFromUser = userData?['full_name'] ?? userData?['name'];
+          print('[DashboardCubit] Slot: $uidStr | Booking Name: $playerNameFromBooking | User Name: $playerNameFromUser | UserData: $userData');
           return <String, dynamic>{
             ...s,
-            'player_name': userData?['full_name'] ??
-                userData?['name'] ??
-                'Customer (ID: ${uidStr.length > 4 ? uidStr.substring(0, 4) : uidStr})',
+            'player_name': playerNameFromBooking ?? playerNameFromUser ?? 'Customer',
           };
         }).toList();
 

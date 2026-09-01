@@ -135,9 +135,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgLight,
-      body: SafeArea(
-        bottom: false,
-        child: BlocBuilder<DashboardCubit, DashboardState>(
+      body: BlocBuilder<DashboardCubit, DashboardState>(
           builder: (context, state) {
             if (state is DashboardLoading || state is DashboardInitial) {
               return const _DashboardSkeleton();
@@ -309,7 +307,6 @@ class _DashboardScreenState extends State<DashboardScreen>
             return const SizedBox.shrink();
           },
         ),
-      ),
     );
   }
 }

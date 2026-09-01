@@ -4,6 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 import 'package:path/path.dart' as path;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:toastification/toastification.dart';
@@ -28,7 +29,8 @@ class LocationDocumentsScreen extends StatefulWidget {
   });
 
   @override
-  State<LocationDocumentsScreen> createState() => _LocationDocumentsScreenState();
+  State<LocationDocumentsScreen> createState() =>
+      _LocationDocumentsScreenState();
 }
 
 class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
@@ -48,7 +50,9 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
     _propertyStatus = data?['property_status'] as String? ?? _propertyStatus;
     _propertyUrl = data?['property_document_url'] as String?;
     _nocUrl = data?['noc_url'] as String?;
-    _isRejected = data?['rejection_reason'] != null && data?['documents_verified'] != true;
+    _isRejected =
+        data?['rejection_reason'] != null &&
+        data?['documents_verified'] != true;
     _rejectionReason = data?['rejection_reason'] as String? ?? '';
   }
 
@@ -67,14 +71,104 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
     });
   }
 
+  bool _isImageUrl(String url) {
+    final lower = url.toLowerCase();
+    return lower.contains('.jpg') ||
+        lower.contains('.jpeg') ||
+        lower.contains('.png') ||
+        lower.contains('alt=media') ||
+        lower.startsWith('blob:') ||
+        lower.startsWith('data:image');
+  }
+
+  void _showDocumentDialog(String? url, File? file) {
+    final pathStr = file != null ? file.path : (url ?? '');
+    if (pathStr.isEmpty) return;
+
+    final isImage = _isImageUrl(pathStr);
+    final isNetworkOrBlob =
+        pathStr.startsWith('http') ||
+        pathStr.startsWith('blob:') ||
+        pathStr.startsWith('data:');
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.black,
+          insetPadding: const EdgeInsets.all(16),
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: isImage
+                    ? InteractiveViewer(
+                        child: Image(
+                          image: isNetworkOrBlob
+                              ? NetworkImage(pathStr) as ImageProvider
+                              : FileImage(File(pathStr)),
+                          fit: BoxFit.contain,
+                        ),
+                      )
+                    : (isNetworkOrBlob
+                          ? SfPdfViewer.network(pathStr)
+                          : SfPdfViewer.file(File(pathStr))),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildPreviewThumbnail(String? url, File? file) {
+    final pathStr = file != null ? file.path : (url ?? '');
+    if (pathStr.isEmpty) {
+      return const Center(
+        child: Icon(Icons.description, color: AppColors.textSecondaryLight),
+      );
+    }
+
+    if (_isImageUrl(pathStr)) {
+      final isNetworkOrBlob =
+          pathStr.startsWith('http') ||
+          pathStr.startsWith('blob:') ||
+          pathStr.startsWith('data:');
+      return Image(
+        image: isNetworkOrBlob
+            ? NetworkImage(pathStr) as ImageProvider
+            : FileImage(File(pathStr)),
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Center(
+          child: Icon(Icons.image_outlined, color: AppColors.primaryDarkGreen),
+        ),
+      );
+    } else {
+      return const Center(
+        child: Icon(Icons.picture_as_pdf, color: Colors.redAccent, size: 28),
+      );
+    }
+  }
+
   Future<String?> _uploadFile(File file) async {
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) return null;
     final fileName =
         '$userId/locations/${widget.locationId}/${DateTime.now().millisecondsSinceEpoch}_${path.basename(file.path)}';
     try {
-      await Supabase.instance.client.storage.from('venue_media').upload(fileName, file);
-      return Supabase.instance.client.storage.from('venue_media').getPublicUrl(fileName);
+      await Supabase.instance.client.storage
+          .from('venue_media')
+          .upload(fileName, file);
+      return Supabase.instance.client.storage
+          .from('venue_media')
+          .getPublicUrl(fileName);
     } catch (e) {
       return null;
     }
@@ -84,20 +178,21 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
     setState(() => _isSaving = true);
     try {
       String? propertyUrl = _propertyUrl;
-      if (_propertyFile != null) propertyUrl = await _uploadFile(_propertyFile!);
+      if (_propertyFile != null)
+        propertyUrl = await _uploadFile(_propertyFile!);
       String? nocUrl = _nocUrl;
       if (_nocFile != null) nocUrl = await _uploadFile(_nocFile!);
 
       await context.read<LocationCubit>().updateLocation(
-            locationId: widget.locationId,
-            data: {
-              'property_status': _propertyStatus,
-              'property_document_url': propertyUrl,
-              'noc_url': nocUrl,
-              // Clear rejection when documents are re-uploaded
-              if (_isRejected) 'rejection_reason': null,
-            },
-          );
+        locationId: widget.locationId,
+        data: {
+          'property_status': _propertyStatus,
+          'property_document_url': propertyUrl,
+          'noc_url': nocUrl,
+          // Clear rejection when documents are re-uploaded
+          if (_isRejected) 'rejection_reason': null,
+        },
+      );
 
       if (!mounted) return;
       Navigator.pop(context);
@@ -166,25 +261,6 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
                     color: AppColors.white,
                   ),
                 ),
-                GestureDetector(
-                  onTap: _isSaving ? null : _skip,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.lg,
-                      vertical: AppSizes.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.white.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                    ),
-                    child: const AppText(
-                      text: 'Skip',
-                      size: 13,
-                      weight: FontWeight.w600,
-                      color: AppColors.white,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -250,9 +326,7 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-                border: Border.all(
-                  color: Colors.blue.withValues(alpha: 0.15),
-                ),
+                border: Border.all(color: Colors.blue.withValues(alpha: 0.15)),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +337,11 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
                       color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                     ),
-                    child: const Icon(Icons.lock_outline, size: 18, color: Colors.blue),
+                    child: const Icon(
+                      Icons.lock_outline,
+                      size: 18,
+                      color: Colors.blue,
+                    ),
                   ),
                   const AppSizedBox(width: AppSizes.md),
                   Expanded(
@@ -282,7 +360,11 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
             // Property status
             _label('PROPERTY STATUS'),
             _chips(
-              options: const ['Owned Property', 'Lease / Rent Agreement', 'Society Permission'],
+              options: const [
+                'Owned Property',
+                'Lease / Rent Agreement',
+                'Society Permission',
+              ],
               selected: _propertyStatus,
               onSelected: (v) => setState(() => _propertyStatus = v),
             ),
@@ -294,6 +376,10 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
               file: _propertyFile,
               existingUrl: _propertyUrl,
               onTap: () => _pickFile(false),
+              onDelete: () => setState(() {
+                _propertyFile = null;
+                _propertyUrl = null;
+              }),
             ),
             const AppSizedBox(height: AppSizes.lg),
             _uploadField(
@@ -302,6 +388,10 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
               file: _nocFile,
               existingUrl: _nocUrl,
               onTap: () => _pickFile(true),
+              onDelete: () => setState(() {
+                _nocFile = null;
+                _nocUrl = null;
+              }),
             ),
             const AppSizedBox(height: AppSizes.xxxxl),
             AppButton(
@@ -317,28 +407,28 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
   }
 
   Widget _label(String text) => Padding(
-        padding: const EdgeInsets.only(bottom: AppSizes.md),
-        child: Row(
-          children: [
-            Container(
-              width: 3,
-              height: 14,
-              decoration: BoxDecoration(
-                color: AppColors.primaryDarkGreen,
-                borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-              ),
-            ),
-            const SizedBox(width: AppSizes.sm),
-            AppText(
-              text: text,
-              size: 12,
-              weight: FontWeight.w700,
-              color: AppColors.textSecondaryLight,
-              letterSpacing: 0.4,
-            ),
-          ],
+    padding: const EdgeInsets.only(bottom: AppSizes.md),
+    child: Row(
+      children: [
+        Container(
+          width: 3,
+          height: 14,
+          decoration: BoxDecoration(
+            color: AppColors.primaryDarkGreen,
+            borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+          ),
         ),
-      );
+        const SizedBox(width: AppSizes.sm),
+        AppText(
+          text: text,
+          size: 12,
+          weight: FontWeight.w700,
+          color: AppColors.textSecondaryLight,
+          letterSpacing: 0.4,
+        ),
+      ],
+    ),
+  );
 
   Widget _chips({
     required List<String> options,
@@ -355,18 +445,24 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(
-                horizontal: AppSizes.lg, vertical: AppSizes.md),
+              horizontal: AppSizes.lg,
+              vertical: AppSizes.md,
+            ),
             decoration: BoxDecoration(
               color: isSelected ? AppColors.inputFillLight : AppColors.white,
               borderRadius: BorderRadius.circular(AppSizes.radiusRound),
               border: Border.all(
-                color: isSelected ? AppColors.primaryDarkGreen : AppColors.borderLight,
+                color: isSelected
+                    ? AppColors.primaryDarkGreen
+                    : AppColors.borderLight,
                 width: isSelected ? 1.5 : 1,
               ),
               boxShadow: isSelected
                   ? [
                       BoxShadow(
-                        color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+                        color: AppColors.primaryDarkGreen.withValues(
+                          alpha: 0.1,
+                        ),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -391,7 +487,9 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
                   text: option,
                   size: 13,
                   weight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? AppColors.primaryDarkGreen : AppColors.textSecondaryLight,
+                  color: isSelected
+                      ? AppColors.primaryDarkGreen
+                      : AppColors.textSecondaryLight,
                 ),
               ],
             ),
@@ -407,6 +505,7 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
     required File? file,
     required String? existingUrl,
     required VoidCallback onTap,
+    required VoidCallback onDelete,
   }) {
     final isUploaded = file != null || existingUrl != null;
     return Column(
@@ -414,12 +513,16 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
       children: [
         _label(label),
         GestureDetector(
-          onTap: onTap,
+          onTap: isUploaded
+              ? () => _showDocumentDialog(existingUrl, file)
+              : onTap,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(
-                vertical: AppSizes.xxl, horizontal: AppSizes.lg),
+            padding: EdgeInsets.symmetric(
+              vertical: isUploaded ? AppSizes.md : AppSizes.xxl,
+              horizontal: AppSizes.lg,
+            ),
             decoration: BoxDecoration(
               gradient: isUploaded
                   ? LinearGradient(
@@ -444,16 +547,14 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
                 ? Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(AppSizes.sm),
+                        width: 45,
+                        height: 45,
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AppColors.primaryDarkGreen, Color(0xFF065B3C)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                          color: AppColors.white,
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: const Icon(Icons.description, color: AppColors.white, size: 22),
+                        clipBehavior: Clip.antiAlias,
+                        child: _buildPreviewThumbnail(existingUrl, file),
                       ),
                       const AppSizedBox(width: AppSizes.md),
                       Expanded(
@@ -461,7 +562,7 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             AppText(
-                              text: file != null ? path.basename(file.path) : 'Document uploaded',
+                              text: label.replaceAll(' (OPTIONAL)', ''),
                               size: 14,
                               weight: FontWeight.w600,
                               maxLines: 1,
@@ -469,24 +570,28 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
                             ),
                             const SizedBox(height: 2),
                             AppText(
-                              text: 'Ready to upload',
+                              text: 'Tap to view document',
                               size: 11,
                               color: AppColors.textSecondaryLight,
                             ),
                           ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(AppSizes.xs),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.check_circle,
+                      IconButton(
+                        icon: const Icon(
+                          Icons.edit_outlined,
                           color: AppColors.primaryDarkGreen,
-                          size: 18,
                         ),
+                        tooltip: 'Change Document',
+                        onPressed: onTap,
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
+                        tooltip: 'Remove Document',
+                        onPressed: onDelete,
                       ),
                     ],
                   )
@@ -495,7 +600,9 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
                       Container(
                         padding: const EdgeInsets.all(AppSizes.md),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryDarkGreen.withValues(alpha: 0.08),
+                          color: AppColors.primaryDarkGreen.withValues(
+                            alpha: 0.08,
+                          ),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
@@ -512,7 +619,11 @@ class _LocationDocumentsScreenState extends State<LocationDocumentsScreen> {
                         color: AppColors.primaryDarkGreen,
                       ),
                       const AppSizedBox(height: AppSizes.xs),
-                      AppText(text: hint, size: 12, color: AppColors.textSecondaryLight),
+                      AppText(
+                        text: hint,
+                        size: 12,
+                        color: AppColors.textSecondaryLight,
+                      ),
                     ],
                   ),
           ),

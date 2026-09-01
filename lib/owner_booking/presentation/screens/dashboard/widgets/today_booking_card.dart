@@ -27,12 +27,50 @@ class _TodayBookingCardState extends State<TodayBookingCard>
         .join(' ');
   }
 
+  String _simplifyPeriod(String period) {
+    if (!period.contains(',')) return period;
+    
+    final parts = period.split(',').map((e) => e.trim()).toList();
+    if (parts.isEmpty) return period;
+    
+    List<String> merged = [];
+    String? currentStart;
+    String? currentEnd;
+    
+    for (final p in parts) {
+      final range = p.split('-').map((e) => e.trim()).toList();
+      if (range.length != 2) return period;
+      
+      final start = range[0];
+      final end = range[1];
+      
+      if (currentStart == null) {
+        currentStart = start;
+        currentEnd = end;
+      } else {
+        if (currentEnd == start) {
+          currentEnd = end;
+        } else {
+          merged.add('$currentStart - $currentEnd');
+          currentStart = start;
+          currentEnd = end;
+        }
+      }
+    }
+    if (currentStart != null) {
+      merged.add('$currentStart - $currentEnd');
+    }
+    
+    return merged.join(', ');
+  }
+
   @override
   Widget build(BuildContext context) {
     final status = (widget.booking['status'] ?? 'pending').toString();
     final playerName = widget.booking['player_name'] ?? 'Customer';
     final groundName = widget.booking['ground_name'] ?? 'Court';
-    final period = widget.booking['period'] ?? 'Time';
+    final rawPeriod = (widget.booking['period'] ?? 'Time').toString();
+    final period = _simplifyPeriod(rawPeriod.split('|').first);
     final sportName = _formatLabel((widget.booking['sport_name'] ?? 'Sport').toString());
     final amount = widget.booking['amount'] ?? widget.booking['total_amount'] ?? 0;
 

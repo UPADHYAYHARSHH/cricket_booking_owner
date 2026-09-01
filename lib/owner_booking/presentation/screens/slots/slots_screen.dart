@@ -42,8 +42,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgLight,
-      body: SafeArea(
-        child: BlocBuilder<SlotCubit, SlotState>(
+      body: BlocBuilder<SlotCubit, SlotState>(
           builder: (context, state) {
             if (state is SlotLoading || state is SlotInitial) {
               return const _SlotsSkeleton();
@@ -54,7 +53,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
             } else if (state is SlotLoaded) {
               return Column(
                 children: [
-                  _buildHeader(state.venueName),
+                  _buildHeader(context, state.venueName),
                   Expanded(
                     child: state.grounds.isEmpty
                         ? _buildNoGroundsView(context, state)
@@ -86,7 +85,6 @@ class _SlotsScreenState extends State<SlotsScreen> {
             return const SizedBox();
           },
         ),
-      ),
     );
   }
 
@@ -163,14 +161,14 @@ class _SlotsScreenState extends State<SlotsScreen> {
     });
   }
 
-  Widget _buildHeader(String venueName) {
+  Widget _buildHeader(BuildContext context, String venueName) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(
-        AppSizes.lg,
-        AppSizes.md,
-        AppSizes.lg,
-        AppSizes.lg,
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + AppSizes.md,
+        left: AppSizes.lg,
+        right: AppSizes.lg,
+        bottom: AppSizes.lg,
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(

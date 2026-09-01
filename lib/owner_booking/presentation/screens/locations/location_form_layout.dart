@@ -61,8 +61,8 @@ class LocationFormLayout extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(
-        top: topPadding + AppSizes.lg,
-        bottom: AppSizes.xl,
+        top: topPadding + AppSizes.md,
+        bottom: AppSizes.lg,
         left: AppSizes.xxl,
         right: AppSizes.xxl,
       ),
@@ -103,7 +103,7 @@ class LocationFormLayout extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AppSizes.md),
           // Animated progress bar
           Row(
             children: List.generate(kLocationFormTotalSteps, (index) {
@@ -130,21 +130,21 @@ class LocationFormLayout extends StatelessWidget {
               );
             }),
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: AppSizes.md),
           AppText(
             text: 'Step $currentStep of $kLocationFormTotalSteps',
             size: 13,
             color: AppColors.white.withValues(alpha: 0.7),
             weight: FontWeight.w500,
           ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: 2),
           AppText(
             text: title,
-            size: 26,
+            size: 24,
             color: AppColors.white,
             weight: FontWeight.w700,
           ),
-          const SizedBox(height: AppSizes.xs),
+          const SizedBox(height: 2),
           AppText(
             text: subtitle,
             size: 13,

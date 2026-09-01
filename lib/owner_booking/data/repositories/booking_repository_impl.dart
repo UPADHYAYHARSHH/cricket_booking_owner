@@ -34,12 +34,30 @@ class BookingRepositoryImpl implements BookingRepository {
   Future<List<Map<String, dynamic>>> fetchUsers(List<String> userIds) async {
     if (userIds.isEmpty) return [];
     try {
-      final response = await _supabase
-          .from('users')
-          .select()
-          .filter('id', 'in', userIds);
-      return List<Map<String, dynamic>>.from(response);
-    } catch (_) {
+      // Use get_user_profile RPC to bypass RLS on the users table
+      final List<Map<String, dynamic>> users = [];
+      for (final id in userIds) {
+        try {
+          final data = await _supabase.rpc('get_user_profile', params: {'p_id': id});
+          if (data != null) {
+            // The RPC might return a Map or throw if not found
+            if (data is Map) {
+              final typedData = Map<String, dynamic>.from(data);
+              // Ensure the id is included so userMap works
+              typedData['id'] = id;
+              users.add(typedData);
+            }
+          }
+        } catch (e) {
+          print('[fetchUsers] Error fetching profile for $id: $e');
+        }
+      }
+      
+      print('[fetchUsers] Success! Found ${users.length} users for IDs: $userIds');
+      print('[fetchUsers] Data: $users');
+      return users;
+    } catch (e) {
+      print('[fetchUsers] ERROR fetching users: $e');
       return [];
     }
   }
@@ -52,7 +70,7 @@ class BookingRepositoryImpl implements BookingRepository {
       final response = await _supabase
           .from('bookings')
           .select('user_id')
-          .filter('user_id', 'in', userIds);
+          .inFilter('user_id', userIds);
       return List<Map<String, dynamic>>.from(response);
     } catch (_) {
       return [];
