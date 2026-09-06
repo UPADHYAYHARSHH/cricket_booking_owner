@@ -22,6 +22,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cub
 import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/payouts/payouts_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -466,7 +467,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                         _SettingsItem(
                           icon: Icons.person_outline,
                           title: "Edit Profile",
-                          isLast: true,
                           onTap: () async {
                             await Navigator.push(
                               context,
@@ -478,6 +478,17 @@ class _ProfileScreenState extends State<ProfileScreen>
                             );
                             if (mounted) _fetchProfileData();
                           },
+                        ),
+                        _SettingsItem(
+                          icon: Icons.account_balance_wallet_outlined,
+                          title: "Payouts",
+                          isLast: true,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const PayoutsScreen(),
+                            ),
+                          ),
                         ),
                       ]),
                       const SizedBox(height: AppSizes.xxl),
