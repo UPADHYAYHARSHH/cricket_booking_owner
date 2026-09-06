@@ -514,20 +514,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                         _SettingsItem(
                           icon: Icons.location_on_outlined,
                           title: "Manage Locations",
+                          isLast: true,
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => const LocationsScreen(),
                             ),
-                          ),
-                        ),
-                        _SettingsItem(
-                          icon: Icons.sports_baseball_outlined,
-                          title: "Update Amenities",
-                          isLast: true,
-                          onTap: () => Navigator.pushNamed(
-                            context,
-                            '/amenities-settings',
                           ),
                         ),
                       ]),
