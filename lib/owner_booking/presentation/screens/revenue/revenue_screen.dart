@@ -178,6 +178,8 @@ class _RevenueScreenState extends State<RevenueScreen>
             _customEnd,
           );
           final revenue = totalRevenue(filtered);
+          final pendingRev = pendingRevenue(filtered);
+          final settledRev = settledRevenue(filtered);
           final count = totalBookingsCount(filtered);
           final avg = averageBookingValue(filtered);
 
@@ -205,6 +207,8 @@ class _RevenueScreenState extends State<RevenueScreen>
                 // Hero Header
                 SliverToBoxAdapter(child: _stagger(0, _HeroHeader(
                   revenue: revenue,
+                  pendingRev: pendingRev,
+                  settledRev: settledRev,
                   count: count,
                   avg: avg,
                 ))),
@@ -314,11 +318,15 @@ class _RevenueScreenState extends State<RevenueScreen>
 
 class _HeroHeader extends StatelessWidget {
   final double revenue;
+  final double pendingRev;
+  final double settledRev;
   final int count;
   final double avg;
 
   const _HeroHeader({
     required this.revenue,
+    required this.pendingRev,
+    required this.settledRev,
     required this.count,
     required this.avg,
   });
@@ -426,6 +434,20 @@ class _HeroHeader extends StatelessWidget {
                       size: 32,
                       weight: FontWeight.bold,
                     ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _StatusBadge(
+                          label: 'Settled: ₹${settledRev.toInt()}',
+                          color: AppColors.primaryDarkGreen,
+                        ),
+                        const SizedBox(width: 8),
+                        _StatusBadge(
+                          label: 'Pending: ₹${pendingRev.toInt()}',
+                          color: Colors.orange,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -449,6 +471,31 @@ class _HeroHeader extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _StatusBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _StatusBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+      ),
+      child: AppText(
+        text: label,
+        color: color.computeLuminance() > 0.5 ? Colors.black : Colors.white,
+        size: 10,
+        weight: FontWeight.w600,
       ),
     );
   }

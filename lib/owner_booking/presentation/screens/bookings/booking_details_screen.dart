@@ -708,18 +708,36 @@ class BookingDetailsScreen extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(width: AppSizes.sm),
-                                    const AppText(
-                                      text: "You Earn",
-                                      size: 14,
-                                      weight: FontWeight.bold,
-                                      color:
-                                          AppColors.primaryDarkGreen,
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const AppText(
+                                          text: "You Earn",
+                                          size: 14,
+                                          weight: FontWeight.bold,
+                                          color: AppColors.primaryDarkGreen,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: (booking['payout_status']?.toString().toLowerCase() == 'settled' ? AppColors.primaryDarkGreen : Colors.orange).withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(4),
+                                            border: Border.all(color: (booking['payout_status']?.toString().toLowerCase() == 'settled' ? AppColors.primaryDarkGreen : Colors.orange).withValues(alpha: 0.5)),
+                                          ),
+                                          child: AppText(
+                                            text: booking['payout_status']?.toString().toLowerCase() == 'settled' ? 'Settled' : 'Pending Payout',
+                                            color: booking['payout_status']?.toString().toLowerCase() == 'settled' ? AppColors.primaryDarkGreen : Colors.orange.shade800,
+                                            size: 10,
+                                            weight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
                                 AppText(
-                                  text:
-                                      "₹${groundRate.toStringAsFixed(0)}",
+                                  text: "₹${groundRate.toStringAsFixed(0)}",
                                   size: 20,
                                   weight: FontWeight.w800,
                                   color: AppColors.primaryDarkGreen,
@@ -727,14 +745,21 @@ class BookingDetailsScreen extends StatelessWidget {
                               ],
                             ),
                           ),
-                          if (paymentId.isNotEmpty) ...[
+                          if (paymentId.isNotEmpty || (booking['payout_reference'] != null && booking['payout_reference'].toString().isNotEmpty)) ...[
                             const SizedBox(height: AppSizes.xs),
                             const _RowDivider(),
-                            _PaymentRow(
-                              label: "Payment Ref.",
-                              value: paymentId,
-                              valueColor: AppColors.textSecondaryLight,
-                            ),
+                            if (paymentId.isNotEmpty)
+                              _PaymentRow(
+                                label: "Payment Ref.",
+                                value: paymentId,
+                                valueColor: AppColors.textSecondaryLight,
+                              ),
+                            if (booking['payout_reference'] != null && booking['payout_reference'].toString().isNotEmpty)
+                              _PaymentRow(
+                                label: "Payout Note",
+                                value: booking['payout_reference'].toString(),
+                                valueColor: AppColors.primaryDarkGreen,
+                              ),
                           ],
                         ],
                       ),

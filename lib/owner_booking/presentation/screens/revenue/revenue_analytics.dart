@@ -126,6 +126,16 @@ double totalRevenue(List<Map<String, dynamic>> bookings) => bookings
     .where(_countsTowardsRevenue)
     .fold(0.0, (sum, b) => sum + _amountOf(b));
 
+double pendingRevenue(List<Map<String, dynamic>> bookings) => bookings
+    .where(_countsTowardsRevenue)
+    .where((b) => b['payout_status'] == 'pending' || b['payout_status'] == null)
+    .fold(0.0, (sum, b) => sum + _amountOf(b));
+
+double settledRevenue(List<Map<String, dynamic>> bookings) => bookings
+    .where(_countsTowardsRevenue)
+    .where((b) => b['payout_status'] == 'settled')
+    .fold(0.0, (sum, b) => sum + _amountOf(b));
+
 int totalBookingsCount(List<Map<String, dynamic>> bookings) =>
     bookings.where(_countsTowardsRevenue).length;
 
