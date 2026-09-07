@@ -782,7 +782,38 @@ class _SlotsScreenState extends State<SlotsScreen> {
   }
 
   void _handleSlotTap(BuildContext context, VirtualSlot slot) {
-    // Check if slot has passed
+    // If the slot has booking details (e.g. booked by user or blocked by owner),
+    // always allow viewing details regardless of whether the slot time has passed.
+    if (slot.bookingDetails != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BookingDetailsScreen(booking: slot.bookingDetails!),
+        ),
+      );
+      return;
+    }
+
+    if (slot.status == SlotStatus.booked) {
+      final bookingMap = {
+        if (slot.bookingId != null) 'id': slot.bookingId,
+        'player_name': slot.bookedPlayerName ?? 'Customer',
+        'amount': slot.price,
+        'booking_date': DateFormat('yyyy-MM-dd').format(slot.startTime),
+        'start_time': DateFormat('h:mm a').format(slot.startTime),
+        'end_time': DateFormat('h:mm a').format(slot.endTime),
+        'status': 'confirmed',
+      };
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BookingDetailsScreen(booking: bookingMap),
+        ),
+      );
+      return;
+    }
+
+    // Check if slot has passed for unbooked / open slots
     final now = DateTime.now();
     final isExpired = slot.startTime.isBefore(now);
 
