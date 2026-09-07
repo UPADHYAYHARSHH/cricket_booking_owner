@@ -355,6 +355,18 @@ class BookingDetailsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.primaryDarkGreen,
+                Color(0xFF0FA968),
+              ],
+            ),
+          ),
+        ),
         leading: Container(
           margin: const EdgeInsets.all(AppSizes.sm),
           decoration: BoxDecoration(
@@ -378,7 +390,7 @@ class BookingDetailsScreen extends StatelessWidget {
         ),
         titleSpacing: 0,
       ),
-      extendBodyBehindAppBar: true,
+      extendBodyBehindAppBar: false,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -396,9 +408,9 @@ class BookingDetailsScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              padding: EdgeInsets.fromLTRB(
+              padding: const EdgeInsets.fromLTRB(
                 AppSizes.xl,
-                MediaQuery.of(context).padding.top + 60,
+                AppSizes.md,
                 AppSizes.xl,
                 AppSizes.xl,
               ),
