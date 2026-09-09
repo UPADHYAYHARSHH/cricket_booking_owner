@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
+import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
@@ -283,6 +285,17 @@ class _BookingsScreenState extends State<BookingsScreen> {
                       ),
                       const SizedBox(width: AppSizes.sm),
                       _DateFilterChip(
+                        label: state is BookingsLoaded && state.pendingRequestsCount > 0
+                            ? 'Requests (${state.pendingRequestsCount})'
+                            : 'Requests',
+                        icon: Icons.hourglass_top_rounded,
+                        selected: dateFilter == BookingDateFilter.requests,
+                        onTap: () => context
+                            .read<BookingsCubit>()
+                            .setDateFilter(BookingDateFilter.requests),
+                      ),
+                      const SizedBox(width: AppSizes.sm),
+                      _DateFilterChip(
                         label: 'Today',
                         selected: dateFilter ==
                             BookingDateFilter.today,
@@ -493,6 +506,148 @@ class _BookingCard extends StatefulWidget {
 
 class _BookingCardState extends State<_BookingCard> {
   bool _pressed = false;
+  Timer? _timer;
+  int _remainingSeconds = 0;
+  bool _isActionLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndStartTimer();
+  }
+
+  @override
+  void didUpdateWidget(_BookingCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.booking['status'] != widget.booking['status'] ||
+        oldWidget.booking['created_at'] != widget.booking['created_at']) {
+      _checkAndStartTimer();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  DateTime? _parseUtcToLocal(dynamic value) {
+    if (value == null) return null;
+    String s = value.toString().trim();
+    if (s.isEmpty) return null;
+    if (s.contains(' ') && !s.contains('T')) {
+      s = s.replaceFirst(' ', 'T');
+    }
+    if (!s.endsWith('Z') && !s.contains('+') && !RegExp(r'-\d{2}:?\d{2}$').hasMatch(s)) {
+      s = '${s}Z';
+    }
+    try {
+      return DateTime.parse(s).toLocal();
+    } catch (_) {
+      return DateTime.tryParse(value.toString())?.toLocal();
+    }
+  }
+
+  void _checkAndStartTimer() {
+    _timer?.cancel();
+    final status = (widget.booking['status'] ?? '').toString().toLowerCase();
+    if (status == 'requested') {
+      final createdAt = _parseUtcToLocal(widget.booking['created_at']);
+      if (createdAt != null) {
+        final deadline = createdAt.add(const Duration(minutes: 45));
+        final diff = deadline.difference(DateTime.now()).inSeconds;
+        _remainingSeconds = diff > 0 ? diff : 0;
+      } else {
+        _remainingSeconds = 2700;
+      }
+
+      if (_remainingSeconds > 0) {
+        _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+          if (!mounted) {
+            t.cancel();
+            return;
+          }
+          setState(() {
+            if (_remainingSeconds > 0) {
+              _remainingSeconds--;
+            } else {
+              t.cancel();
+              final id = widget.booking['id']?.toString();
+              if (id != null) {
+                context.read<BookingsCubit>().expireBooking(id);
+              }
+            }
+          });
+        });
+      }
+    }
+  }
+
+  String _formatTimer(int seconds) {
+    final m = (seconds ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Future<void> _approveRequest() async {
+    setState(() => _isActionLoading = true);
+    try {
+      final bookingId = widget.booking['id'].toString();
+      await context.read<BookingsCubit>().approveBooking(bookingId);
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.success,
+          style: ToastificationStyle.fillColored,
+          title: const Text("Request Approved!"),
+          description: const Text("User has 45 minutes to complete payment."),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text("Error approving request"),
+          description: Text(e.toString()),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isActionLoading = false);
+    }
+  }
+
+  Future<void> _declineRequest() async {
+    setState(() => _isActionLoading = true);
+    try {
+      final bookingId = widget.booking['id'].toString();
+      await context.read<BookingsCubit>().declineBooking(bookingId);
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.info,
+          style: ToastificationStyle.fillColored,
+          title: const Text("Request Declined"),
+          description: const Text("Booking cancelled and slots released."),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text("Error declining request"),
+          description: Text(e.toString()),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isActionLoading = false);
+    }
+  }
 
   void _openDetails() {
     Navigator.push(
@@ -716,6 +871,108 @@ class _BookingCardState extends State<_BookingCard> {
                                 ),
                               ],
                             ),
+                            if (status.toLowerCase() == 'requested') ...[
+                              const SizedBox(height: AppSizes.md),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 7),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF3E0),
+                                  borderRadius: BorderRadius.circular(
+                                      AppSizes.radiusSm),
+                                  border: Border.all(
+                                      color: const Color(0xFFFFB74D)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.timer_outlined,
+                                        size: 16, color: Color(0xFFE65100)),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: AppText(
+                                        text: _remainingSeconds > 0
+                                            ? "Expires in ${_formatTimer(_remainingSeconds)}"
+                                            : "Expired",
+                                        size: 12,
+                                        weight: FontWeight.w700,
+                                        color: const Color(0xFFE65100),
+                                      ),
+                                    ),
+                                    const AppText(
+                                      text: "Max 45m",
+                                      size: 11,
+                                      weight: FontWeight.w600,
+                                      color: Color(0xFFE65100),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: AppSizes.sm),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: _isActionLoading
+                                          ? null
+                                          : _declineRequest,
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppColors.error,
+                                        side: const BorderSide(
+                                            color: AppColors.error),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              AppSizes.radiusSm),
+                                        ),
+                                      ),
+                                      child: const AppText(
+                                        text: "Decline",
+                                        size: 12,
+                                        weight: FontWeight.w700,
+                                        color: AppColors.error,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSizes.md),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: (_isActionLoading ||
+                                              _remainingSeconds <= 0)
+                                          ? null
+                                          : _approveRequest,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            AppColors.primaryDarkGreen,
+                                        foregroundColor: AppColors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 8),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              AppSizes.radiusSm),
+                                        ),
+                                      ),
+                                      child: _isActionLoading
+                                          ? const SizedBox(
+                                              width: 14,
+                                              height: 14,
+                                              child:
+                                                  CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const AppText(
+                                              text: "Approve",
+                                              size: 12,
+                                              weight: FontWeight.w700,
+                                              color: AppColors.white,
+                                            ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),

@@ -128,7 +128,7 @@ class DashboardCubit extends Cubit<DashboardState> {
             } catch (_) {}
           }
 
-          if (status == 'pending') {
+          if (status == 'pending' || status == 'requested') {
             pendingAcceptCount++;
             pendingApprovals.add({
               ...b,
@@ -137,18 +137,18 @@ class DashboardCubit extends Cubit<DashboardState> {
           }
         }
 
-        // Resolve customer names for today's slots so the dashboard can show
-        // who booked, not just the raw user id.
-        final todayUserIds = todaySlots
-            .map((s) => (s as Map)['user_id'])
-            .where((id) => id != null)
-            .cast<String>()
-            .toSet()
-            .toList();
-        final users = todayUserIds.isEmpty
+        // Resolve customer names for today's slots and pending approvals so the dashboard
+        // can show who booked, not just the raw user id.
+        final allUserIds = [
+          ...todaySlots.map((s) => (s as Map)['user_id']),
+          ...pendingApprovals.map((s) => (s as Map)['user_id']),
+        ].where((id) => id != null).cast<String>().toSet().toList();
+
+        final users = allUserIds.isEmpty
             ? <Map<String, dynamic>>[]
-            : await _bookingRepository.fetchUsers(todayUserIds);
+            : await _bookingRepository.fetchUsers(allUserIds);
         final userMap = {for (var u in users) u['id']: u};
+
         final enrichedTodaySlots = todaySlots.map((slot) {
           final s = slot as Map<String, dynamic>;
           final userData = userMap[s['user_id']];
@@ -156,6 +156,17 @@ class DashboardCubit extends Cubit<DashboardState> {
           final playerNameFromBooking = s['player_name']?.toString().isNotEmpty == true ? s['player_name'] : null;
           final playerNameFromUser = userData?['full_name'] ?? userData?['name'];
           print('[DashboardCubit] Slot: $uidStr | Booking Name: $playerNameFromBooking | User Name: $playerNameFromUser | UserData: $userData');
+          return <String, dynamic>{
+            ...s,
+            'player_name': playerNameFromBooking ?? playerNameFromUser ?? 'Customer',
+          };
+        }).toList();
+
+        final enrichedPendingApprovals = pendingApprovals.map((b) {
+          final s = b as Map<String, dynamic>;
+          final userData = userMap[s['user_id']];
+          final playerNameFromBooking = s['player_name']?.toString().isNotEmpty == true ? s['player_name'] : null;
+          final playerNameFromUser = userData?['full_name'] ?? userData?['name'];
           return <String, dynamic>{
             ...s,
             'player_name': playerNameFromBooking ?? playerNameFromUser ?? 'Customer',
@@ -185,7 +196,7 @@ class DashboardCubit extends Cubit<DashboardState> {
           pendingAcceptCount: pendingAcceptCount,
           occupancyPercentage: occupancy,
           todaySlots: enrichedTodaySlots,
-          pendingApprovals: pendingApprovals,
+          pendingApprovals: enrichedPendingApprovals,
           locations: locations,
           selectedLocationId: _selectedLocationId,
         ));

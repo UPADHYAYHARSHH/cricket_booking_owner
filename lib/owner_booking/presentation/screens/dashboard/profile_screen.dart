@@ -44,6 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   
   double _locationRating = 0.0;
   int _locationReviewsCount = 0;
+  bool _requireBookingApproval = false;
 
   StreamSubscription<List<Map<String, dynamic>>>? _bookingsSubscription;
 
@@ -210,6 +211,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       if (mounted) {
         setState(() {
           _ownerDetails = ownerRes;
+          _requireBookingApproval = ownerRes?['require_booking_approval'] == true;
           _locationRating = avgRating;
           _locationReviewsCount = totReviews;
           _isLoading = false;
@@ -220,6 +222,55 @@ class _ProfileScreenState extends State<ProfileScreen>
       debugPrint("Error fetching profile: $e");
       if (mounted) {
         setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _toggleBookingApproval(bool value) async {
+    final userId = currentUserId;
+    if (userId == null) return;
+
+    setState(() {
+      _requireBookingApproval = value;
+    });
+
+    try {
+      await Supabase.instance.client
+          .from('owner_details')
+          .update({'require_booking_approval': value})
+          .eq('id', userId);
+
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.success,
+          style: ToastificationStyle.fillColored,
+          title: Text(
+            value ? "Booking Approval Enabled" : "Instant Booking Enabled",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          description: Text(value
+              ? "All your locations now require booking requests. You have 45 minutes to confirm."
+              : "Users can now book and pay immediately for all your grounds."),
+          autoCloseDuration: const Duration(seconds: 4),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _requireBookingApproval = !value;
+        });
+        final isSchemaError = e.toString().contains('PGRST204') ||
+            e.toString().contains('require_booking_approval');
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text("Failed to update setting"),
+          description: Text(isSchemaError
+              ? "Database column missing: Please run supabase/booking_approval_flow_migration.sql in your Supabase SQL Editor."
+              : e.toString()),
+          autoCloseDuration: const Duration(seconds: 5),
+        );
       }
     }
   }
@@ -495,7 +546,19 @@ class _ProfileScreenState extends State<ProfileScreen>
 
                       // Venue Settings
                       _buildSettingsSection("Venue Settings", [
-
+                        _SettingsItem(
+                          icon: Icons.checklist_rounded,
+                          title: "Require Booking Approval",
+                          subtitle: _requireBookingApproval
+                              ? "Active: Users request first (45m to approve)"
+                              : "Off: Users book & pay instantly",
+                          onTap: () => _toggleBookingApproval(!_requireBookingApproval),
+                          customWidget: Switch.adaptive(
+                            value: _requireBookingApproval,
+                            activeColor: AppColors.primaryDarkGreen,
+                            onChanged: _toggleBookingApproval,
+                          ),
+                        ),
                         _SettingsItem(
                           icon: Icons.calendar_month_outlined,
                           title: "All Bookings",

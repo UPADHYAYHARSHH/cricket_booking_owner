@@ -131,4 +131,10 @@ abstract class OwnerRepository {
     required double latitude,
     required double longitude,
   });
+
+  /// Get whether owner requires booking approval
+  Future<bool> getBookingApprovalSetting(String userId);
+
+  /// Update whether owner requires booking approval for all grounds
+  Future<void> updateBookingApprovalSetting(String userId, bool required);
 }

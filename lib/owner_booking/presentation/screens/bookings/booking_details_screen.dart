@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -9,11 +10,172 @@ import 'package:turfpro_owner/common/services/app_config_service.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
+import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart';
+import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
 
-class BookingDetailsScreen extends StatelessWidget {
+class BookingDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> booking;
 
   const BookingDetailsScreen({super.key, required this.booking});
+
+  @override
+  State<BookingDetailsScreen> createState() => _BookingDetailsScreenState();
+}
+
+class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
+  late Map<String, dynamic> _booking;
+  Timer? _timer;
+  int _remainingSeconds = 0;
+  bool _isActionLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _booking = Map<String, dynamic>.from(widget.booking);
+    _checkAndStartTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  DateTime? _parseUtcToLocal(dynamic value) {
+    if (value == null) return null;
+    String s = value.toString().trim();
+    if (s.isEmpty) return null;
+    if (s.contains(' ') && !s.contains('T')) {
+      s = s.replaceFirst(' ', 'T');
+    }
+    if (!s.endsWith('Z') && !s.contains('+') && !RegExp(r'-\d{2}:?\d{2}$').hasMatch(s)) {
+      s = '${s}Z';
+    }
+    try {
+      return DateTime.parse(s).toLocal();
+    } catch (_) {
+      return DateTime.tryParse(value.toString())?.toLocal();
+    }
+  }
+
+  void _checkAndStartTimer() {
+    _timer?.cancel();
+    final status = (_booking['status'] ?? '').toString().toLowerCase();
+    if (status == 'requested') {
+      final createdAt = _parseUtcToLocal(_booking['created_at']);
+      if (createdAt != null) {
+        final deadline = createdAt.add(const Duration(minutes: 45));
+        final diff = deadline.difference(DateTime.now()).inSeconds;
+        _remainingSeconds = diff > 0 ? diff : 0;
+      } else {
+        _remainingSeconds = 2700;
+      }
+
+      if (_remainingSeconds > 0) {
+        _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+          if (!mounted) {
+            t.cancel();
+            return;
+          }
+          setState(() {
+            if (_remainingSeconds > 0) {
+              _remainingSeconds--;
+            } else {
+              t.cancel();
+              _expireBooking();
+            }
+          });
+        });
+      }
+    }
+  }
+
+  String _formatTimer(int seconds) {
+    final m = (seconds ~/ 60).toString().padLeft(2, '0');
+    final s = (seconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Future<void> _expireBooking() async {
+    final id = _booking['id']?.toString() ?? '';
+    if (id.isEmpty) return;
+    try {
+      await getIt<BookingRepository>().deleteOrExpireBooking(id, reason: 'expired_owner_timeout');
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.warning,
+          title: const Text("Booking Request Expired"),
+          description: const Text("45-minute window for owner approval elapsed."),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+        Navigator.pop(context);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _approveBooking() async {
+    setState(() => _isActionLoading = true);
+    final id = _booking['id']?.toString() ?? '';
+    try {
+      await getIt<BookingRepository>().approveBooking(id);
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.success,
+          style: ToastificationStyle.fillColored,
+          title: const Text("Booking Request Approved! 🎉"),
+          description: const Text("User now has 45 minutes to complete payment."),
+          autoCloseDuration: const Duration(seconds: 4),
+        );
+        setState(() {
+          _booking['status'] = 'approved';
+        });
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text("Failed to approve"),
+          description: Text(e.toString()),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isActionLoading = false);
+    }
+  }
+
+  Future<void> _declineBooking() async {
+    setState(() => _isActionLoading = true);
+    final id = _booking['id']?.toString() ?? '';
+    try {
+      await getIt<BookingRepository>().deleteOrExpireBooking(id, reason: 'declined_by_owner');
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.info,
+          style: ToastificationStyle.fillColored,
+          title: const Text("Booking Declined"),
+          description: const Text("Slots have been released."),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text("Failed to decline"),
+          description: Text(e.toString()),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isActionLoading = false);
+    }
+  }
 
   Color _statusColor(String status) {
     return AppColors.bookingStatusColor(status);
@@ -267,6 +429,7 @@ class BookingDetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final booking = _booking;
     final status = (booking['status'] ?? 'pending').toString();
 
     final playerName = booking['player_name']?.toString() ?? 'Player';
@@ -467,6 +630,59 @@ class BookingDetailsScreen extends StatelessWidget {
                 ],
               ),
             ),
+
+            if (status.toLowerCase() == 'requested')
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.xl,
+                  vertical: AppSizes.md,
+                ),
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFFF3E0),
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFFFB74D), width: 1.5),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFE0B2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.timer_outlined,
+                        size: 22,
+                        color: Color(0xFFE65100),
+                      ),
+                    ),
+                    const SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const AppText(
+                            text: "Booking Request Awaiting Approval",
+                            size: 14,
+                            weight: FontWeight.w700,
+                            color: Color(0xFFE65100),
+                          ),
+                          const SizedBox(height: 2),
+                          AppText(
+                            text: _remainingSeconds > 0
+                                ? "Time remaining: ${_formatTimer(_remainingSeconds)} (max 45 minutes)"
+                                : "Request Expired",
+                            size: 12,
+                            color: const Color(0xFFE65100),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
 
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -812,6 +1028,71 @@ class BookingDetailsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
+                    ),
+                  ],
+
+                  if (status.toLowerCase() == 'requested') ...[
+                    const SizedBox(height: AppSizes.xxl),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: AppSizes.buttonHeightLg,
+                            child: OutlinedButton(
+                              onPressed: _isActionLoading ? null : _declineBooking,
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(
+                                    color: AppColors.error, width: 1.5),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppSizes.radiusMd),
+                                ),
+                              ),
+                              child: const AppText(
+                                text: "Decline",
+                                size: 15,
+                                weight: FontWeight.w700,
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: SizedBox(
+                            height: AppSizes.buttonHeightLg,
+                            child: ElevatedButton(
+                              onPressed: (_isActionLoading || _remainingSeconds <= 0)
+                                  ? null
+                                  : _approveBooking,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryDarkGreen,
+                                foregroundColor: AppColors.white,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AppSizes.radiusMd),
+                                ),
+                              ),
+                              child: _isActionLoading
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const AppText(
+                                      text: "Approve Booking",
+                                      size: 15,
+                                      weight: FontWeight.w700,
+                                      color: AppColors.white,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ],

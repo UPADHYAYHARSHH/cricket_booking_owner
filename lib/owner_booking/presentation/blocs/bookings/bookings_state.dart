@@ -1,4 +1,4 @@
-enum BookingDateFilter { all, today, tomorrow, range }
+enum BookingDateFilter { all, requests, today, tomorrow, range }
 
 abstract class BookingsState {}
 
@@ -13,6 +13,10 @@ class BookingsLoaded extends BookingsState {
   final BookingDateFilter dateFilter;
   final DateTime? rangeStart;
   final DateTime? rangeEnd;
+
+  int get pendingRequestsCount => allBookings
+      .where((b) => (b['status'] ?? '').toString().toLowerCase() == 'requested')
+      .length;
 
   BookingsLoaded({
     required this.allBookings,

@@ -139,4 +139,108 @@ class BookingRepositoryImpl implements BookingRepository {
         .order('created_at', ascending: false);
     return List<Map<String, dynamic>>.from(response);
   }
+
+  @override
+  Future<void> approveBooking(String bookingId) async {
+    try {
+      await _supabase.rpc('approve_booking', params: {
+        'p_booking_id': bookingId,
+      });
+    } catch (e) {
+      // Fallback: direct update if RPC is unavailable
+      final updated = await _supabase
+          .from('bookings')
+          .update({
+            'status': 'approved',
+            'approved_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', bookingId)
+          .select('*, grounds(name)')
+          .maybeSingle();
+
+      if (updated != null && updated['user_id'] != null) {
+        final groundName = updated['grounds']?['name'] ?? 'the venue';
+        try {
+          await _supabase.from('notifications').insert({
+            'user_id': updated['user_id'],
+            'title': 'Booking Approved! 🎉 Pay in 45 Mins',
+            'message': 'Your booking request for $groundName has been approved! Please complete payment within 45 minutes.',
+            'type': 'booking_approved',
+            'data': {
+              'booking_id': bookingId,
+              'ground_id': updated['ground_id'],
+              'amount': updated['amount'],
+              'action': 'payment_required',
+            },
+            'is_read': false,
+            'created_at': DateTime.now().toUtc().toIso8601String(),
+          });
+        } catch (_) {}
+      }
+    }
+  }
+
+  @override
+  Future<void> deleteOrExpireBooking(String bookingId, {String reason = 'declined_by_owner'}) async {
+    try {
+      await _supabase.rpc('delete_or_expire_booking', params: {
+        'p_booking_id': bookingId,
+        'p_reason': reason,
+      });
+    } catch (e) {
+      // Fallback: fetch details, delete booking, free slots and notify user
+      try {
+        final booking = await _supabase
+            .from('bookings')
+            .select('*, grounds(name, owner_id)')
+            .eq('id', bookingId)
+            .maybeSingle();
+
+        if (booking != null) {
+          final userId = booking['user_id'];
+          final groundName = booking['grounds']?['name'] ?? 'the ground';
+          final groundId = booking['ground_id'];
+          final slotTimeStr = booking['slot_time']?.toString();
+
+          // Free slots
+          if (slotTimeStr != null && groundId != null) {
+            final slotDate = DateTime.tryParse(slotTimeStr);
+            if (slotDate != null) {
+              final dateStr = "${slotDate.year}-${slotDate.month.toString().padLeft(2, '0')}-${slotDate.day.toString().padLeft(2, '0')}";
+              await _supabase
+                  .from('slots')
+                  .update({'status': 'available'})
+                  .match({'ground_id': groundId, 'date': dateStr});
+            }
+          }
+
+          // Delete booking
+          await _supabase.from('bookings').delete().eq('id', bookingId);
+
+          // Insert notification
+          if (userId != null) {
+            String title = 'Booking Request Declined';
+            String msg = 'Your booking request for $groundName was declined by the owner.';
+            if (reason == 'expired_owner_timeout') {
+              title = 'Booking Request Expired';
+              msg = 'Your booking request for $groundName expired as the owner did not respond in 45 minutes.';
+            } else if (reason == 'expired_user_payment_timeout') {
+              title = 'Booking Cancelled (Payment Timeout)';
+              msg = 'Your booking for $groundName was cancelled as payment was not completed in 45 minutes.';
+            }
+
+            await _supabase.from('notifications').insert({
+              'user_id': userId,
+              'title': title,
+              'message': msg,
+              'type': 'booking_cancelled',
+              'data': {'ground_name': groundName, 'reason': reason},
+              'is_read': false,
+              'created_at': DateTime.now().toIso8601String(),
+            });
+          }
+        }
+      } catch (_) {}
+    }
+  }
 }

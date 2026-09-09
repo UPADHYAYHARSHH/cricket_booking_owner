@@ -25,4 +25,10 @@ abstract class BookingRepository {
   /// Fetches all of an owner's bookings, each joined with its ground's
   /// name, sport category and location id — used to build the revenue report.
   Future<List<Map<String, dynamic>>> getOwnerBookingsWithDetails(String ownerId);
+
+  /// Approves a requested booking and notifies the user to pay within 45 minutes.
+  Future<void> approveBooking(String bookingId);
+
+  /// Deletes or expires a booking (e.g. timeout or declined) and frees slots.
+  Future<void> deleteOrExpireBooking(String bookingId, {String reason = 'declined_by_owner'});
 }

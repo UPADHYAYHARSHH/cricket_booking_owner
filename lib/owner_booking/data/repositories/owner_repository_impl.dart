@@ -510,4 +510,26 @@ class OwnerRepositoryImpl implements OwnerRepository {
 
     await submitApplication(userId);
   }
+
+  @override
+  Future<bool> getBookingApprovalSetting(String userId) async {
+    try {
+      final res = await _supabase
+          .from('owner_details')
+          .select('require_booking_approval')
+          .eq('id', userId)
+          .maybeSingle();
+      return res?['require_booking_approval'] == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> updateBookingApprovalSetting(String userId, bool required) async {
+    await _supabase.from('owner_details').update({
+      'require_booking_approval': required,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', userId);
+  }
 }

@@ -15,7 +15,9 @@ import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_state.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/bookings_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/dashboard_header.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/pending_approval_card.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/revenue_card.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/stat_card.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/dashboard/widgets/today_booking_card.dart';
@@ -232,10 +234,83 @@ class _DashboardScreenState extends State<DashboardScreen>
                           ],
                         ),
                       )),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
+
+                      // Pending Approvals Section (displayed on home screen when there are requests)
+                      if (state.pendingApprovals.isNotEmpty) ...[
+                        _buildStaggeredChild(3, Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFFFF3E0),
+                                      borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                                    ),
+                                    child: const Icon(
+                                      Icons.hourglass_top_rounded,
+                                      size: 16,
+                                      color: Color(0xFFE65100),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const AppText(
+                                    text: "Pending Approvals",
+                                    color: AppColors.textPrimaryLight,
+                                    size: 16,
+                                    weight: FontWeight.w700,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE65100),
+                                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
+                                    ),
+                                    child: AppText(
+                                      text: "${state.pendingApprovals.length}",
+                                      color: Colors.white,
+                                      size: 11,
+                                      weight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const BookingsScreen(),
+                                  ),
+                                ),
+                                child: const AppText(
+                                  text: "View All",
+                                  color: AppColors.primaryDarkGreen,
+                                  size: 13,
+                                  weight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )),
+                        const SizedBox(height: 14),
+                        ...List.generate(state.pendingApprovals.length, (index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                            child: PendingApprovalCard(
+                              booking: state.pendingApprovals[index] as Map<String, dynamic>,
+                            ),
+                          );
+                        }),
+                        const SizedBox(height: 28),
+                      ],
 
                       // Today's Slots Header
-                      _buildStaggeredChild(3, Padding(
+                      _buildStaggeredChild(4, Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,

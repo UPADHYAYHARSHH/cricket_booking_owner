@@ -195,6 +195,8 @@ class BookingsCubit extends Cubit<BookingsState> {
     switch (dateFilter) {
       case BookingDateFilter.all:
         return true;
+      case BookingDateFilter.requests:
+        return (booking['status'] ?? '').toString().toLowerCase() == 'requested';
       case BookingDateFilter.today:
         return slotDate == today;
       case BookingDateFilter.tomorrow:
@@ -204,6 +206,36 @@ class BookingsCubit extends Cubit<BookingsState> {
         final start = _dateOnly(rangeStart);
         final end = _dateOnly(rangeEnd);
         return !slotDate.isBefore(start) && !slotDate.isAfter(end);
+    }
+  }
+
+  Future<void> approveBooking(String bookingId) async {
+    try {
+      await _bookingRepository.approveBooking(bookingId);
+    } catch (e) {
+      print("Error approving booking: $e");
+    }
+  }
+
+  Future<void> declineBooking(String bookingId) async {
+    try {
+      await _bookingRepository.deleteOrExpireBooking(
+        bookingId,
+        reason: 'declined_by_owner',
+      );
+    } catch (e) {
+      print("Error declining booking: $e");
+    }
+  }
+
+  Future<void> expireBooking(String bookingId) async {
+    try {
+      await _bookingRepository.deleteOrExpireBooking(
+        bookingId,
+        reason: 'expired_owner_timeout',
+      );
+    } catch (e) {
+      print("Error expiring booking: $e");
     }
   }
 
