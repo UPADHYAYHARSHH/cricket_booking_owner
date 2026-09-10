@@ -216,15 +216,11 @@ class NotificationService {
 
       // Check if token already exists to bypass strict unique constraints on upsert
       final platform = 'owner_${kIsWeb ? 'web' : defaultTargetPlatform.name}';
-      final nowUtc = DateTime.now().toUtc().toIso8601String();
-
-      await Supabase.instance.client.from('fcm_tokens').upsert({
+      await Supabase.instance.client.functions.invoke('update-fcm-token', body: {
         'user_id': user.uid,
         'token': token,
         'platform': platform,
-        'last_used_at': DateTime.now().toIso8601String(),
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'token');
+      });
     } catch (e) {
       debugPrint("Failed to update token in Supabase: $e");
     }
