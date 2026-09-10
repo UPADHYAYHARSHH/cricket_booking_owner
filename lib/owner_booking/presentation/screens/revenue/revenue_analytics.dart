@@ -102,9 +102,7 @@ List<RevenuePoint> customRangeSeries(
   final e = DateTime(end.year, end.month, end.day);
   final dayCount = e.difference(s).inDays + 1;
 
-  // Cap at 31 days to keep the chart readable
-  final capped = dayCount > 31 ? 31 : dayCount;
-  final days = List.generate(capped, (i) => s.add(Duration(days: i)));
+  final days = List.generate(dayCount, (i) => s.add(Duration(days: i)));
 
   final totals = {for (final d in days) d: 0.0};
   for (final b in bookings) {
