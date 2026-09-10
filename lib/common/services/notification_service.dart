@@ -215,22 +215,22 @@ class NotificationService {
       await prefs.setString(_fcmTokenKey, token);
 
       // Check if token already exists to bypass strict unique constraints on upsert
-      final platform = kIsWeb ? 'web' : defaultTargetPlatform.name;
+      final platform = 'owner_${kIsWeb ? 'web' : defaultTargetPlatform.name}';
       final nowUtc = DateTime.now().toUtc().toIso8601String();
 
       final existingTokens = await Supabase.instance.client
           .from('fcm_tokens')
           .select('id')
-          .eq('user_id', user.uid)
+          .eq('token', token)
           .limit(1);
 
       if (existingTokens.isNotEmpty) {
         await Supabase.instance.client.from('fcm_tokens').update({
-          'token': token,
+          'user_id': user.uid,
           'platform': platform,
           'last_used_at': nowUtc,
           'updated_at': nowUtc,
-        }).eq('user_id', user.uid);
+        }).eq('token', token);
       } else {
         await Supabase.instance.client.from('fcm_tokens').insert({
           'user_id': user.uid,

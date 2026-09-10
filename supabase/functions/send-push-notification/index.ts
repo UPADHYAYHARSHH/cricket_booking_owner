@@ -34,7 +34,7 @@ serve(async (req) => {
     // 2. Fetch FCM tokens for this user
     const { data: tokens, error: tokenError } = await supabase
       .from("fcm_tokens")
-      .select("token")
+      .select("token, platform")
       .eq("user_id", notification.user_id);
 
     if (tokenError || !tokens || tokens.length === 0) {
@@ -85,8 +85,22 @@ serve(async (req) => {
       }
     }
 
+    let appTarget = "both";
+    if (type.includes("booking_request") || type.includes("new_booking") || type.includes("booking_confirmed") || type.includes("owner")) {
+       appTarget = "owner";
+    } else if (type.includes("booking_approved") || type.includes("booking_checked_in") || type.includes("booking_cancelled") || type.includes("payment_required")) {
+       appTarget = "user";
+    }
+
+    let targetTokens = tokens;
+    if (appTarget === "owner") {
+      targetTokens = tokens.filter((t: any) => !(t.platform || "").startsWith("user"));
+    } else if (appTarget === "user") {
+      targetTokens = tokens.filter((t: any) => !(t.platform || "").startsWith("owner"));
+    }
+
     let sentCount = 0;
-    for (const row of tokens) {
+    for (const row of targetTokens) {
       try {
         const messagePayload: any = {
           token: row.token,
