@@ -11,6 +11,10 @@ export const corsHeaders = {
 
 
 serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   try {
     const { notification_id } = await req.json();
 
@@ -116,7 +120,7 @@ serve(async (req) => {
           },
           data: stringifiedData,
           android: {
-            priority: "high",
+            priority: "HIGH",
             notification: {
               channel_id: channelId,
               ...(soundName ? { sound: soundName } : {}),
@@ -158,7 +162,7 @@ serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ success: true, sent: sentCount }), {
+    return new Response(JSON.stringify({ success: true, sent: sentCount, target_count: targetTokens.length, original_count: tokens.length }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
