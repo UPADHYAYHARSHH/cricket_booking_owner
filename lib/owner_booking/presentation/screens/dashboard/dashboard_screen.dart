@@ -299,10 +299,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                         )),
                         const SizedBox(height: 14),
                         ...List.generate(state.pendingApprovals.length, (index) {
+                          final booking = state.pendingApprovals[index] as Map<String, dynamic>;
                           return Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                             child: PendingApprovalCard(
-                              booking: state.pendingApprovals[index] as Map<String, dynamic>,
+                              key: ValueKey(booking['id']),
+                              booking: booking,
                             ),
                           );
                         }),

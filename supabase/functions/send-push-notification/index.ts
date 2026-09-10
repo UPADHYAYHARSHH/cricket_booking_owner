@@ -45,7 +45,6 @@ serve(async (req) => {
     }
 
     // 3. Send push to each token via FCM HTTP v1 API
-    // You need a Firebase service account key stored as FCM_SERVICE_ACCOUNT JSON in Supabase secrets
     const serviceAccountJson = Deno.env.get("FCM_SERVICE_ACCOUNT");
     if (!serviceAccountJson) {
       return new Response(JSON.stringify({ error: "FCM_SERVICE_ACCOUNT not configured" }), {
@@ -57,9 +56,66 @@ serve(async (req) => {
     const serviceAccount = JSON.parse(serviceAccountJson);
     const accessToken = await getAccessToken(serviceAccount);
 
+    const type = String(notification.type ?? "");
+    let channelId = "user_notifications";
+    let soundName: string | undefined = undefined;
+
+    if (type === "booking_request" || type === "new_booking") {
+      channelId = "new_booking_channel";
+      soundName = "booking_confirmed";
+    } else if (type === "booking_confirmed" || type === "booking_approved") {
+      channelId = "booking_confirmed_channel";
+      soundName = "booking_confirmed";
+    } else if (type.includes("owner")) {
+      channelId = "owner_notifications";
+    }
+
+    // FCM HTTP v1 requires all values in data to be strings
+    const stringifiedData: Record<string, string> = {
+      title: String(notification.title ?? ""),
+      message: String(notification.message ?? ""),
+      body: String(notification.message ?? ""),
+      type: type,
+      notification_id: String(notification_id),
+    };
+
+    if (notification.data && typeof notification.data === "object") {
+      for (const [k, v] of Object.entries(notification.data)) {
+        stringifiedData[k] = typeof v === "object" ? JSON.stringify(v) : String(v ?? "");
+      }
+    }
+
     let sentCount = 0;
     for (const row of tokens) {
       try {
+        const messagePayload: any = {
+          token: row.token,
+          notification: {
+            title: notification.title,
+            body: notification.message,
+          },
+          data: stringifiedData,
+          android: {
+            priority: "high",
+            notification: {
+              channel_id: channelId,
+              priority: "HIGH",
+              ...(soundName ? { sound: soundName } : {}),
+            },
+          },
+          apns: {
+            payload: {
+              aps: {
+                alert: {
+                  title: notification.title,
+                  body: notification.message,
+                },
+                sound: soundName ? `${soundName}.mp3` : "default",
+              },
+            },
+          },
+        };
+
         const response = await fetch(
           `https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`,
           {
@@ -68,38 +124,7 @@ serve(async (req) => {
               "Content-Type": "application/json",
               Authorization: `Bearer ${accessToken}`,
             },
-            body: JSON.stringify({
-              message: {
-                token: row.token,
-                notification: {
-                  title: notification.title,
-                  body: notification.message,
-                },
-                data: {
-                  type: notification.type ?? "",
-                  notification_id: notification_id,
-                  ...(notification.data ?? {}),
-                },
-                android: {
-                  priority: "high",
-                  notification: {
-                    channel_id: "owner_notifications",
-                    priority: "HIGH",
-                  },
-                },
-                apns: {
-                  payload: {
-                    aps: {
-                      alert: {
-                        title: notification.title,
-                        body: notification.message,
-                      },
-                      sound: "default",
-                    },
-                  },
-                },
-              },
-            }),
+            body: JSON.stringify({ message: messagePayload }),
           }
         );
 

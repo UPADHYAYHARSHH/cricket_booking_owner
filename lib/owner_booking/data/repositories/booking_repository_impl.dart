@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
 
@@ -94,6 +95,17 @@ class BookingRepositoryImpl implements BookingRepository {
     }).eq('id', bookingId);
   }
 
+  Future<void> _invokePushNotification(String notificationId) async {
+    try {
+      final res = await _supabase.functions.invoke('send-push-notification', body: {
+        'notification_id': notificationId,
+      });
+      print('[BookingRepository] Push notification response: ${res.data}');
+    } catch (e) {
+      print('[BookingRepository] Push notification invoke error: $e');
+    }
+  }
+
   @override
   Future<void> sendCheckInNotification({
     required String userId,
@@ -104,7 +116,7 @@ class BookingRepositoryImpl implements BookingRepository {
   }) async {
     try {
       // Insert notification into the notifications table
-      await _supabase.from('notifications').insert({
+      final notifInsert = await _supabase.from('notifications').insert({
         'user_id': userId,
         'title': 'Check-In Confirmed',
         'message': 'Your booking at $groundName has been checked in at $checkInTime on $checkInDate.',
@@ -116,7 +128,13 @@ class BookingRepositoryImpl implements BookingRepository {
           'check_in_date': checkInDate,
         },
         'is_read': false,
-      });
+        'created_at': DateTime.now().toUtc().toIso8601String(),
+      }).select('id').maybeSingle();
+
+      final notifId = notifInsert?['id']?.toString();
+      if (notifId != null) {
+        _invokePushNotification(notifId);
+      }
     } catch (e) {
       // Don't fail check-in if notification fails
       print('Failed to send check-in notification: $e');
@@ -142,105 +160,263 @@ class BookingRepositoryImpl implements BookingRepository {
 
   @override
   Future<void> approveBooking(String bookingId) async {
+    Map<String, dynamic>? bookingData;
+
     try {
-      await _supabase.rpc('approve_booking', params: {
+      final res = await _supabase.rpc('approve_booking', params: {
         'p_booking_id': bookingId,
       });
-    } catch (e) {
-      // Fallback: direct update if RPC is unavailable
-      final updated = await _supabase
-          .from('bookings')
-          .update({
-            'status': 'approved',
-            'approved_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', bookingId)
-          .select('*, grounds(name)')
-          .maybeSingle();
-
-      if (updated != null && updated['user_id'] != null) {
-        final groundName = updated['grounds']?['name'] ?? 'the venue';
-        try {
-          await _supabase.from('notifications').insert({
-            'user_id': updated['user_id'],
-            'title': 'Booking Approved! 🎉 Pay in 45 Mins',
-            'message': 'Your booking request for $groundName has been approved! Please complete payment within 45 minutes.',
-            'type': 'booking_approved',
-            'data': {
-              'booking_id': bookingId,
-              'ground_id': updated['ground_id'],
-              'amount': updated['amount'],
-              'action': 'payment_required',
-            },
-            'is_read': false,
-            'created_at': DateTime.now().toUtc().toIso8601String(),
-          });
-        } catch (_) {}
+      if (res != null) {
+        if (res is Map) {
+          bookingData = Map<String, dynamic>.from(res);
+        } else if (res is String) {
+          try {
+            final decoded = jsonDecode(res);
+            if (decoded is Map) bookingData = Map<String, dynamic>.from(decoded);
+          } catch (_) {}
+        }
       }
+    } catch (e) {
+      print('[approveBooking] RPC failed, falling back to direct update: $e');
+    }
+
+    // Direct update fallback if RPC didn't return or failed
+    if (bookingData == null) {
+      try {
+        final updated = await _supabase
+            .from('bookings')
+            .update({
+              'status': 'approved',
+              'approved_at': DateTime.now().toUtc().toIso8601String(),
+            })
+            .eq('id', bookingId)
+            .select('*, grounds(name)')
+            .maybeSingle();
+        if (updated != null) {
+          bookingData = Map<String, dynamic>.from(updated);
+        }
+      } catch (e) {
+        print('[approveBooking] Direct update failed: $e');
+      }
+    }
+
+    // Ensure user notification and trigger push
+    try {
+      // If bookingData is still missing, fetch it directly
+      if (bookingData == null) {
+        final fetched = await _supabase
+            .from('bookings')
+            .select('*, grounds(name)')
+            .eq('id', bookingId)
+            .maybeSingle();
+        if (fetched != null) {
+          bookingData = Map<String, dynamic>.from(fetched);
+        }
+      }
+
+      if (bookingData != null) {
+        final userId = bookingData['user_id']?.toString();
+        if (userId != null && userId.isNotEmpty) {
+          String groundName = 'the venue';
+          if (bookingData['grounds'] is Map && bookingData['grounds']['name'] != null) {
+            groundName = bookingData['grounds']['name'];
+          } else if (bookingData['ground_id'] != null) {
+            try {
+              final g = await _supabase.from('grounds').select('name').eq('id', bookingData['ground_id']).maybeSingle();
+              if (g != null && g['name'] != null) groundName = g['name'];
+            } catch (_) {}
+          }
+
+          // Check if notification was already inserted by RPC
+          String? notifId;
+          final existing = await _supabase
+              .from('notifications')
+              .select('id')
+              .eq('user_id', userId)
+              .eq('type', 'booking_approved')
+              .contains('data', {'booking_id': bookingId})
+              .order('created_at', ascending: false)
+              .limit(1)
+              .maybeSingle();
+
+          if (existing != null && existing['id'] != null) {
+            notifId = existing['id'].toString();
+          } else {
+            // Insert notification row
+            final inserted = await _supabase.from('notifications').insert({
+              'user_id': userId,
+              'title': 'Booking Approved! 🎉 Pay in 45 Mins',
+              'message': 'Your booking request for $groundName has been approved! Please complete payment within 45 minutes.',
+              'type': 'booking_approved',
+              'data': {
+                'booking_id': bookingId,
+                'ground_id': bookingData['ground_id'],
+                'amount': bookingData['amount'],
+                'action': 'payment_required',
+              },
+              'is_read': false,
+              'created_at': DateTime.now().toUtc().toIso8601String(),
+            }).select('id').maybeSingle();
+
+            if (inserted != null && inserted['id'] != null) {
+              notifId = inserted['id'].toString();
+            }
+          }
+
+          if (notifId != null) {
+            _invokePushNotification(notifId);
+          }
+        }
+      }
+    } catch (e) {
+      print('[approveBooking] Error in push notification flow: $e');
     }
   }
 
   @override
   Future<void> deleteOrExpireBooking(String bookingId, {String reason = 'declined_by_owner'}) async {
+    String newStatus = 'declined';
+    if (reason == 'expired_owner_timeout') {
+      newStatus = 'expired';
+    } else if (reason == 'expired_user_payment_timeout') {
+      newStatus = 'cancelled';
+    }
+
+    Map<String, dynamic>? bookingData;
+
     try {
-      await _supabase.rpc('delete_or_expire_booking', params: {
+      final res = await _supabase.rpc('delete_or_expire_booking', params: {
         'p_booking_id': bookingId,
         'p_reason': reason,
       });
+      if (res != null) {
+        if (res is Map) {
+          bookingData = Map<String, dynamic>.from(res);
+        } else if (res is String) {
+          try {
+            final decoded = jsonDecode(res);
+            if (decoded is Map) bookingData = Map<String, dynamic>.from(decoded);
+          } catch (_) {}
+        }
+      }
     } catch (e) {
-      // Fallback: fetch details, delete booking, free slots and notify user
+      print('[deleteOrExpireBooking] RPC failed, falling back to direct update: $e');
+    }
+
+    // Direct update: update status to 'declined' / 'expired' / 'cancelled'
+    try {
+      final updated = await _supabase
+          .from('bookings')
+          .update({
+            'status': newStatus,
+            'notes': reason,
+          })
+          .eq('id', bookingId)
+          .select('*, grounds(name, owner_id)')
+          .maybeSingle();
+      if (updated != null) {
+        bookingData = Map<String, dynamic>.from(updated);
+      }
+    } catch (e) {
+      print('[deleteOrExpireBooking] Direct update error: $e');
+    }
+
+    // If bookingData not yet fetched, fetch it to release slots and notify user
+    if (bookingData == null) {
       try {
-        final booking = await _supabase
+        final fetched = await _supabase
             .from('bookings')
             .select('*, grounds(name, owner_id)')
             .eq('id', bookingId)
             .maybeSingle();
-
-        if (booking != null) {
-          final userId = booking['user_id'];
-          final groundName = booking['grounds']?['name'] ?? 'the ground';
-          final groundId = booking['ground_id'];
-          final slotTimeStr = booking['slot_time']?.toString();
-
-          // Free slots
-          if (slotTimeStr != null && groundId != null) {
-            final slotDate = DateTime.tryParse(slotTimeStr);
-            if (slotDate != null) {
-              final dateStr = "${slotDate.year}-${slotDate.month.toString().padLeft(2, '0')}-${slotDate.day.toString().padLeft(2, '0')}";
-              await _supabase
-                  .from('slots')
-                  .update({'status': 'available'})
-                  .match({'ground_id': groundId, 'date': dateStr});
-            }
-          }
-
-          // Delete booking
-          await _supabase.from('bookings').delete().eq('id', bookingId);
-
-          // Insert notification
-          if (userId != null) {
-            String title = 'Booking Request Declined';
-            String msg = 'Your booking request for $groundName was declined by the owner.';
-            if (reason == 'expired_owner_timeout') {
-              title = 'Booking Request Expired';
-              msg = 'Your booking request for $groundName expired as the owner did not respond in 45 minutes.';
-            } else if (reason == 'expired_user_payment_timeout') {
-              title = 'Booking Cancelled (Payment Timeout)';
-              msg = 'Your booking for $groundName was cancelled as payment was not completed in 45 minutes.';
-            }
-
-            await _supabase.from('notifications').insert({
-              'user_id': userId,
-              'title': title,
-              'message': msg,
-              'type': 'booking_cancelled',
-              'data': {'ground_name': groundName, 'reason': reason},
-              'is_read': false,
-              'created_at': DateTime.now().toIso8601String(),
-            });
-          }
+        if (fetched != null) {
+          bookingData = Map<String, dynamic>.from(fetched);
         }
       } catch (_) {}
+    }
+
+    if (bookingData != null) {
+      final groundId = bookingData['ground_id'];
+      final slotTimeStr = bookingData['slot_time']?.toString();
+      final periodStr = bookingData['period']?.toString();
+
+      // Free slots
+      if (slotTimeStr != null && groundId != null) {
+        final slotDate = DateTime.tryParse(slotTimeStr);
+        if (slotDate != null) {
+          final dateStr = "${slotDate.year}-${slotDate.month.toString().padLeft(2, '0')}-${slotDate.day.toString().padLeft(2, '0')}";
+
+          // Free slots in slots table via direct update
+          try {
+            await _supabase
+                .from('slots')
+                .update({'status': 'available'})
+                .match({'ground_id': groundId, 'date': dateStr})
+                .inFilter('status', ['held', 'requested', 'booked']);
+          } catch (_) {}
+
+          // Free specific slots if period has slot start times (e.g. Day|6:00 AM,7:00 AM)
+          if (periodStr != null && periodStr.contains('|')) {
+            final parts = periodStr.split('|');
+            if (parts.length > 1) {
+              final startTimes = parts[1].split(',').map((s) => s.trim()).where((s) => s.isNotEmpty);
+              for (final startTime in startTimes) {
+                try {
+                  await _supabase.rpc('upsert_slot', params: {
+                    'p_ground_id': groundId,
+                    'p_date': dateStr,
+                    'p_start_time': startTime,
+                    'p_status': 'available',
+                    'p_price': 0,
+                  });
+                } catch (_) {}
+              }
+            }
+          }
+        }
+      }
+
+      // Notify user
+      final userId = bookingData['user_id']?.toString();
+      if (userId != null && userId.isNotEmpty) {
+        String groundName = 'the ground';
+        if (bookingData['grounds'] is Map && bookingData['grounds']['name'] != null) {
+          groundName = bookingData['grounds']['name'];
+        }
+
+        String title = 'Booking Request Declined';
+        String msg = 'Your booking request for $groundName was declined by the owner.';
+        if (reason == 'expired_owner_timeout') {
+          title = 'Booking Request Expired';
+          msg = 'Your booking request for $groundName expired as the owner did not respond within 45 minutes.';
+        } else if (reason == 'expired_user_payment_timeout') {
+          title = 'Booking Cancelled (Payment Timeout)';
+          msg = 'Your booking for $groundName was cancelled as payment was not completed within 45 minutes.';
+        }
+
+        try {
+          final notifInsert = await _supabase.from('notifications').insert({
+            'user_id': userId,
+            'title': title,
+            'message': msg,
+            'type': 'booking_cancelled',
+            'data': {
+              'booking_id': bookingId,
+              'ground_name': groundName,
+              'reason': reason,
+            },
+            'is_read': false,
+            'created_at': DateTime.now().toUtc().toIso8601String(),
+          }).select('id').maybeSingle();
+
+          final notifId = notifInsert?['id']?.toString();
+          if (notifId != null) {
+            await _invokePushNotification(notifId);
+          }
+        } catch (e) {
+          print('[deleteOrExpireBooking] Notification error: $e');
+        }
+      }
     }
   }
 }

@@ -8,6 +8,7 @@ import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
 
 class PendingApprovalCard extends StatefulWidget {
@@ -88,6 +89,9 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
             final id = widget.booking['id']?.toString();
             if (id != null) {
               context.read<BookingsCubit>().expireBooking(id);
+              try {
+                context.read<DashboardCubit>().fetchDashboardData();
+              } catch (_) {}
             }
           }
         });
@@ -144,6 +148,9 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
       final bookingId = widget.booking['id'].toString();
       await context.read<BookingsCubit>().approveBooking(bookingId);
       if (mounted) {
+        try {
+          context.read<DashboardCubit>().fetchDashboardData();
+        } catch (_) {}
         toastification.show(
           context: context,
           type: ToastificationType.success,
@@ -174,12 +181,15 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
       final bookingId = widget.booking['id'].toString();
       await context.read<BookingsCubit>().declineBooking(bookingId);
       if (mounted) {
+        try {
+          context.read<DashboardCubit>().fetchDashboardData();
+        } catch (_) {}
         toastification.show(
           context: context,
           type: ToastificationType.info,
           style: ToastificationStyle.fillColored,
           title: const Text("Request Declined"),
-          description: const Text("Booking cancelled and slots released."),
+          description: const Text("Booking declined and slots released."),
           autoCloseDuration: const Duration(seconds: 3),
         );
       }
@@ -198,13 +208,18 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
     }
   }
 
-  void _openDetails() {
-    Navigator.push(
+  Future<void> _openDetails() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => BookingDetailsScreen(booking: widget.booking),
       ),
     );
+    if (result == true && mounted) {
+      try {
+        context.read<DashboardCubit>().fetchDashboardData();
+      } catch (_) {}
+    }
   }
 
   @override

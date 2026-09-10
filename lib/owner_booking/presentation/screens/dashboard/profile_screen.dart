@@ -23,6 +23,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/revenue/revenue_c
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/payouts/payouts_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/support/owner_help_support_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -577,11 +578,21 @@ class _ProfileScreenState extends State<ProfileScreen>
                         _SettingsItem(
                           icon: Icons.location_on_outlined,
                           title: "Manage Locations",
-                          isLast: true,
                           onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => const LocationsScreen(),
+                            ),
+                          ),
+                        ),
+                        _SettingsItem(
+                          icon: Icons.support_agent_rounded,
+                          title: "Help & Support (Partner AI)",
+                          isLast: true,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const OwnerHelpSupportScreen(),
                             ),
                           ),
                         ),

@@ -483,7 +483,10 @@ class _StaggeredBookingListState extends State<_StaggeredBookingList>
               opacity: itemFade,
               child: Transform.translate(
                 offset: Offset(0, 16 * (1 - itemFade)),
-                child: _BookingCard(booking: widget.bookings[index]),
+                child: _BookingCard(
+                  key: ValueKey(widget.bookings[index]['id']),
+                  booking: widget.bookings[index],
+                ),
               ),
             );
           },
@@ -498,7 +501,7 @@ class _StaggeredBookingListState extends State<_StaggeredBookingList>
 class _BookingCard extends StatefulWidget {
   final Map<String, dynamic> booking;
 
-  const _BookingCard({required this.booking});
+  const _BookingCard({super.key, required this.booking});
 
   @override
   State<_BookingCard> createState() => _BookingCardState();
@@ -649,14 +652,17 @@ class _BookingCardState extends State<_BookingCard> {
     }
   }
 
-  void _openDetails() {
-    Navigator.push(
+  Future<void> _openDetails() async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) =>
             BookingDetailsScreen(booking: widget.booking),
       ),
     );
+    if (result == true && mounted) {
+      context.read<BookingsCubit>().fetchBookings();
+    }
   }
 
   String _simplifyPeriod(String period) {

@@ -210,14 +210,53 @@ class BookingsCubit extends Cubit<BookingsState> {
   }
 
   Future<void> approveBooking(String bookingId) async {
+    final currentState = state;
+    if (currentState is BookingsLoaded) {
+      final updated = currentState.allBookings.map((b) {
+        if (b['id']?.toString() == bookingId) {
+          return <String, dynamic>{...b, 'status': 'approved'};
+        }
+        return b;
+      }).toList();
+      emit(currentState.copyWith(
+        allBookings: updated,
+        filteredBookings: _applyFilters(
+          updated,
+          currentState.searchQuery,
+          currentState.dateFilter,
+          currentState.rangeStart,
+          currentState.rangeEnd,
+        ),
+      ));
+    }
     try {
       await _bookingRepository.approveBooking(bookingId);
     } catch (e) {
       print("Error approving booking: $e");
+      rethrow;
     }
   }
 
   Future<void> declineBooking(String bookingId) async {
+    final currentState = state;
+    if (currentState is BookingsLoaded) {
+      final updated = currentState.allBookings.map((b) {
+        if (b['id']?.toString() == bookingId) {
+          return <String, dynamic>{...b, 'status': 'declined'};
+        }
+        return b;
+      }).toList();
+      emit(currentState.copyWith(
+        allBookings: updated,
+        filteredBookings: _applyFilters(
+          updated,
+          currentState.searchQuery,
+          currentState.dateFilter,
+          currentState.rangeStart,
+          currentState.rangeEnd,
+        ),
+      ));
+    }
     try {
       await _bookingRepository.deleteOrExpireBooking(
         bookingId,
@@ -225,10 +264,30 @@ class BookingsCubit extends Cubit<BookingsState> {
       );
     } catch (e) {
       print("Error declining booking: $e");
+      rethrow;
     }
   }
 
   Future<void> expireBooking(String bookingId) async {
+    final currentState = state;
+    if (currentState is BookingsLoaded) {
+      final updated = currentState.allBookings.map((b) {
+        if (b['id']?.toString() == bookingId) {
+          return <String, dynamic>{...b, 'status': 'expired'};
+        }
+        return b;
+      }).toList();
+      emit(currentState.copyWith(
+        allBookings: updated,
+        filteredBookings: _applyFilters(
+          updated,
+          currentState.searchQuery,
+          currentState.dateFilter,
+          currentState.rangeStart,
+          currentState.rangeEnd,
+        ),
+      ));
+    }
     try {
       await _bookingRepository.deleteOrExpireBooking(
         bookingId,
@@ -236,6 +295,7 @@ class BookingsCubit extends Cubit<BookingsState> {
       );
     } catch (e) {
       print("Error expiring booking: $e");
+      rethrow;
     }
   }
 

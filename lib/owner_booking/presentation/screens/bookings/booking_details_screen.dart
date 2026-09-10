@@ -131,7 +131,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         setState(() {
           _booking['status'] = 'approved';
         });
-        Navigator.pop(context);
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -161,7 +161,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           description: const Text("Slots have been released."),
           autoCloseDuration: const Duration(seconds: 3),
         );
-        Navigator.pop(context);
+        setState(() {
+          _booking['status'] = 'declined';
+        });
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
