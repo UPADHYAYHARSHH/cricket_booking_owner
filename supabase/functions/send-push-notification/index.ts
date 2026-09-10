@@ -60,10 +60,10 @@ serve(async (req) => {
     let channelId = "user_notifications";
     let soundName: string | undefined = undefined;
 
-    if (type === "booking_request" || type === "new_booking") {
+    if (type === "booking_request" || type === "new_booking" || type === "booking_confirmed") {
       channelId = "new_booking_channel";
       soundName = "booking_confirmed";
-    } else if (type === "booking_confirmed" || type === "booking_approved") {
+    } else if (type === "booking_approved") {
       channelId = "booking_confirmed_channel";
       soundName = "booking_confirmed";
     } else if (type.includes("owner")) {
@@ -96,10 +96,9 @@ serve(async (req) => {
           },
           data: stringifiedData,
           android: {
-            priority: "high",
+            priority: "HIGH",
             notification: {
               channel_id: channelId,
-              priority: "HIGH",
               ...(soundName ? { sound: soundName } : {}),
             },
           },
