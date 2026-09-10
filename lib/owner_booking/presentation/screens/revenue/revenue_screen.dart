@@ -666,78 +666,92 @@ class _TrendChartCard extends StatelessWidget {
           else
             SizedBox(
               height: 220,
-              child: BarChart(
-                BarChartData(
-                  maxY: maxY,
-                  alignment: BarChartAlignment.spaceAround,
-                  gridData: const FlGridData(show: false),
-                  borderData: FlBorderData(show: false),
-                  barTouchData: BarTouchData(
-                    touchTooltipData: BarTouchTooltipData(
-                      getTooltipItem: (group, rodIndex, rod, mouse) => BarTooltipItem(
-                        '₹${rod.toY.toInt()}',
-                        const TextStyle(
-                          color: AppColors.white,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final minBarWidth = 45.0;
+                  final chartWidth = points.length * minBarWidth;
+                  final width = chartWidth > constraints.maxWidth ? chartWidth : constraints.maxWidth;
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Container(
+                      width: width,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: BarChart(
+                        BarChartData(
+                          maxY: maxY,
+                          alignment: BarChartAlignment.spaceAround,
+                          gridData: const FlGridData(show: false),
+                          borderData: FlBorderData(show: false),
+                          barTouchData: BarTouchData(
+                            touchTooltipData: BarTouchTooltipData(
+                              getTooltipItem: (group, rodIndex, rod, mouse) => BarTooltipItem(
+                                '₹${rod.toY.toInt()}',
+                                const TextStyle(
+                                  color: AppColors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                          titlesData: FlTitlesData(
+                            leftTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            rightTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            topTitles: const AxisTitles(
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
+                            bottomTitles: AxisTitles(
+                              sideTitles: SideTitles(
+                                showTitles: true,
+                                getTitlesWidget: (value, meta) {
+                                  final i = value.toInt();
+                                  if (i < 0 || i >= points.length) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      points[i].label,
+                                      style: const TextStyle(
+                                        fontSize: 10,
+                                        color: AppColors.textSecondaryLight,
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          barGroups: [
+                            for (int i = 0; i < points.length; i++)
+                              BarChartGroupData(
+                                x: i,
+                                barRods: [
+                                  BarChartRodData(
+                                    toY: points[i].amount,
+                                    width: 20,
+                                    borderRadius: const BorderRadius.vertical(
+                                      top: Radius.circular(6),
+                                    ),
+                                    backDrawRodData: BackgroundBarChartRodData(
+                                      show: true,
+                                      toY: maxY,
+                                      color: AppColors.borderLight,
+                                    ),
+                                    color: AppColors.primaryDarkGreen,
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
                       ),
                     ),
-                  ),
-                  titlesData: FlTitlesData(
-                    leftTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    topTitles: const AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          final i = value.toInt();
-                          if (i < 0 || i >= points.length) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              points[i].label,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: AppColors.textSecondaryLight,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  barGroups: [
-                    for (int i = 0; i < points.length; i++)
-                      BarChartGroupData(
-                        x: i,
-                        barRods: [
-                          BarChartRodData(
-                            toY: points[i].amount,
-                            width: 20,
-                            borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(6),
-                            ),
-                            backDrawRodData: BackgroundBarChartRodData(
-                              show: true,
-                              toY: maxY,
-                              color: AppColors.borderLight,
-                            ),
-                            color: AppColors.primaryDarkGreen,
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
         ],
