@@ -110,7 +110,7 @@ serve(async (req) => {
           },
           data: stringifiedData,
           android: {
-            priority: "HIGH",
+            priority: "high",
             notification: {
               channel_id: channelId,
               ...(soundName ? { sound: soundName } : {}),

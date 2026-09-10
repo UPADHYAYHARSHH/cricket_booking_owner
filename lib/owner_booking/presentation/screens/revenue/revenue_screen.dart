@@ -63,6 +63,7 @@ class _RevenueScreenState extends State<RevenueScreen>
     final now = DateTime.now();
     final picked = await showDateRangePicker(
       context: context,
+      helpText: 'Scroll down to view past months',
       firstDate: DateTime(now.year - 2),
       lastDate: now,
       initialDateRange: _customStart != null && _customEnd != null
@@ -652,10 +653,27 @@ class _TrendChartCard extends StatelessWidget {
           if (subtitle != null)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: AppText(
-                text: subtitle!,
-                size: 12,
-                color: AppColors.textSecondaryLight,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  AppText(
+                    text: subtitle!,
+                    size: 12,
+                    color: AppColors.textSecondaryLight,
+                  ),
+                  if (points.length > 7)
+                    const Row(
+                      children: [
+                        Icon(Icons.swipe_outlined, size: 14, color: AppColors.textSecondaryLight),
+                        SizedBox(width: 4),
+                        AppText(
+                          text: "Swipe to view all",
+                          size: 11,
+                          color: AppColors.textSecondaryLight,
+                        ),
+                      ],
+                    ),
+                ],
               ),
             ),
           if (points.every((p) => p.amount == 0))
