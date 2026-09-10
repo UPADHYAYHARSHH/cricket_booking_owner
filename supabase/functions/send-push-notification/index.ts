@@ -4,6 +4,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+export const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+
 serve(async (req) => {
   try {
     const { notification_id } = await req.json();
@@ -11,7 +17,7 @@ serve(async (req) => {
     if (!notification_id) {
       return new Response(JSON.stringify({ error: "notification_id required" }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -27,7 +33,7 @@ serve(async (req) => {
     if (notifError || !notification) {
       return new Response(JSON.stringify({ error: "Notification not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -40,7 +46,7 @@ serve(async (req) => {
     if (tokenError || !tokens || tokens.length === 0) {
       return new Response(JSON.stringify({ error: "No FCM tokens found" }), {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -49,7 +55,7 @@ serve(async (req) => {
     if (!serviceAccountJson) {
       return new Response(JSON.stringify({ error: "FCM_SERVICE_ACCOUNT not configured" }), {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -154,12 +160,12 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true, sent: sentCount }), {
       status: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
