@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -124,7 +124,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           context: context,
           type: ToastificationType.success,
           style: ToastificationStyle.fillColored,
-          title: const Text("Booking Request Approved! 🎉"),
+          title: const Text("Booking Request Approved! ðŸŽ‰"),
           description: const Text("User now has 45 minutes to complete payment."),
           autoCloseDuration: const Duration(seconds: 4),
         );
@@ -148,10 +148,96 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   }
 
   Future<void> _declineBooking() async {
+    final reasonController = TextEditingController();
+    final shouldDecline = await showGeneralDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: "Decline Booking",
+      barrierColor: AppColors.black.withValues(alpha: 0.45),
+      pageBuilder: (context, anim1, anim2) {
+        return Center(
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.85,
+            padding: const EdgeInsets.all(AppSizes.xl),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Material(
+              type: MaterialType.transparency,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Decline Booking",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Are you sure you want to decline this booking?",
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: reasonController,
+                    decoration: const InputDecoration(
+                      labelText: 'Reason (Optional)',
+                      hintText: 'e.g., Ground under maintenance',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text("Cancel"),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.errorRed,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text("Decline"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (shouldDecline != true) return;
+    
+    final finalReason = reasonController.text.trim().isNotEmpty ? reasonController.text.trim() : 'declined_by_owner';
+
     setState(() => _isActionLoading = true);
     final id = _booking['id']?.toString() ?? '';
     try {
-      await getIt<BookingRepository>().deleteOrExpireBooking(id, reason: 'declined_by_owner');
+      await getIt<BookingRepository>().deleteOrExpireBooking(id, reason: finalReason);
       if (mounted) {
         toastification.show(
           context: context,
@@ -455,7 +541,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       timeFormatted = periodFromDb.split('|').first;
     } else if (slotTime != null) {
       timeFormatted =
-          "${DateFormat('h:mm a').format(slotTime)} – ${DateFormat('h:mm a').format(slotTime.add(const Duration(hours: 1)))}";
+          "${DateFormat('h:mm a').format(slotTime)} â€“ ${DateFormat('h:mm a').format(slotTime.add(const Duration(hours: 1)))}";
     } else {
       timeFormatted = 'N/A';
     }
@@ -470,7 +556,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       displayId = fullId.length > 5 ? fullId.substring(0, 5).toUpperCase() : fullId.toUpperCase();
     }
 
-    // Amount & Fee Snapshot — stored in rupees per booking
+    // Amount & Fee Snapshot â€” stored in rupees per booking
     final platformFee = (booking['platform_fee'] as num?)?.toDouble() ?? AppConfigService.instance.platformFee;
     final commissionRate = (booking['commission_rate'] as num?)?.toDouble() ?? AppConfigService.instance.commissionRate;
     final commissionIsPercentage = booking['commission_is_percentage'] != null 
@@ -866,12 +952,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         children: [
                           _PaymentRow(
                             label: "Customer Paid",
-                            value: "₹${totalAmount.toStringAsFixed(0)}",
+                            value: "â‚¹${totalAmount.toStringAsFixed(0)}",
                           ),
                           const _RowDivider(),
                           _PaymentRow(
                             label: "Platform Fee",
-                            value: "– ₹${platformFee.toStringAsFixed(0)}",
+                            value: "â€“ â‚¹${platformFee.toStringAsFixed(0)}",
                             valueColor: AppColors.error,
                           ),
                           if (commissionRate > 0) ...[
@@ -881,7 +967,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                   ? "Commission (${commissionRate.toStringAsFixed(commissionRate % 1 == 0 ? 0 : 1)}%)"
                                   : "Commission Fee",
                               value:
-                                  "– ₹${commissionFee.toStringAsFixed(0)}",
+                                  "â€“ â‚¹${commissionFee.toStringAsFixed(0)}",
                               valueColor: AppColors.error,
                             ),
                           ],
@@ -892,7 +978,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                             valueColor: AppColors.textSecondaryLight,
                           ),
                           const _RowDivider(),
-                          // You earn — highlighted section
+                          // You earn â€” highlighted section
                           Container(
                             margin: const EdgeInsets.only(
                                 top: AppSizes.sm, bottom: AppSizes.xxs),
@@ -968,7 +1054,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                   ],
                                 ),
                                 AppText(
-                                  text: "₹${groundRate.toStringAsFixed(0)}",
+                                  text: "â‚¹${groundRate.toStringAsFixed(0)}",
                                   size: 20,
                                   weight: FontWeight.w800,
                                   color: AppColors.primaryDarkGreen,
