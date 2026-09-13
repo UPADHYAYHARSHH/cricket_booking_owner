@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
@@ -66,8 +66,8 @@ class DashboardCubit extends Cubit<DashboardState> {
           ownerName: ownerName,
           venueName: venueName,
           activeCourts: 0,
-          todayRevenue: '₹0',
-          revenueChangeLabel: '—',
+          todayRevenue: 'â‚¹0',
+          revenueChangeLabel: 'â€”',
           todayBookingsCount: 0,
           pendingAcceptCount: 0,
           occupancyPercentage: '0%',
@@ -115,7 +115,7 @@ class DashboardCubit extends Cubit<DashboardState> {
                 if (isRevenueCounted) {
                   todayRevenue += amount;
                 }
-                if (status != 'pending') { todaySlots.add({
+                if (status != 'pending' && status != 'requested') { todaySlots.add({
                   ...b,
                   'ground_name': groundMap[b['ground_id']] ?? 'Unknown Ground',
                 }); } } else if (bDate.year == yesterday.year &&
@@ -212,4 +212,5 @@ class DashboardCubit extends Cubit<DashboardState> {
     fetchDashboardData();
   }
 }
+
 
