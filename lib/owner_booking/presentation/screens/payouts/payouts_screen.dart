@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -36,15 +37,20 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
   Future<void> _fetchWalletAndHistory() async {
     setState(() => _isLoadingWallet = true);
     try {
+      final ownerId = FirebaseAuth.instance.currentUser?.uid;
+      if (ownerId == null) {
+        setState(() => _isLoadingWallet = false);
+        return;
+      }
+
       // Fetch Wallet
-      final walletResponse = await _supabase.rpc('get_owner_wallet');
+      final walletResponse = await _supabase.rpc('get_owner_wallet', params: {'p_owner_id': ownerId});
       
       // Fetch Withdrawals history
-      final ownerId = _supabase.auth.currentUser?.id;
       final withdrawalsResponse = await _supabase
           .from('withdrawals')
-          .select('*')
-          .eq('owner_id', ownerId ?? '')
+          .select()
+          .eq('owner_id', ownerId)
           .order('created_at', ascending: false);
 
       if (mounted) {
@@ -66,7 +72,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
     if (_isRequesting) return;
     setState(() => _isRequesting = true);
     try {
-      await _supabase.rpc('request_withdrawal', params: {'p_amount': amount});
+      await _supabase.rpc('request_withdrawal', params: {'p_owner_id': FirebaseAuth.instance.currentUser?.uid, 'p_amount': amount});
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -110,7 +116,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppText(text: 'Available: ₹$available', color: AppColors.primaryDarkGreen, weight: FontWeight.w600),
+                  AppText(text: 'Available: â‚¹$available', color: AppColors.primaryDarkGreen, weight: FontWeight.w600),
                   const SizedBox(height: 16),
                   TextField(
                     controller: controller,
@@ -190,8 +196,8 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildWalletCard('Available', '₹$availableBalance', AppColors.primaryDarkGreen),
-                    _buildWalletCard('Total Earned', '₹$totalEarnings', Colors.grey.shade700),
+                    _buildWalletCard('Available', 'â‚¹$availableBalance', AppColors.primaryDarkGreen),
+                    _buildWalletCard('Total Earned', 'â‚¹$totalEarnings', Colors.grey.shade700),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -268,7 +274,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
         final amount = w['amount'];
         final status = w['status']?.toString().toUpperCase() ?? 'UNKNOWN';
         final date = DateTime.tryParse(w['created_at'].toString())?.toLocal();
-        final dateStr = date != null ? DateFormat('MMM d, yyyy • h:mm a').format(date) : '';
+        final dateStr = date != null ? DateFormat('MMM d, yyyy â€¢ h:mm a').format(date) : '';
         
         Color statusColor = Colors.orange;
         if (status == 'SUCCESS') statusColor = Colors.green;
@@ -284,7 +290,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                AppText(text: '₹$amount', weight: FontWeight.bold, size: 16),
+                AppText(text: 'â‚¹$amount', weight: FontWeight.bold, size: 16),
                 AppText(text: status, color: statusColor, size: 11, weight: FontWeight.w700),
               ],
             ),
@@ -328,7 +334,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      AppText(text: '+ ₹$amount', weight: FontWeight.bold, size: 15, color: Colors.green),
+                      AppText(text: '+ â‚¹$amount', weight: FontWeight.bold, size: 15, color: Colors.green),
                       AppText(text: status, color: status == 'SETTLED' ? Colors.green : Colors.orange, size: 11, weight: FontWeight.w700),
                     ],
                   ),
