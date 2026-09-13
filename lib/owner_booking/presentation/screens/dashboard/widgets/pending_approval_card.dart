@@ -230,12 +230,24 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
     final groundName = booking['ground_name'] ?? 'Court';
     final rawPeriod = (booking['period'] ?? 'Time').toString();
     String period = rawPeriod;
+    
+    String dateLabel = "Date";
+    final slotTimeStr = booking['slot_time']?.toString() ?? booking['created_at']?.toString() ?? '';
+    if (slotTimeStr.isNotEmpty) {
+      try {
+        final d = DateTime.parse(slotTimeStr).toLocal();
+        dateLabel = DateFormat('d MMM').format(d);
+      } catch (_) {}
+    }
+
     if (rawPeriod.contains('|')) {
       final parts = rawPeriod.split('|');
       final times = parts[1].replaceAll(',', ', ');
-      period = "${parts[0]} - $times";
+      period = "$dateLabel - $times";
     } else {
-      period = _simplifyPeriod(rawPeriod);
+      String simplified = _simplifyPeriod(rawPeriod);
+      simplified = simplified.replaceAll(RegExp(r'^(Day|Night|Midnight)\s*-\s*'), '');
+      period = "$dateLabel - $simplified";
     }
     final sportName = (booking['sport_name'] ?? 'Sport').toString();
     final amount = booking['amount'] ?? booking['total_amount'] ?? 0;
@@ -391,7 +403,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                   ),
                                   const SizedBox(width: 4),
                                   AppText(
-                                    text: "â‚¹$amount",
+                                    text: "₹$amount",
                                     size: 13,
                                     weight: FontWeight.w700,
                                     color: AppColors.primaryDarkGreen,

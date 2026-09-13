@@ -111,12 +111,24 @@ class _TodayBookingCardState extends State<TodayBookingCard>
     final groundName = widget.booking['ground_name'] ?? 'Court';
     final rawPeriod = (widget.booking['period'] ?? 'Time').toString();
     String period = rawPeriod;
+    
+    String dateLabel = "Date";
+    final slotTimeStr = widget.booking['slot_time']?.toString() ?? widget.booking['created_at']?.toString() ?? '';
+    if (slotTimeStr.isNotEmpty) {
+      try {
+        final d = DateTime.parse(slotTimeStr).toLocal();
+        dateLabel = DateFormat('d MMM').format(d);
+      } catch (_) {}
+    }
+
     if (rawPeriod.contains('|')) {
       final parts = rawPeriod.split('|');
       final times = parts[1].replaceAll(',', ', ');
-      period = "${parts[0]} - $times";
+      period = "$dateLabel - $times";
     } else {
-      period = _simplifyPeriod(rawPeriod);
+      String simplified = _simplifyPeriod(rawPeriod);
+      simplified = simplified.replaceAll(RegExp(r'^(Day|Night|Midnight)\s*-\s*'), '');
+      period = "$dateLabel - $simplified";
     }
     final sportName = _formatLabel((widget.booking['sport_name'] ?? 'Sport').toString());
     final amount = widget.booking['amount'] ?? widget.booking['total_amount'] ?? 0;
@@ -233,7 +245,7 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                   children: [
                     _InfoChip(
                       icon: HugeIcons.strokeRoundedMoneyBag01,
-                      text: "?$amount",
+                      text: "₹$amount",
                     ),
                     const SizedBox(width: 16),
                     _InfoChip(
