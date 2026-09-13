@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+ï»¿import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -127,7 +128,7 @@ class _TodayBookingCardState extends State<TodayBookingCard>
         final d = DateTime.parse(slotTime).toLocal();
         final now = DateTime.now();
         if (d.year != now.year || d.month != now.month || d.day != now.day) {
-           dateStr = "${d.day}/${d.month} • ";
+           dateStr = "${d.day}/${d.month} â€¢ ";
         }
       } catch (_) {}
     }
@@ -196,7 +197,7 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                                 overflow: TextOverflow.ellipsis,
                               ),
                               AppText(
-                                text: "$groundName • $dateStr$period",
+                                text: "$groundName â€¢ $dateStr$period",
                                 size: 12,
                                 color: AppColors.textSecondaryLight,
                               ),
@@ -331,3 +332,4 @@ class _InfoChip extends StatelessWidget {
     );
   }
 }
+

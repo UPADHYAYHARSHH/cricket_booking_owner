@@ -1,4 +1,5 @@
-import 'dart:async';
+﻿import 'dart:async';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -155,7 +156,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
           context: context,
           type: ToastificationType.success,
           style: ToastificationStyle.fillColored,
-          title: const Text("Request Approved! 🎉"),
+          title: const Text("Request Approved! ðŸŽ‰"),
           description: const Text("User has 45 minutes to complete payment."),
           autoCloseDuration: const Duration(seconds: 3),
         );
@@ -390,7 +391,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                   ),
                                   const SizedBox(width: 4),
                                   AppText(
-                                    text: "₹$amount",
+                                    text: "â‚¹$amount",
                                     size: 13,
                                     weight: FontWeight.w700,
                                     color: AppColors.primaryDarkGreen,
@@ -502,3 +503,4 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
     );
   }
 }
+
