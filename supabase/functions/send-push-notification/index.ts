@@ -30,7 +30,7 @@ serve(async (req) => {
     // 1. Fetch the notification row
     const { data: notification, error: notifError } = await supabase
       .from("notifications")
-      .select("user_id, title, message, type, data")
+      .select("id, user_id, title, message, type, data")
       .eq("id", notification_id)
       .single();
 
@@ -40,6 +40,28 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Deduplication check: if notification was already sent within the last 60 seconds, skip
+    const notifData = (notification.data && typeof notification.data === "object") ? notification.data : {};
+    const lastSentAt = notifData.fcm_pushed_at ? new Date(notifData.fcm_pushed_at).getTime() : 0;
+    if (Date.now() - lastSentAt < 60000) {
+      console.log(`Notification ${notification_id} already pushed at ${notifData.fcm_pushed_at}. Skipping duplicate.`);
+      return new Response(JSON.stringify({ success: true, duplicate: true, message: "Duplicate push skipped" }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Immediately mark as pushed in data column to prevent concurrent duplicate sends
+    await supabase
+      .from("notifications")
+      .update({
+        data: {
+          ...notifData,
+          fcm_pushed_at: new Date().toISOString(),
+        },
+      })
+      .eq("id", notification_id);
 
     // 2. Fetch FCM tokens for this user
     const { data: tokens, error: tokenError } = await supabase
@@ -123,10 +145,14 @@ serve(async (req) => {
             priority: "HIGH",
             notification: {
               channel_id: channelId,
+              tag: `notif_${notification_id}`,
               ...(soundName ? { sound: soundName } : {}),
             },
           },
           apns: {
+            headers: {
+              "apns-collapse-id": `notif_${notification_id}`,
+            },
             payload: {
               aps: {
                 alert: {

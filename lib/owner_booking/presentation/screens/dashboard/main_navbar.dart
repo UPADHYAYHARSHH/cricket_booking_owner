@@ -1,3 +1,4 @@
+import 'package:turfpro_owner/common/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
@@ -17,6 +18,12 @@ class MainNavbar extends StatefulWidget {
 
 class _MainNavbarState extends State<MainNavbar> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    NotificationService.updateFcmToken();
+  }
 
   static final List<Widget> _screens = [
     const DashboardScreen(),

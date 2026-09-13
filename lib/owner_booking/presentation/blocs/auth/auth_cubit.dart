@@ -30,6 +30,7 @@ class AuthCubit extends Cubit<AuthState> {
     } else if (!user.emailVerified) {
       emit(AuthEmailUnverified(user.email ?? ''));
     } else {
+      await NotificationService.updateFcmToken();
       await _emitOnboardingStep(user.uid);
     }
   }
@@ -132,6 +133,7 @@ class AuthCubit extends Cubit<AuthState> {
               phone: user.phoneNumber ?? '',
             );
           }
+          await NotificationService.updateFcmToken();
           await _emitOnboardingStep(user.uid);
         }
       } else {
@@ -150,6 +152,7 @@ class AuthCubit extends Cubit<AuthState> {
       await _authRepository.reloadUser();
       final user = _authRepository.currentUser;
       if (user != null && user.emailVerified) {
+        await NotificationService.updateFcmToken();
         await _emitOnboardingStep(user.uid);
       } else {
         emit(AuthEmailUnverified(user?.email ?? ''));

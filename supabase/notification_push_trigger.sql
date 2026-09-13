@@ -1,6 +1,15 @@
--- Trigger: send FCM push notification whenever a row is inserted into notifications
--- Requires: pg_net extension (enabled by default on Supabase)
+-- ==============================================================================
+-- 🛑 TO REMOVE / DISABLE THE AUTOMATIC DATABASE TRIGGER (RUN IN SUPABASE SQL EDITOR):
+-- ==============================================================================
+DROP TRIGGER IF EXISTS on_notification_created ON public.notifications;
+DROP FUNCTION IF EXISTS public.send_notification_push();
 
+-- ==============================================================================
+-- (TEMPORARILY COMMENTED OUT TO PREVENT DUPLICATE NOTIFICATIONS)
+-- If you ever want the database trigger to send push notifications again,
+-- uncomment the blocks below and run in Supabase SQL Editor:
+-- ==============================================================================
+/*
 -- 1. Enable pg_net if not already
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
@@ -13,7 +22,7 @@ AS $$
 DECLARE
   edge_function_url TEXT;
 BEGIN
-  -- Supabase Edge Function URL — replace <project-ref> with your project ref
+  -- Supabase Edge Function URL
   edge_function_url := 'https://qcybnzopffyzmpiaxwbc.supabase.co/functions/v1/send-push-notification';
 
   -- Fire-and-forget HTTP POST to the Edge Function
@@ -36,3 +45,4 @@ CREATE TRIGGER on_notification_created
   AFTER INSERT ON public.notifications
   FOR EACH ROW
   EXECUTE FUNCTION public.send_notification_push();
+*/

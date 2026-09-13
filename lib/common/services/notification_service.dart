@@ -118,6 +118,8 @@ class NotificationService {
     }
   }
 
+  static final Map<String, DateTime> _recentNotificationKeys = {};
+
   static void _handleForegroundMessage(RemoteMessage message) {
     debugPrint('Owner App - Foreground message: ${message.messageId} data: ${message.data}');
 
@@ -127,12 +129,28 @@ class NotificationService {
 
     if (title.isEmpty && body.isEmpty) return;
 
+    // Deduplicate rapid duplicate foreground pushes for the same notification/booking
+    final notifKey = message.data['notification_id']?.toString() ??
+        message.data['booking_id']?.toString() ??
+        '${title}_$body';
+
+    final now = DateTime.now();
+    _recentNotificationKeys.removeWhere((k, t) => now.difference(t).inSeconds > 30);
+    if (_recentNotificationKeys.containsKey(notifKey)) {
+      debugPrint('Owner App - Skipping duplicate foreground notification for key: $notifKey');
+      return;
+    }
+    _recentNotificationKeys[notifKey] = now;
+
     final type = message.data['type']?.toString() ?? '';
     final isNewBooking = type == 'new_booking' || type == 'booking_confirmed' || type == 'booking_request';
 
+    final int localId = notifKey.hashCode & 0x7FFFFFFF;
+
     // Show local notification
     _showLocalNotification(
-      id: message.hashCode,
+      id: localId,
+      tag: notifKey,
       title: title,
       body: body,
       payload: message.data.toString(),
@@ -147,6 +165,7 @@ class NotificationService {
 
   static Future<void> _showLocalNotification({
     required int id,
+    String? tag,
     required String title,
     required String body,
     String? payload,
@@ -155,21 +174,25 @@ class NotificationService {
     // New booking → cricket bat sound on dedicated channel
     // Other notifications → default channel
     final AndroidNotificationDetails androidDetails = isBookingSound
-        ? const AndroidNotificationDetails(
+        ? AndroidNotificationDetails(
             'new_booking_channel',
             'New Booking Alert',
             channelDescription: 'Plays a cricket sound when a new booking arrives',
             importance: Importance.max,
             priority: Priority.high,
-            sound: RawResourceAndroidNotificationSound('booking_confirmed'),
+            sound: const RawResourceAndroidNotificationSound('booking_confirmed'),
             playSound: true,
+            tag: tag,
+            onlyAlertOnce: true,
           )
-        : const AndroidNotificationDetails(
+        : AndroidNotificationDetails(
             'owner_notifications',
             'Owner Notifications',
             channelDescription: 'General notifications for venue owners',
             importance: Importance.high,
             priority: Priority.high,
+            tag: tag,
+            onlyAlertOnce: true,
           );
 
     final DarwinNotificationDetails iosDetails = isBookingSound
@@ -214,15 +237,32 @@ class NotificationService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_fcmTokenKey, token);
 
-      // Check if token already exists to bypass strict unique constraints on upsert
       final platform = 'owner_${kIsWeb ? 'web' : defaultTargetPlatform.name}';
-      await Supabase.instance.client.functions.invoke('update-fcm-token', body: {
+
+      // 1. Remove stale mappings for this device token
+      await Supabase.instance.client
+          .from('fcm_tokens')
+          .delete()
+          .eq('token', token);
+
+      // 2. Remove any previous token for this owner (respects unique user_id constraint)
+      await Supabase.instance.client
+          .from('fcm_tokens')
+          .delete()
+          .eq('user_id', user.uid);
+
+      // 3. Insert fresh token directly into Supabase
+      await Supabase.instance.client.from('fcm_tokens').insert({
         'user_id': user.uid,
         'token': token,
         'platform': platform,
+        'last_used_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toIso8601String(),
       });
+
+      debugPrint("DEBUG: [NotificationService] Owner token updated successfully in Supabase for owner: ${user.uid}");
     } catch (e) {
-      debugPrint("Failed to update token in Supabase: $e");
+      debugPrint("DEBUG: [NotificationService] Failed to update token in Supabase: $e");
     }
   }
 

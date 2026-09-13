@@ -95,7 +95,11 @@ class BookingRepositoryImpl implements BookingRepository {
     }).eq('id', bookingId);
   }
 
+  // TEMPORARILY DISABLED: Commented out to prevent duplicate push notifications.
+  // The backend database trigger handles notification dispatch automatically,
+  // or client invocation is silenced so only 1 notification is received.
   Future<void> _invokePushNotification(String notificationId) async {
+    /*
     try {
       final res = await _supabase.functions.invoke('send-push-notification', body: {
         'notification_id': notificationId,
@@ -104,6 +108,7 @@ class BookingRepositoryImpl implements BookingRepository {
     } catch (e) {
       print('[BookingRepository] Push notification invoke error: $e');
     }
+    */
   }
 
   @override

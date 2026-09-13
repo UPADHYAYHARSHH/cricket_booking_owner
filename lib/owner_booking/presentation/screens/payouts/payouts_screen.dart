@@ -40,11 +40,11 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
       final walletResponse = await _supabase.rpc('get_owner_wallet');
       
       // Fetch Withdrawals history
-      final ownerId = _supabase.auth.currentUser?.uid;
+      final ownerId = _supabase.auth.currentUser?.id;
       final withdrawalsResponse = await _supabase
           .from('withdrawals')
           .select('*')
-          .eq('owner_id', ownerId)
+          .eq('owner_id', ownerId ?? '')
           .order('created_at', ascending: false);
 
       if (mounted) {
@@ -268,7 +268,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
         final amount = w['amount'];
         final status = w['status']?.toString().toUpperCase() ?? 'UNKNOWN';
         final date = DateTime.tryParse(w['created_at'].toString())?.toLocal();
-        final dateStr = date != null ? DateFormat('MMM d, yyyy • h:mm a').format(date) : '';
+        final dateStr = date != null ? DateFormat('MMM d, yyyy â€¢ h:mm a').format(date) : '';
         
         Color statusColor = Colors.orange;
         if (status == 'SUCCESS') statusColor = Colors.green;
