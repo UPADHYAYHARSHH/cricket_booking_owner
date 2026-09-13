@@ -482,60 +482,91 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                             const SizedBox(height: AppSizes.sm),
 
                             // Action buttons: Decline & Approve
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton(
-                                    onPressed: _isActionLoading ? null : _declineRequest,
-                                    style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppColors.error,
-                                      side: const BorderSide(color: AppColors.error),
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                              Row(
+                                children: widget.booking['status'] == 'approved' ? [
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: (_isActionLoading || _remainingSeconds <= 0)
+                                          ? null
+                                          : _notifyUser,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primaryDarkGreen,
+                                        foregroundColor: AppColors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                                        ),
                                       ),
-                                    ),
-                                    child: const AppText(
-                                      text: "Decline",
-                                      size: 12,
-                                      weight: FontWeight.w700,
-                                      color: AppColors.error,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: AppSizes.md),
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: (_isActionLoading || _remainingSeconds <= 0)
-                                        ? null
-                                        : _approveRequest,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: AppColors.primaryDarkGreen,
-                                      foregroundColor: AppColors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 8),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                                      ),
-                                    ),
-                                    child: _isActionLoading
-                                        ? const SizedBox(
-                                            width: 14,
-                                            height: 14,
-                                            child: CircularProgressIndicator(
-                                              color: Colors.white,
-                                              strokeWidth: 2,
+                                      child: _isActionLoading
+                                          ? const SizedBox(
+                                              width: 14,
+                                              height: 14,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const AppText(
+                                              text: "Notify User",
+                                              size: 12,
+                                              weight: FontWeight.w700,
+                                              color: AppColors.white,
                                             ),
-                                          )
-                                        : const AppText(
-                                            text: "Approve",
-                                            size: 12,
-                                            weight: FontWeight.w700,
-                                            color: AppColors.white,
-                                          ),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ] : [
+                                  Expanded(
+                                    child: OutlinedButton(
+                                      onPressed: _isActionLoading ? null : _declineRequest,
+                                      style: OutlinedButton.styleFrom(
+                                        foregroundColor: AppColors.error,
+                                        side: const BorderSide(color: AppColors.error),
+                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                                        ),
+                                      ),
+                                      child: const AppText(
+                                        text: "Decline",
+                                        size: 12,
+                                        weight: FontWeight.w700,
+                                        color: AppColors.error,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSizes.md),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: (_isActionLoading || _remainingSeconds <= 0)
+                                          ? null
+                                          : _approveRequest,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: AppColors.primaryDarkGreen,
+                                        foregroundColor: AppColors.white,
+                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                                        ),
+                                      ),
+                                      child: _isActionLoading
+                                          ? const SizedBox(
+                                              width: 14,
+                                              height: 14,
+                                              child: CircularProgressIndicator(
+                                                color: Colors.white,
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : const AppText(
+                                              text: "Approve",
+                                              size: 12,
+                                              weight: FontWeight.w700,
+                                              color: AppColors.white,
+                                            ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                           ],
                         ),
                       ),
