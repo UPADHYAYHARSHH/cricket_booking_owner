@@ -30,5 +30,6 @@ abstract class BookingRepository {
   Future<void> approveBooking(String bookingId);
 
   /// Deletes or expires a booking (e.g. timeout or declined) and frees slots.
+  Future<void> notifyUserToPay(String bookingId);
   Future<void> deleteOrExpireBooking(String bookingId, {String reason = 'declined_by_owner'});
 }

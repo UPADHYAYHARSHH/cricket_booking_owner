@@ -127,7 +127,7 @@ class DashboardCubit extends Cubit<DashboardState> {
             } catch (_) {}
           }
 
-          if (status == 'pending' || status == 'requested') {
+          if (status == 'pending' || status == 'requested' || status == 'approved') {
             pendingAcceptCount++;
             pendingApprovals.add({
               ...b,

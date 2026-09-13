@@ -237,7 +237,18 @@ class BookingsCubit extends Cubit<BookingsState> {
     }
   }
 
-  Future<void> declineBooking(String bookingId) async {
+  
+  Future<void> notifyUserToPay(String bookingId) async {
+    try {
+      await _bookingRepository.notifyUserToPay(bookingId);
+    } catch (e) {
+      print("Error notifying user: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> declineBooking(
+String bookingId) async {
     final currentState = state;
     if (currentState is BookingsLoaded) {
       final updated = currentState.allBookings.map((b) {

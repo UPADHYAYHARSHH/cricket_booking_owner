@@ -67,9 +67,12 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
 
   void _checkAndStartTimer() {
     _timer?.cancel();
-    final createdAt = _parseUtcToLocal(widget.booking['created_at']);
-    if (createdAt != null) {
-      final deadline = createdAt.add(const Duration(minutes: 45));
+    final isApproved = widget.booking['status']?.toString().toLowerCase() == 'approved';
+    final timeStr = isApproved ? (widget.booking['approved_at'] ?? widget.booking['created_at']) : widget.booking['created_at'];
+    final referenceTime = _parseUtcToLocal(timeStr);
+    
+    if (referenceTime != null) {
+      final deadline = referenceTime.add(const Duration(minutes: 45));
       final diff = deadline.difference(DateTime.now()).inSeconds;
       _remainingSeconds = diff > 0 ? diff : 0;
     } else {
@@ -176,7 +179,39 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
     }
   }
 
+  
+  Future<void> _notifyUser() async {
+    setState(() => _isActionLoading = true);
+    try {
+      final bookingId = widget.booking['id'].toString();
+      await context.read<BookingsCubit>().notifyUserToPay(bookingId);
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.success,
+          style: ToastificationStyle.fillColored,
+          title: const Text("Notification Sent"),
+          description: const Text("User has been reminded to complete payment."),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text("Error notifying user"),
+          description: Text(e.toString()),
+          autoCloseDuration: const Duration(seconds: 3),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isActionLoading = false);
+    }
+  }
+
   Future<void> _declineRequest() async {
+
     setState(() => _isActionLoading = true);
     try {
       final bookingId = widget.booking['id'].toString();
@@ -358,7 +393,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                       Icon(Icons.hourglass_top_rounded, size: 12, color: Color(0xFFE65100)),
                                       SizedBox(width: 4),
                                       AppText(
-                                        text: "Requested",
+                                        text: widget.booking["status"] == "approved" ? "Awaiting Payment" : "Requested",
                                         size: 11,
                                         weight: FontWeight.w700,
                                         color: Color(0xFFE65100),
