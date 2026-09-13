@@ -180,23 +180,8 @@ class BookingRepositoryImpl implements BookingRepository {
 
 
 
-    try {
-      final res = await _supabase.rpc('approve_booking', params: {
-        'p_booking_id': bookingId,
-      });
-      if (res != null) {
-        if (res is Map) {
-          bookingData = Map<String, dynamic>.from(res);
-        } else if (res is String) {
-          try {
-            final decoded = jsonDecode(res);
-            if (decoded is Map) bookingData = Map<String, dynamic>.from(decoded);
-          } catch (_) {}
-        }
-      }
-    } catch (e) {
-      print('[approveBooking] RPC failed, falling back to direct update: $e');
-    }
+    // Bypass RPC because it incorrectly sets status to 'confirmed' instead of 'approved'
+    // Proceed directly to the fallback direct update
 
     // Direct update fallback if RPC didn't return or failed
     if (bookingData == null) {
