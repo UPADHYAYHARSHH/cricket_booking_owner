@@ -261,6 +261,10 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
+    final isApproved = booking['status']?.toString().toLowerCase() == 'approved';
+    final accentColor = isApproved ? AppColors.primaryDarkGreen : accentColor;
+    final lightAccentColor = isApproved ? AppColors.primaryDarkGreen.withOpacity(0.4) : lightAccentColor;
+
     final playerName = booking['player_name'] ?? 'Customer';
     final groundName = booking['ground_name'] ?? 'Court';
     final rawPeriod = (booking['period'] ?? 'Time').toString();
@@ -314,7 +318,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppSizes.radiusLg),
                 border: Border.all(
-                  color: const Color(0xFFFFB74D),
+                  color: lightAccentColor,
                   width: 1.5,
                 ),
               ),
@@ -324,7 +328,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                     // Orange accent bar on the left
                     Container(
                       width: 5,
-                      color: const Color(0xFFE65100),
+                      color: accentColor,
                     ),
                     Expanded(
                       child: Padding(
@@ -350,7 +354,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                           child: HugeIcon(
                                             icon: sportIcon(sportName),
                                             size: 16,
-                                            color: const Color(0xFFE65100),
+                                            color: accentColor,
                                           ),
                                         ),
                                       ),
@@ -385,18 +389,18 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFFFF3E0),
                                     borderRadius: BorderRadius.circular(AppSizes.radiusFull),
-                                    border: Border.all(color: const Color(0xFFFFB74D)),
+                                    border: Border.all(color: lightAccentColor),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.hourglass_top_rounded, size: 12, color: Color(0xFFE65100)),
+                                      Icon(Icons.hourglass_top_rounded, size: 12, color: accentColor),
                                       SizedBox(width: 4),
                                       AppText(
                                         text: widget.booking["status"] == "approved" ? "Awaiting Payment" : "Requested",
                                         size: 11,
                                         weight: FontWeight.w700,
-                                        color: Color(0xFFE65100),
+                                        color: accentColor,
                                       ),
                                     ],
                                   ),
@@ -454,11 +458,11 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFF3E0),
                                 borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                                border: Border.all(color: const Color(0xFFFFCC80)),
+                                border: Border.all(color: lightAccentColor),
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.timer_outlined, size: 15, color: Color(0xFFE65100)),
+                                  const Icon(Icons.timer_outlined, size: 15, color: accentColor),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: AppText(
@@ -467,14 +471,14 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                           : "Request Expired",
                                       size: 12,
                                       weight: FontWeight.w700,
-                                      color: const Color(0xFFE65100),
+                                      color: accentColor,
                                     ),
                                   ),
                                   const AppText(
                                     text: "Max 45m",
                                     size: 11,
                                     weight: FontWeight.w600,
-                                    color: Color(0xFFE65100),
+                                    color: accentColor,
                                   ),
                                 ],
                               ),

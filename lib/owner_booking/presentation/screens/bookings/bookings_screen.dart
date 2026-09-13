@@ -894,8 +894,8 @@ class _BookingCardState extends State<_BookingCard> {
                                     AppSizes.radiusSm,
                                   ),
                                 ),
-                                child: Icon(
-                                  sportIcon(sportName),
+                                child: HugeIcon(
+                                  icon: sportIcon(sportName),
                                   color: AppColors.primaryDarkGreen,
                                   size: 20,
                                 ),
