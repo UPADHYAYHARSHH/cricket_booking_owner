@@ -349,7 +349,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.primaryDarkGreen.withOpacity(0.1),
+                          color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Icon(Icons.sports_cricket_rounded, color: AppColors.primaryDarkGreen, size: 24),
@@ -361,7 +361,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                           children: [
                             AppText(text: playerName, weight: FontWeight.w700, size: 14),
                             const SizedBox(height: 2),
-                            AppText(text: ' • ', size: 12, color: Colors.grey.shade600),
+                            AppText(text: '$sportName • $dateStr', size: 12, color: Colors.grey.shade600),
                             AppText(text: rawPeriod.split('|').first, size: 12, color: Colors.grey.shade600),
                           ],
                         ),
@@ -369,7 +369,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          AppText(text: '+ ₹', weight: FontWeight.bold, size: 16, color: Colors.green),
+                          AppText(text: '+ ₹$amount', weight: FontWeight.bold, size: 16, color: Colors.green),
                           const SizedBox(height: 4),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -391,6 +391,5 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
         return const SizedBox.shrink();
       },
     );
-  }
   }
 }
