@@ -40,7 +40,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
       final walletResponse = await _supabase.rpc('get_owner_wallet');
       
       // Fetch Withdrawals history
-      final ownerId = _supabase.auth.currentUser?.uid;
+      final ownerId = _supabase.auth.currentUser?.id;
       final withdrawalsResponse = await _supabase
           .from('withdrawals')
           .select('*')
