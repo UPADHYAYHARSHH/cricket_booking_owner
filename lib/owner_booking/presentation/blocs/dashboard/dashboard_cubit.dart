@@ -66,8 +66,8 @@ class DashboardCubit extends Cubit<DashboardState> {
           ownerName: ownerName,
           venueName: venueName,
           activeCourts: 0,
-          todayRevenue: 'â‚¹0',
-          revenueChangeLabel: 'â€”',
+          todayRevenue: '₹0',
+          revenueChangeLabel: '—',
           todayBookingsCount: 0,
           pendingAcceptCount: 0,
           occupancyPercentage: '0%',
@@ -115,7 +115,7 @@ class DashboardCubit extends Cubit<DashboardState> {
                 if (isRevenueCounted) {
                   todayRevenue += amount;
                 }
-                if (status != 'pending' && status != 'requested') { todaySlots.add({
+                if (status == 'confirmed' || status == 'completed' || status == 'paid') { todaySlots.add({
                   ...b,
                   'ground_name': groundMap[b['ground_id']] ?? 'Unknown Ground',
                 }); } } else if (bDate.year == yesterday.year &&
@@ -189,7 +189,7 @@ class DashboardCubit extends Cubit<DashboardState> {
           ownerName: ownerName,
           venueName: venueName,
           activeCourts: courts,
-          todayRevenue: '?${todayRevenue.toInt()}',
+          todayRevenue: '₹${todayRevenue.toInt()}',
           revenueChangeLabel: revenueChangeLabel,
           todayBookingsCount: todayBookingsCount,
           pendingAcceptCount: pendingAcceptCount,
