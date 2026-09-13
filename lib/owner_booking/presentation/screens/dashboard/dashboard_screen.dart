@@ -234,7 +234,50 @@ class _DashboardScreenState extends State<DashboardScreen>
                       )),
                       const SizedBox(height: 32),
 
-                      // Today's Slots Header
+                                              // Pending Requests Header
+                        if (state.pendingApprovals.isNotEmpty) ...[
+                          _buildStaggeredChild(3, Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const AppText(
+                                  text: "Pending Requests",
+                                  color: AppColors.textPrimaryLight,
+                                  size: 16,
+                                  weight: FontWeight.w700,
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.statusPendingBg,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: AppText(
+                                    text: state.pendingApprovals.length.toString(),
+                                    color: AppColors.statusPending,
+                                    size: 12,
+                                    weight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )),
+                          const SizedBox(height: 16),
+                          ...List.generate(state.pendingApprovals.length, (index) {
+                            return _buildStaggeredChild(
+                              4 + index,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+                                child: TodayBookingCard(
+                                  booking: state.pendingApprovals[index] as Map<String, dynamic>,
+                                ),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: 24),
+                        ],
+                        // Today's Slots Header
                       _buildStaggeredChild(3, Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Row(
@@ -579,3 +622,4 @@ class _DashboardSkeleton extends StatelessWidget {
     );
   }
 }
+

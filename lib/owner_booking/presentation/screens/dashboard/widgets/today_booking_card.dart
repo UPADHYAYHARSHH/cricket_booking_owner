@@ -73,6 +73,18 @@ class _TodayBookingCardState extends State<TodayBookingCard>
     final period = _simplifyPeriod(rawPeriod.split('|').first);
     final sportName = _formatLabel((widget.booking['sport_name'] ?? 'Sport').toString());
     final amount = widget.booking['amount'] ?? widget.booking['total_amount'] ?? 0;
+    
+    final slotTime = widget.booking['slot_time']?.toString() ?? widget.booking['created_at']?.toString() ?? '';
+    String dateStr = '';
+    if (slotTime.isNotEmpty) {
+      try {
+        final d = DateTime.parse(slotTime).toLocal();
+        final now = DateTime.now();
+        if (d.year != now.year || d.month != now.month || d.day != now.day) {
+           dateStr = "${d.day}/${d.month} ";
+        }
+      } catch (_) {}
+    }
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
@@ -136,7 +148,7 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                                 overflow: TextOverflow.ellipsis,
                               ),
                               AppText(
-                                text: "$groundName · $period",
+                                text: "$groundName • $dateStr$period",
                                 size: 12,
                                 color: AppColors.textSecondaryLight,
                               ),
