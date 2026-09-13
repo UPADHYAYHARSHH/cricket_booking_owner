@@ -163,6 +163,19 @@ class BookingRepositoryImpl implements BookingRepository {
     Map<String, dynamic>? bookingData;
 
     try {
+      print('[deleteOrExpireBooking] Fetching booking details...');
+      final fetched = await _supabase.from('bookings').select('*, grounds(name, owner_id)').eq('id', bookingId).maybeSingle();
+      if (fetched != null) {
+        bookingData = Map<String, dynamic>.from(fetched);
+        print('[deleteOrExpireBooking] Fetched bookingData: $bookingData');
+      }
+    } catch (e) {
+      print('[deleteOrExpireBooking] Error fetching booking: $e');
+    }
+
+
+
+    try {
       final res = await _supabase.rpc('approve_booking', params: {
         'p_booking_id': bookingId,
       });
@@ -285,95 +298,83 @@ class BookingRepositoryImpl implements BookingRepository {
     Map<String, dynamic>? bookingData;
 
     try {
+      print('[deleteOrExpireBooking] Fetching booking details...');
+      final fetched = await _supabase.from('bookings').select('*, grounds(name, owner_id)').eq('id', bookingId).maybeSingle();
+      if (fetched != null) {
+        bookingData = Map<String, dynamic>.from(fetched);
+        print('[deleteOrExpireBooking] Fetched bookingData: $bookingData');
+      }
+    } catch (e) {
+      print('[deleteOrExpireBooking] Error fetching booking: $e');
+    }
+
+    try {
       final res = await _supabase.rpc('delete_or_expire_booking', params: {
         'p_booking_id': bookingId,
         'p_reason': reason,
       });
-      if (res != null) {
-        if (res is Map) {
-          bookingData = Map<String, dynamic>.from(res);
-        } else if (res is String) {
-          try {
-            final decoded = jsonDecode(res);
-            if (decoded is Map) bookingData = Map<String, dynamic>.from(decoded);
-          } catch (_) {}
-        }
-      }
     } catch (e) {
       print('[deleteOrExpireBooking] RPC failed, falling back to direct update: $e');
-    }
-
-    // Direct update: update status to 'declined' / 'expired' / 'cancelled'
-    try {
-      final updated = await _supabase
-          .from('bookings')
-          .update({
-            'status': newStatus,
-            'notes': reason,
-          })
-          .eq('id', bookingId)
-          .select('*, grounds(name, owner_id)')
-          .maybeSingle();
-      if (updated != null) {
-        bookingData = Map<String, dynamic>.from(updated);
-      }
-    } catch (e) {
-      print('[deleteOrExpireBooking] Direct update error: $e');
-    }
-
-    // If bookingData not yet fetched, fetch it to release slots and notify user
-    if (bookingData == null) {
       try {
-        final fetched = await _supabase
-            .from('bookings')
-            .select('*, grounds(name, owner_id)')
-            .eq('id', bookingId)
-            .maybeSingle();
-        if (fetched != null) {
-          bookingData = Map<String, dynamic>.from(fetched);
-        }
-      } catch (_) {}
+        await _supabase.from('bookings').update({
+          'status': newStatus,
+          'notes': reason,
+        }).eq('id', bookingId);
+      } catch (e) {
+        print('[deleteOrExpireBooking] Direct update error: $e');
+      }
     }
 
     if (bookingData != null) {
       final groundId = bookingData['ground_id'];
       final slotTimeStr = bookingData['slot_time']?.toString();
       final periodStr = bookingData['period']?.toString();
+      print('[deleteOrExpireBooking] Data to free slots -> groundId: $groundId, slotTimeStr: $slotTimeStr, periodStr: $periodStr');
 
       // Free slots
       if (slotTimeStr != null && groundId != null) {
-        final slotDate = DateTime.tryParse(slotTimeStr);
+        final slotDate = DateTime.tryParse(slotTimeStr)?.toLocal();
+        print('[deleteOrExpireBooking] Parsed slotDate (local): $slotDate');
         if (slotDate != null) {
           final dateStr = "${slotDate.year}-${slotDate.month.toString().padLeft(2, '0')}-${slotDate.day.toString().padLeft(2, '0')}";
-
-          // Free slots in slots table via direct update
-          try {
-            await _supabase
-                .from('slots')
-                .update({'status': 'available'})
-                .match({'ground_id': groundId, 'date': dateStr})
-                .inFilter('status', ['held', 'requested', 'booked']);
-          } catch (_) {}
+          print('[deleteOrExpireBooking] Formatted dateStr: $dateStr');
 
           // Free specific slots if period has slot start times (e.g. Day|6:00 AM,7:00 AM)
           if (periodStr != null && periodStr.contains('|')) {
             final parts = periodStr.split('|');
             if (parts.length > 1) {
               final startTimes = parts[1].split(',').map((s) => s.trim()).where((s) => s.isNotEmpty);
-              for (final startTime in startTimes) {
+              final amount = double.tryParse(bookingData['amount']?.toString() ?? '0') ?? 0;
+              final startTimesList = startTimes.toList();
+              final slotPrice = startTimesList.isNotEmpty ? (amount / startTimesList.length).toInt() : 0;
+              print('[deleteOrExpireBooking] startTimesList: $startTimesList, calculated slotPrice: $slotPrice');
+
+              for (final startTime in startTimesList) {
                 try {
-                  await _supabase.rpc('upsert_slot', params: {
+                  print('[deleteOrExpireBooking] Calling upsert_slot for $startTime...');
+                  final res = await _supabase.rpc('upsert_slot', params: {
                     'p_ground_id': groundId,
                     'p_date': dateStr,
                     'p_start_time': startTime,
                     'p_status': 'available',
-                    'p_price': 0,
+                    'p_price': slotPrice,
                   });
-                } catch (_) {}
+                  print('[deleteOrExpireBooking] upsert_slot success for $startTime. Res: $res');
+                } catch (e) {
+                  print('[deleteOrExpireBooking] Error in upsert_slot for $startTime: $e');
+                }
               }
+            } else {
+              print('[deleteOrExpireBooking] periodStr parts length <= 1');
             }
+          } else {
+            print('[deleteOrExpireBooking] periodStr does not contain |');
           }
+        } else {
+          print('[deleteOrExpireBooking] slotDate parsing failed for $slotTimeStr');
         }
+      } else {
+        print('[deleteOrExpireBooking] Missing slotTimeStr or groundId');
       }
 
       // Notify user

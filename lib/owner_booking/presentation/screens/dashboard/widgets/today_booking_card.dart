@@ -70,7 +70,14 @@ class _TodayBookingCardState extends State<TodayBookingCard>
     final playerName = widget.booking['player_name'] ?? 'Customer';
     final groundName = widget.booking['ground_name'] ?? 'Court';
     final rawPeriod = (widget.booking['period'] ?? 'Time').toString();
-    final period = _simplifyPeriod(rawPeriod.split('|').first);
+    String period = rawPeriod;
+    if (rawPeriod.contains('|')) {
+      final parts = rawPeriod.split('|');
+      final times = parts[1].replaceAll(',', ', ');
+      period = "${parts[0]} - $times";
+    } else {
+      period = _simplifyPeriod(rawPeriod);
+    }
     final sportName = _formatLabel((widget.booking['sport_name'] ?? 'Sport').toString());
     final amount = widget.booking['amount'] ?? widget.booking['total_amount'] ?? 0;
 

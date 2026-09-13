@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -48,7 +48,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     if (s.contains(' ') && !s.contains('T')) {
       s = s.replaceFirst(' ', 'T');
     }
-    if (!s.endsWith('Z') && !s.contains('+') && !RegExp(r'-\d{2}:?\d{2}$').hasMatch(s)) {
+    if (!s.endsWith('Z') &&
+        !s.contains('+') &&
+        !RegExp(r'-\d{2}:?\d{2}$').hasMatch(s)) {
       s = '${s}Z';
     }
     try {
@@ -100,13 +102,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final id = _booking['id']?.toString() ?? '';
     if (id.isEmpty) return;
     try {
-      await getIt<BookingRepository>().deleteOrExpireBooking(id, reason: 'expired_owner_timeout');
+      await getIt<BookingRepository>().deleteOrExpireBooking(
+        id,
+        reason: 'expired_owner_timeout',
+      );
       if (mounted) {
         toastification.show(
           context: context,
           type: ToastificationType.warning,
           title: const Text("Booking Request Expired"),
-          description: const Text("45-minute window for owner approval elapsed."),
+          description: const Text(
+            "45-minute window for owner approval elapsed.",
+          ),
           autoCloseDuration: const Duration(seconds: 3),
         );
         Navigator.pop(context);
@@ -125,7 +132,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           type: ToastificationType.success,
           style: ToastificationStyle.fillColored,
           title: const Text("Booking Request Approved! ðŸŽ‰"),
-          description: const Text("User now has 45 minutes to complete payment."),
+          description: const Text(
+            "User now has 45 minutes to complete payment.",
+          ),
           autoCloseDuration: const Duration(seconds: 4),
         );
         setState(() {
@@ -170,10 +179,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 children: [
                   const Text(
                     "Decline Booking",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -210,7 +216,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         child: ElevatedButton(
                           onPressed: () => Navigator.pop(context, true),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.errorRed,
+                            backgroundColor: AppColors.error,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
@@ -231,13 +237,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     );
 
     if (shouldDecline != true) return;
-    
-    final finalReason = reasonController.text.trim().isNotEmpty ? reasonController.text.trim() : 'declined_by_owner';
+
+    final finalReason = reasonController.text.trim().isNotEmpty
+        ? reasonController.text.trim()
+        : 'declined_by_owner';
 
     setState(() => _isActionLoading = true);
     final id = _booking['id']?.toString() ?? '';
     try {
-      await getIt<BookingRepository>().deleteOrExpireBooking(id, reason: finalReason);
+      await getIt<BookingRepository>().deleteOrExpireBooking(
+        id,
+        reason: finalReason,
+      );
       if (mounted) {
         toastification.show(
           context: context,
@@ -278,11 +289,19 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     if (slug.isEmpty) return 'Box Cricket';
     return slug
         .split('_')
-        .map((w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '')
+        .map(
+          (w) => w.isNotEmpty ? '${w[0].toUpperCase()}${w.substring(1)}' : '',
+        )
         .join(' ');
   }
 
-  void _showUnblockDialog(BuildContext context, String dateStr, String timeStr, String? blockReason, String bookingId) {
+  void _showUnblockDialog(
+    BuildContext context,
+    String dateStr,
+    String timeStr,
+    String? blockReason,
+    String bookingId,
+  ) {
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -475,15 +494,17 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                               ),
                               onPressed: () async {
                                 Navigator.of(ctx).pop();
-                                await context
-                                    .read<SlotCubit>()
-                                    .unbookOwnerSlot(bookingId);
+                                await context.read<SlotCubit>().unbookOwnerSlot(
+                                  bookingId,
+                                );
                                 if (context.mounted) {
                                   toastification.show(
                                     context: context,
                                     title: const Text("Slot Unblocked"),
                                     type: ToastificationType.success,
-                                    autoCloseDuration: const Duration(seconds: 3),
+                                    autoCloseDuration: const Duration(
+                                      seconds: 3,
+                                    ),
                                   );
                                   Navigator.pop(context);
                                 }
@@ -524,27 +545,93 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final playerName = booking['player_name']?.toString() ?? 'Player';
     final groundName = booking['ground_name']?.toString() ?? 'Court';
 
-    final rawSport = booking['sport_name']?.toString() ?? booking['sport']?.toString() ?? '';
+    final rawSport =
+        booking['sport_name']?.toString() ?? booking['sport']?.toString() ?? '';
     final sportName = _formatSportSlug(rawSport);
 
-    // Slot date
-    final slotTimeStr = booking['slot_time']?.toString() ?? '';
-    DateTime? slotTime;
-    if (slotTimeStr.isNotEmpty) slotTime = DateTime.tryParse(slotTimeStr)?.toLocal();
-    final dateFormatted =
-        slotTime != null ? DateFormat('EEEE, MMM d, yyyy').format(slotTime) : 'N/A';
+    // ---------- robust slot_time + period parsing ----------
+    DateTime? _parseSlot(dynamic v) {
+      if (v == null) return null;
+      final s = v.toString().trim();
+      if (s.isEmpty) return null;
+      final candidates = <String>[
+        s,
+        if (!s.endsWith('Z') &&
+            !s.contains('+') &&
+            !RegExp(r'-\d{2}:?\d{2}$').hasMatch(s))
+          '${s}Z',
+        s.replaceFirst(' ', 'T'),
+      ];
+      for (final c in candidates) {
+        final d = DateTime.tryParse(c);
+        if (d != null) return d.toLocal();
+      }
+      return null;
+    }
 
-    // Use period from DB; fall back to computing from slot_time
+    String _mergeSlotRange(String csvStartTimes) {
+      // csv like "6:00 AM,7:00 AM,8:00 AM"  →  "6:00 AM – 9:00 AM"
+      final slots = csvStartTimes
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+      if (slots.isEmpty) return '';
+      if (slots.length == 1) return slots.first;
+
+      DateTime? first;
+      DateTime? lastEnd;
+      final refYear = 2000;
+      for (final raw in slots) {
+        final baseParsed = DateFormat('h:mm a').parseLoose(raw);
+        final t = DateTime(refYear, 1, 1, baseParsed.hour, baseParsed.minute);
+        final end = t.add(const Duration(hours: 1));
+        first ??= t;
+        lastEnd ??= end;
+        // Only merge if contiguous / within 15 min of last end
+        final gap = t.difference(lastEnd!).inMinutes;
+        if (gap >= -1 && gap <= 15) {
+          lastEnd = end;
+        } else {
+          // Non-contiguous — bail out to comma list
+          return '${slots.first} – ${slots.last}';
+        }
+      }
+      return '${DateFormat('h:mm a').format(first!)} – ${DateFormat('h:mm a').format(lastEnd!)}';
+    }
+
+    final slotTime = _parseSlot(booking['slot_time']);
+    final dateFormatted = slotTime != null
+        ? DateFormat('EEEE, MMM d, yyyy').format(slotTime)
+        : 'N/A';
+
+    // Period = "PeriodLabel|slotStart1,slotStart2,..."
     final periodFromDb = booking['period']?.toString() ?? '';
+    final pipeIdx = periodFromDb.indexOf('|');
+    final periodLabel = pipeIdx >= 0
+        ? periodFromDb.substring(0, pipeIdx).trim()
+        : periodFromDb.trim();
+    final slotCsv = pipeIdx >= 0 && pipeIdx < periodFromDb.length - 1
+        ? periodFromDb.substring(pipeIdx + 1).trim()
+        : '';
+
     final String timeFormatted;
-    if (periodFromDb.isNotEmpty) {
-      timeFormatted = periodFromDb.split('|').first;
+    final mergedSlots = slotCsv.isNotEmpty ? _mergeSlotRange(slotCsv) : '';
+    if (mergedSlots.isNotEmpty && periodLabel.isNotEmpty) {
+      timeFormatted = '$periodLabel · $mergedSlots';
+    } else if (mergedSlots.isNotEmpty) {
+      timeFormatted = mergedSlots;
+    } else if (periodLabel.isNotEmpty) {
+      timeFormatted = periodLabel;
     } else if (slotTime != null) {
       timeFormatted =
-          "${DateFormat('h:mm a').format(slotTime)} â€“ ${DateFormat('h:mm a').format(slotTime.add(const Duration(hours: 1)))}";
+          "${DateFormat('h:mm a').format(slotTime)} – ${DateFormat('h:mm a').format(slotTime.add(const Duration(hours: 1)))}";
     } else {
       timeFormatted = 'N/A';
     }
+    debugPrint(
+      '[BOOKING_DETAILS] period=$periodFromDb periodLabel=$periodLabel slotsCsv=$slotCsv -> time=$timeFormatted slotTime=$slotTime',
+    );
 
     // Booking ID
     final rawDisplayId = booking['display_id'];
@@ -553,24 +640,35 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         : '';
     if (displayId.isEmpty) {
       final fullId = booking['id']?.toString() ?? '';
-      displayId = fullId.length > 5 ? fullId.substring(0, 5).toUpperCase() : fullId.toUpperCase();
+      displayId = fullId.length > 5
+          ? fullId.substring(0, 5).toUpperCase()
+          : fullId.toUpperCase();
     }
 
-    // Amount & Fee Snapshot â€” stored in rupees per booking
-    final platformFee = (booking['platform_fee'] as num?)?.toDouble() ?? AppConfigService.instance.platformFee;
-    final commissionRate = (booking['commission_rate'] as num?)?.toDouble() ?? AppConfigService.instance.commissionRate;
-    final commissionIsPercentage = booking['commission_is_percentage'] != null 
-        ? (booking['commission_is_percentage'] == true) 
+    // Amount & Fee Snapshot — stored in rupees per booking
+    final platformFee =
+        (booking['platform_fee'] as num?)?.toDouble() ??
+        AppConfigService.instance.platformFee;
+    final commissionRate =
+        (booking['commission_rate'] as num?)?.toDouble() ??
+        AppConfigService.instance.commissionRate;
+    final commissionIsPercentage = booking['commission_is_percentage'] != null
+        ? (booking['commission_is_percentage'] == true)
         : AppConfigService.instance.commissionIsPercentage;
 
-    final rawAmount = (booking['amount'] as num?) ?? (booking['total_amount'] as num?) ?? 0;
+    final rawAmount =
+        (booking['amount'] as num?) ?? (booking['total_amount'] as num?) ?? 0;
     final totalAmount = rawAmount.toDouble();
-    final baseAmount = (booking['base_amount'] as num?)?.toDouble() ?? (totalAmount - platformFee).clamp(0.0, totalAmount);
+    final baseAmount =
+        (booking['base_amount'] as num?)?.toDouble() ??
+        (totalAmount - platformFee).clamp(0.0, totalAmount);
 
     final commissionFee = commissionIsPercentage
         ? baseAmount * commissionRate / 100
         : commissionRate;
-    final groundRate = (booking['owner_earnings'] as num?)?.toDouble() ?? (baseAmount - commissionFee).clamp(0.0, baseAmount);
+    final groundRate =
+        (booking['owner_earnings'] as num?)?.toDouble() ??
+        (baseAmount - commissionFee).clamp(0.0, baseAmount);
 
     // Player info
     final playerImage = booking['player_image']?.toString() ?? '';
@@ -578,7 +676,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     String memberSinceFormatted = '';
     if (memberSinceStr.isNotEmpty) {
       final msDate = DateTime.tryParse(memberSinceStr)?.toLocal();
-      if (msDate != null) memberSinceFormatted = DateFormat('MMM yyyy').format(msDate);
+      if (msDate != null)
+        memberSinceFormatted = DateFormat('MMM yyyy').format(msDate);
     }
     // Check-in
     final isCheckedIn = booking['checked_in'] == true;
@@ -586,7 +685,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     String? checkedInFormatted;
     if (checkedInAtStr.isNotEmpty) {
       final ciDate = DateTime.tryParse(checkedInAtStr)?.toLocal();
-      if (ciDate != null) checkedInFormatted = DateFormat('d MMM yyyy, h:mm a').format(ciDate);
+      if (ciDate != null)
+        checkedInFormatted = DateFormat('d MMM yyyy, h:mm a').format(ciDate);
     }
 
     // Booked on date
@@ -594,7 +694,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     String bookedOnFormatted = '';
     if (createdAtStr.isNotEmpty) {
       final caDate = DateTime.tryParse(createdAtStr)?.toLocal();
-      if (caDate != null) bookedOnFormatted = DateFormat('d MMM yyyy, h:mm a').format(caDate);
+      if (caDate != null)
+        bookedOnFormatted = DateFormat('d MMM yyyy, h:mm a').format(caDate);
     }
 
     // Payment reference
@@ -612,10 +713,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                AppColors.primaryDarkGreen,
-                Color(0xFF0FA968),
-              ],
+              colors: [AppColors.primaryDarkGreen, Color(0xFF0FA968)],
             ),
           ),
         ),
@@ -654,10 +752,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    AppColors.primaryDarkGreen,
-                    Color(0xFF0FA968),
-                  ],
+                  colors: [AppColors.primaryDarkGreen, Color(0xFF0FA968)],
                 ),
               ),
               padding: const EdgeInsets.fromLTRB(
@@ -695,15 +790,15 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                   Container(
                     margin: const EdgeInsets.only(top: 2),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 6),
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
                       color: _statusBgColor(status),
-                      borderRadius:
-                          BorderRadius.circular(AppSizes.radiusFull),
+                      borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                       boxShadow: [
                         BoxShadow(
-                          color: _statusColor(status)
-                              .withValues(alpha: 0.25),
+                          color: _statusColor(status).withValues(alpha: 0.25),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -775,14 +870,19 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  AppSizes.lg, AppSizes.lg, AppSizes.lg, AppSizes.xxxxl),
+                AppSizes.lg,
+                AppSizes.lg,
+                AppSizes.lg,
+                AppSizes.xxxxl,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Check-in banner
                   _CheckInBanner(
-                      isCheckedIn: isCheckedIn,
-                      checkedInAt: checkedInFormatted),
+                    isCheckedIn: isCheckedIn,
+                    checkedInAt: checkedInFormatted,
+                  ),
                   const SizedBox(height: AppSizes.lg),
 
                   // Player card or Owner Block Reason
@@ -790,7 +890,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     _SectionCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            vertical: AppSizes.md),
+                          vertical: AppSizes.md,
+                        ),
                         child: Row(
                           children: [
                             Container(
@@ -804,14 +905,16 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                   width: 2,
                                 ),
                               ),
-                              child: const Icon(Icons.lock,
-                                  color: AppColors.white, size: 24),
+                              child: const Icon(
+                                Icons.lock,
+                                color: AppColors.white,
+                                size: 24,
+                              ),
                             ),
                             const SizedBox(width: AppSizes.lg),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   const AppText(
                                     text: "Booked by Owner",
@@ -820,10 +923,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                   ),
                                   const SizedBox(height: AppSizes.xxs),
                                   AppText(
-                                    text: "Reason: ${booking['notes']?.toString().isNotEmpty == true ? booking['notes'] : 'No reason provided'}",
+                                    text:
+                                        "Reason: ${booking['notes']?.toString().isNotEmpty == true ? booking['notes'] : 'No reason provided'}",
                                     size: 13,
-                                    color:
-                                        AppColors.textSecondaryLight,
+                                    color: AppColors.textSecondaryLight,
                                   ),
                                 ],
                               ),
@@ -836,7 +939,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                     _SectionCard(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
-                            vertical: AppSizes.md),
+                          vertical: AppSizes.md,
+                        ),
                         child: Row(
                           children: [
                             // Avatar with ring border
@@ -852,16 +956,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                               ),
                               child: CircleAvatar(
                                 radius: 25,
-                                backgroundColor:
-                                    AppColors.primaryDarkGreen,
+                                backgroundColor: AppColors.primaryDarkGreen,
                                 backgroundImage: playerImage.isNotEmpty
                                     ? NetworkImage(playerImage)
                                     : null,
                                 child: playerImage.isEmpty
                                     ? AppText(
                                         text: playerName.isNotEmpty
-                                            ? playerName[0]
-                                                .toUpperCase()
+                                            ? playerName[0].toUpperCase()
                                             : 'P',
                                         color: AppColors.white,
                                         size: 20,
@@ -873,23 +975,20 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                             const SizedBox(width: AppSizes.lg),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment:
-                                    CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   AppText(
                                     text: playerName,
                                     size: 15,
                                     weight: FontWeight.bold,
                                   ),
-                                  if (memberSinceFormatted
-                                      .isNotEmpty) ...[
+                                  if (memberSinceFormatted.isNotEmpty) ...[
                                     const SizedBox(height: AppSizes.xxs),
                                     AppText(
                                       text:
                                           "Member since $memberSinceFormatted",
                                       size: 12,
-                                      color:
-                                          AppColors.textSecondaryLight,
+                                      color: AppColors.textSecondaryLight,
                                     ),
                                   ],
                                 ],
@@ -916,9 +1015,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         _DetailRow(
                           label: "Sport",
                           value: sportName,
-                          icon: sportIcon(rawSport.isNotEmpty
-                              ? rawSport
-                              : sportName),
+                          icon: sportIcon(
+                            rawSport.isNotEmpty ? rawSport : sportName,
+                          ),
                         ),
                         const _RowDivider(),
                         _DetailRow(
@@ -952,12 +1051,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         children: [
                           _PaymentRow(
                             label: "Customer Paid",
-                            value: "â‚¹${totalAmount.toStringAsFixed(0)}",
+                            value: "₹${totalAmount.toStringAsFixed(0)}",
                           ),
                           const _RowDivider(),
                           _PaymentRow(
                             label: "Platform Fee",
-                            value: "â€“ â‚¹${platformFee.toStringAsFixed(0)}",
+                            value: "– ₹${platformFee.toStringAsFixed(0)}",
                             valueColor: AppColors.error,
                           ),
                           if (commissionRate > 0) ...[
@@ -966,8 +1065,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                               label: commissionIsPercentage
                                   ? "Commission (${commissionRate.toStringAsFixed(commissionRate % 1 == 0 ? 0 : 1)}%)"
                                   : "Commission Fee",
-                              value:
-                                  "â€“ â‚¹${commissionFee.toStringAsFixed(0)}",
+                              value: "– ₹${commissionFee.toStringAsFixed(0)}",
                               valueColor: AppColors.error,
                             ),
                           ],
@@ -978,33 +1076,34 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                             valueColor: AppColors.textSecondaryLight,
                           ),
                           const _RowDivider(),
-                          // You earn â€” highlighted section
+                          // You earn — highlighted section
                           Container(
                             margin: const EdgeInsets.only(
-                                top: AppSizes.sm, bottom: AppSizes.xxs),
+                              top: AppSizes.sm,
+                              bottom: AppSizes.xxs,
+                            ),
                             padding: const EdgeInsets.symmetric(
-                                horizontal: AppSizes.lg,
-                                vertical: AppSizes.md),
+                              horizontal: AppSizes.lg,
+                              vertical: AppSizes.md,
+                            ),
                             decoration: BoxDecoration(
                               gradient: const LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                                colors: [
-                                  Color(0xFFE8F5E9),
-                                  Color(0xFFF1F8E9),
-                                ],
+                                colors: [Color(0xFFE8F5E9), Color(0xFFF1F8E9)],
                               ),
-                              borderRadius:
-                                  BorderRadius.circular(AppSizes.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusMd,
+                              ),
                               border: Border.all(
-                                color: AppColors.primaryDarkGreen
-                                    .withValues(alpha: 0.15),
+                                color: AppColors.primaryDarkGreen.withValues(
+                                  alpha: 0.15,
+                                ),
                                 width: 1,
                               ),
                             ),
                             child: Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Row(
                                   children: [
@@ -1013,20 +1112,20 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                       decoration: BoxDecoration(
                                         color: AppColors.primaryDarkGreen
                                             .withValues(alpha: 0.12),
-                                        borderRadius:
-                                            BorderRadius.circular(
-                                                AppSizes.radiusSm),
+                                        borderRadius: BorderRadius.circular(
+                                          AppSizes.radiusSm,
+                                        ),
                                       ),
                                       child: const Icon(
                                         Icons.account_balance_wallet_rounded,
                                         size: 18,
-                                        color:
-                                            AppColors.primaryDarkGreen,
+                                        color: AppColors.primaryDarkGreen,
                                       ),
                                     ),
                                     const SizedBox(width: AppSizes.sm),
                                     Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         const AppText(
                                           text: "You Earn",
@@ -1036,15 +1135,50 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                         ),
                                         const SizedBox(height: 2),
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: (booking['payout_status']?.toString().toLowerCase() == 'settled' ? AppColors.primaryDarkGreen : Colors.orange).withValues(alpha: 0.1),
-                                            borderRadius: BorderRadius.circular(4),
-                                            border: Border.all(color: (booking['payout_status']?.toString().toLowerCase() == 'settled' ? AppColors.primaryDarkGreen : Colors.orange).withValues(alpha: 0.5)),
+                                            color:
+                                                (booking['payout_status']
+                                                                ?.toString()
+                                                                .toLowerCase() ==
+                                                            'settled'
+                                                        ? AppColors
+                                                              .primaryDarkGreen
+                                                        : Colors.orange)
+                                                    .withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                            border: Border.all(
+                                              color:
+                                                  (booking['payout_status']
+                                                                  ?.toString()
+                                                                  .toLowerCase() ==
+                                                              'settled'
+                                                          ? AppColors
+                                                                .primaryDarkGreen
+                                                          : Colors.orange)
+                                                      .withValues(alpha: 0.5),
+                                            ),
                                           ),
                                           child: AppText(
-                                            text: booking['payout_status']?.toString().toLowerCase() == 'settled' ? 'Settled' : 'Pending Payout',
-                                            color: booking['payout_status']?.toString().toLowerCase() == 'settled' ? AppColors.primaryDarkGreen : Colors.orange.shade800,
+                                            text:
+                                                booking['payout_status']
+                                                        ?.toString()
+                                                        .toLowerCase() ==
+                                                    'settled'
+                                                ? 'Settled'
+                                                : 'Pending Payout',
+                                            color:
+                                                booking['payout_status']
+                                                        ?.toString()
+                                                        .toLowerCase() ==
+                                                    'settled'
+                                                ? AppColors.primaryDarkGreen
+                                                : Colors.orange.shade800,
                                             size: 10,
                                             weight: FontWeight.w600,
                                           ),
@@ -1054,7 +1188,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                   ],
                                 ),
                                 AppText(
-                                  text: "â‚¹${groundRate.toStringAsFixed(0)}",
+                                  text: "₹${groundRate.toStringAsFixed(0)}",
                                   size: 20,
                                   weight: FontWeight.w800,
                                   color: AppColors.primaryDarkGreen,
@@ -1062,7 +1196,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                               ],
                             ),
                           ),
-                          if (paymentId.isNotEmpty || (booking['payout_reference'] != null && booking['payout_reference'].toString().isNotEmpty)) ...[
+                          if (paymentId.isNotEmpty ||
+                              (booking['payout_reference'] != null &&
+                                  booking['payout_reference']
+                                      .toString()
+                                      .isNotEmpty)) ...[
                             const SizedBox(height: AppSizes.xs),
                             const _RowDivider(),
                             if (paymentId.isNotEmpty)
@@ -1071,7 +1209,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                 value: paymentId,
                                 valueColor: AppColors.textSecondaryLight,
                               ),
-                            if (booking['payout_reference'] != null && booking['payout_reference'].toString().isNotEmpty)
+                            if (booking['payout_reference'] != null &&
+                                booking['payout_reference']
+                                    .toString()
+                                    .isNotEmpty)
                               _PaymentRow(
                                 label: "Payout Note",
                                 value: booking['payout_reference'].toString(),
@@ -1090,17 +1231,25 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       height: AppSizes.buttonHeightLg,
                       child: ElevatedButton(
                         onPressed: () {
-                          _showUnblockDialog(context, dateFormatted, timeFormatted, booking['notes']?.toString(), booking['id'].toString());
+                          _showUnblockDialog(
+                            context,
+                            dateFormatted,
+                            timeFormatted,
+                            booking['notes']?.toString(),
+                            booking['id'].toString(),
+                          );
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.surfaceLight,
                           foregroundColor: AppColors.accentOrange,
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppSizes.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusMd,
+                            ),
                             side: const BorderSide(
-                                color: AppColors.accentOrange,
-                                width: 1.5),
+                              color: AppColors.accentOrange,
+                              width: 1.5,
+                            ),
                           ),
                           elevation: 0,
                         ),
@@ -1128,13 +1277,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           child: SizedBox(
                             height: AppSizes.buttonHeightLg,
                             child: OutlinedButton(
-                              onPressed: _isActionLoading ? null : _declineBooking,
+                              onPressed: _isActionLoading
+                                  ? null
+                                  : _declineBooking,
                               style: OutlinedButton.styleFrom(
                                 side: const BorderSide(
-                                    color: AppColors.error, width: 1.5),
+                                  color: AppColors.error,
+                                  width: 1.5,
+                                ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(AppSizes.radiusMd),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusMd,
+                                  ),
                                 ),
                               ),
                               child: const AppText(
@@ -1151,7 +1305,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           child: SizedBox(
                             height: AppSizes.buttonHeightLg,
                             child: ElevatedButton(
-                              onPressed: (_isActionLoading || _remainingSeconds <= 0)
+                              onPressed:
+                                  (_isActionLoading || _remainingSeconds <= 0)
                                   ? null
                                   : _approveBooking,
                               style: ElevatedButton.styleFrom(
@@ -1159,8 +1314,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                 foregroundColor: AppColors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(AppSizes.radiusMd),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusMd,
+                                  ),
                                 ),
                               ),
                               child: _isActionLoading
@@ -1215,7 +1371,9 @@ class _CheckInBanner extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.lg, vertical: AppSizes.md),
+        horizontal: AppSizes.lg,
+        vertical: AppSizes.md,
+      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(AppSizes.radiusMd),
@@ -1230,9 +1388,7 @@ class _CheckInBanner extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSizes.radiusSm),
             ),
             child: Icon(
-              isCheckedIn
-                  ? Icons.check_circle_rounded
-                  : Icons.schedule_rounded,
+              isCheckedIn ? Icons.check_circle_rounded : Icons.schedule_rounded,
               color: color,
               size: 18,
             ),
@@ -1243,9 +1399,7 @@ class _CheckInBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AppText(
-                  text: isCheckedIn
-                      ? "Checked In"
-                      : "Not Yet Checked In",
+                  text: isCheckedIn ? "Checked In" : "Not Yet Checked In",
                   size: 13,
                   weight: FontWeight.w700,
                   color: color,
@@ -1285,12 +1439,7 @@ class _SectionLabel extends StatelessWidget {
           letterSpacing: 1.2,
         ),
         const SizedBox(width: AppSizes.sm),
-        Expanded(
-          child: Container(
-            height: 1,
-            color: AppColors.borderLight,
-          ),
-        ),
+        Expanded(child: Container(height: 1, color: AppColors.borderLight)),
       ],
     );
   }
@@ -1306,14 +1455,13 @@ class _SectionCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.lg, vertical: AppSizes.sm),
+        horizontal: AppSizes.lg,
+        vertical: AppSizes.sm,
+      ),
       decoration: BoxDecoration(
         color: AppColors.surfaceLight,
         borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-        border: Border.all(
-          color: AppColors.borderLight,
-          width: 1,
-        ),
+        border: Border.all(color: AppColors.borderLight, width: 1),
       ),
       child: child,
     );
@@ -1342,18 +1490,10 @@ class _DetailRow extends StatelessWidget {
         children: [
           // Icon + label
           if (iconData != null) ...[
-            Icon(
-              iconData,
-              size: 16,
-              color: AppColors.primaryDarkGreen,
-            ),
+            Icon(iconData, size: 16, color: AppColors.primaryDarkGreen),
             const SizedBox(width: AppSizes.sm),
           ] else if (icon != null) ...[
-            HugeIcon(
-              icon: icon,
-              size: 16,
-              color: AppColors.primaryDarkGreen,
-            ),
+            HugeIcon(icon: icon, size: 16, color: AppColors.primaryDarkGreen),
             const SizedBox(width: AppSizes.sm),
           ],
           Expanded(
@@ -1392,8 +1532,11 @@ class _PaymentRow extends StatelessWidget {
   final String value;
   final Color? valueColor;
 
-  const _PaymentRow(
-      {required this.label, required this.value, this.valueColor});
+  const _PaymentRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1402,11 +1545,7 @@ class _PaymentRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          AppText(
-            text: label,
-            size: 13,
-            color: AppColors.textSecondaryLight,
-          ),
+          AppText(text: label, size: 13, color: AppColors.textSecondaryLight),
           AppText(
             text: value,
             size: 13,
@@ -1424,10 +1563,6 @@ class _RowDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Divider(
-      color: AppColors.borderLight,
-      height: 1,
-      thickness: 1,
-    );
+    return Divider(color: AppColors.borderLight, height: 1, thickness: 1);
   }
 }

@@ -228,7 +228,14 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
     final playerName = booking['player_name'] ?? 'Customer';
     final groundName = booking['ground_name'] ?? 'Court';
     final rawPeriod = (booking['period'] ?? 'Time').toString();
-    final period = _simplifyPeriod(rawPeriod.split('|').first);
+    String period = rawPeriod;
+    if (rawPeriod.contains('|')) {
+      final parts = rawPeriod.split('|');
+      final times = parts[1].replaceAll(',', ', ');
+      period = "${parts[0]} - $times";
+    } else {
+      period = _simplifyPeriod(rawPeriod);
+    }
     final sportName = (booking['sport_name'] ?? 'Sport').toString();
     final amount = booking['amount'] ?? booking['total_amount'] ?? 0;
 
@@ -255,6 +262,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
             onTap: _openDetails,
             borderRadius: BorderRadius.circular(AppSizes.radiusLg),
             child: Container(
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppSizes.radiusLg),
                 border: Border.all(
@@ -268,13 +276,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                     // Orange accent bar on the left
                     Container(
                       width: 5,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFE65100),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(AppSizes.radiusLg),
-                          bottomLeft: Radius.circular(AppSizes.radiusLg),
-                        ),
-                      ),
+                      color: const Color(0xFFE65100),
                     ),
                     Expanded(
                       child: Padding(

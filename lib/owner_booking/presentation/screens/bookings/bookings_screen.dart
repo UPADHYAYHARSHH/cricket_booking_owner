@@ -17,6 +17,7 @@ import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 
 import '../../blocs/location/location_cubit.dart';
 import '../../blocs/location/location_state.dart';
+
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
 
@@ -48,9 +49,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
       initialDateRange: DateTimeRange(start: now, end: now),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: Theme.of(context).colorScheme.copyWith(
-                primary: AppColors.primaryDarkGreen,
-              ),
+          colorScheme: Theme.of(
+            context,
+          ).colorScheme.copyWith(primary: AppColors.primaryDarkGreen),
         ),
         child: child!,
       ),
@@ -72,10 +73,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  AppColors.primaryDarkGreen,
-                  Color(0xFF0FA968),
-                ],
+                colors: [AppColors.primaryDarkGreen, Color(0xFF0FA968)],
               ),
             ),
             padding: EdgeInsets.fromLTRB(
@@ -97,7 +95,9 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
                               color: AppColors.white.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusSm,
+                              ),
                             ),
                             child: const Icon(
                               Icons.arrow_back_ios_new_rounded,
@@ -122,11 +122,16 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             builder: (context, locState) {
                               String locName = "All Locations";
                               if (locState is LocationLoaded) {
-                                final selectedId = SharedPrefsService.instance.selectedLocationId;
+                                final selectedId = SharedPrefsService
+                                    .instance
+                                    .selectedLocationId;
                                 if (selectedId != null) {
                                   try {
-                                    final loc = locState.locations.firstWhere((l) => l['id'] == selectedId);
-                                    if (loc['name'] != null && loc['name'].toString().isNotEmpty) {
+                                    final loc = locState.locations.firstWhere(
+                                      (l) => l['id'] == selectedId,
+                                    );
+                                    if (loc['name'] != null &&
+                                        loc['name'].toString().isNotEmpty) {
                                       locName = loc['name'];
                                     }
                                   } catch (_) {}
@@ -134,12 +139,20 @@ class _BookingsScreenState extends State<BookingsScreen> {
                               }
                               return Row(
                                 children: [
-                                  Icon(Icons.location_on_outlined, size: 12, color: AppColors.white.withValues(alpha: 0.8)),
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    size: 12,
+                                    color: AppColors.white.withValues(
+                                      alpha: 0.8,
+                                    ),
+                                  ),
                                   const SizedBox(width: 4),
                                   AppText(
                                     text: locName,
                                     size: 12,
-                                    color: AppColors.white.withValues(alpha: 0.8),
+                                    color: AppColors.white.withValues(
+                                      alpha: 0.8,
+                                    ),
                                   ),
                                 ],
                               );
@@ -155,11 +168,14 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             : 0;
                         return Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 5),
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
                           decoration: BoxDecoration(
                             color: AppColors.white.withValues(alpha: 0.2),
-                            borderRadius:
-                                BorderRadius.circular(AppSizes.radiusFull),
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusFull,
+                            ),
                           ),
                           child: AppText(
                             text: "$count",
@@ -179,7 +195,11 @@ class _BookingsScreenState extends State<BookingsScreen> {
           // ── Search bar ──
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                AppSizes.lg, AppSizes.lg, AppSizes.lg, 0),
+              AppSizes.lg,
+              AppSizes.lg,
+              AppSizes.lg,
+              0,
+            ),
             child: Container(
               decoration: BoxDecoration(
                 color: AppColors.surfaceLight,
@@ -218,39 +238,39 @@ class _BookingsScreenState extends State<BookingsScreen> {
                           decoration: BoxDecoration(
                             color: AppColors.borderLight,
                             borderRadius: BorderRadius.circular(
-                                AppSizes.radiusFull),
+                              AppSizes.radiusFull,
+                            ),
                           ),
-                          child: const Icon(Icons.close_rounded,
-                              size: 14, color: AppColors.textSecondaryLight),
+                          child: const Icon(
+                            Icons.close_rounded,
+                            size: 14,
+                            color: AppColors.textSecondaryLight,
+                          ),
                         ),
                         onPressed: () {
                           _searchController.clear();
-                          context
-                              .read<BookingsCubit>()
-                              .searchBookings('');
+                          context.read<BookingsCubit>().searchBookings('');
                         },
                       );
                     },
                   ),
                   filled: true,
                   fillColor: AppColors.surfaceLight,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 0),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0),
                   border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.radiusMd),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                     borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.radiusMd),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                     borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSizes.radiusMd),
+                    borderRadius: BorderRadius.circular(AppSizes.radiusMd),
                     borderSide: const BorderSide(
-                        color: AppColors.primaryDarkGreen, width: 1.2),
+                      color: AppColors.primaryDarkGreen,
+                      width: 1.2,
+                    ),
                   ),
                 ),
               ),
@@ -260,16 +280,22 @@ class _BookingsScreenState extends State<BookingsScreen> {
           // ── Date filter chips ──
           Padding(
             padding: const EdgeInsets.fromLTRB(
-                AppSizes.lg, AppSizes.md, AppSizes.lg, AppSizes.md),
+              AppSizes.lg,
+              AppSizes.md,
+              AppSizes.lg,
+              AppSizes.md,
+            ),
             child: BlocBuilder<BookingsCubit, BookingsState>(
               builder: (context, state) {
                 final dateFilter = state is BookingsLoaded
                     ? state.dateFilter
                     : BookingDateFilter.all;
-                final rangeStart =
-                    state is BookingsLoaded ? state.rangeStart : null;
-                final rangeEnd =
-                    state is BookingsLoaded ? state.rangeEnd : null;
+                final rangeStart = state is BookingsLoaded
+                    ? state.rangeStart
+                    : null;
+                final rangeEnd = state is BookingsLoaded
+                    ? state.rangeEnd
+                    : null;
 
                 return SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
@@ -277,15 +303,16 @@ class _BookingsScreenState extends State<BookingsScreen> {
                     children: [
                       _DateFilterChip(
                         label: 'All',
-                        selected:
-                            dateFilter == BookingDateFilter.all,
+                        selected: dateFilter == BookingDateFilter.all,
                         onTap: () => context
                             .read<BookingsCubit>()
                             .setDateFilter(BookingDateFilter.all),
                       ),
                       const SizedBox(width: AppSizes.sm),
                       _DateFilterChip(
-                        label: state is BookingsLoaded && state.pendingRequestsCount > 0
+                        label:
+                            state is BookingsLoaded &&
+                                state.pendingRequestsCount > 0
                             ? 'Requests (${state.pendingRequestsCount})'
                             : 'Requests',
                         icon: Icons.hourglass_top_rounded,
@@ -297,8 +324,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                       const SizedBox(width: AppSizes.sm),
                       _DateFilterChip(
                         label: 'Today',
-                        selected: dateFilter ==
-                            BookingDateFilter.today,
+                        selected: dateFilter == BookingDateFilter.today,
                         onTap: () => context
                             .read<BookingsCubit>()
                             .setDateFilter(BookingDateFilter.today),
@@ -306,24 +332,21 @@ class _BookingsScreenState extends State<BookingsScreen> {
                       const SizedBox(width: AppSizes.sm),
                       _DateFilterChip(
                         label: 'Tomorrow',
-                        selected: dateFilter ==
-                            BookingDateFilter.tomorrow,
+                        selected: dateFilter == BookingDateFilter.tomorrow,
                         onTap: () => context
                             .read<BookingsCubit>()
-                            .setDateFilter(
-                                BookingDateFilter.tomorrow),
+                            .setDateFilter(BookingDateFilter.tomorrow),
                       ),
                       const SizedBox(width: AppSizes.sm),
                       _DateFilterChip(
-                        label: dateFilter ==
-                                    BookingDateFilter.range &&
+                        label:
+                            dateFilter == BookingDateFilter.range &&
                                 rangeStart != null &&
                                 rangeEnd != null
                             ? '${DateFormat('d MMM').format(rangeStart)} – ${DateFormat('d MMM').format(rangeEnd)}'
                             : 'Date Range',
                         icon: Icons.date_range_rounded,
-                        selected: dateFilter ==
-                            BookingDateFilter.range,
+                        selected: dateFilter == BookingDateFilter.range,
                         onTap: _pickDateRange,
                       ),
                     ],
@@ -340,17 +363,19 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 if (state is BookingsLoading) {
                   return ListView.separated(
                     padding: const EdgeInsets.fromLTRB(
-                        AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
+                      AppSizes.lg,
+                      AppSizes.sm,
+                      AppSizes.lg,
+                      AppSizes.lg,
+                    ),
                     itemCount: 4,
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: AppSizes.md),
-                    itemBuilder: (context, index) =>
-                        const _BookingSkeleton(),
+                    itemBuilder: (context, index) => const _BookingSkeleton(),
                   );
                 } else if (state is BookingsError) {
                   return Center(
-                    child: AppText(
-                        text: state.message, color: AppColors.error),
+                    child: AppText(text: state.message, color: AppColors.error),
                   );
                 } else if (state is BookingsLoaded) {
                   if (state.filteredBookings.isEmpty) {
@@ -363,13 +388,13 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             Container(
                               padding: const EdgeInsets.all(AppSizes.xl),
                               decoration: BoxDecoration(
-                                color: AppColors.borderLight
-                                    .withValues(alpha: 0.5),
+                                color: AppColors.borderLight.withValues(
+                                  alpha: 0.5,
+                                ),
                                 shape: BoxShape.circle,
                               ),
                               child: HugeIcon(
-                                icon: HugeIcons
-                                    .strokeRoundedSearch02,
+                                icon: HugeIcons.strokeRoundedSearch02,
                                 size: 48,
                                 color: AppColors.textSecondaryLight,
                               ),
@@ -383,8 +408,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             ),
                             const SizedBox(height: AppSizes.xs),
                             AppText(
-                              text:
-                                  "Try adjusting your search or filters",
+                              text: "Try adjusting your search or filters",
                               size: 13,
                               color: AppColors.borderLight,
                             ),
@@ -396,13 +420,12 @@ class _BookingsScreenState extends State<BookingsScreen> {
 
                   return RefreshIndicator(
                     onRefresh: () async {
-                      await context
-                          .read<BookingsCubit>()
-                          .fetchBookings();
+                      await context.read<BookingsCubit>().fetchBookings();
                     },
                     color: AppColors.primaryDarkGreen,
                     child: _StaggeredBookingList(
-                      bookings: state.filteredBookings.cast<Map<String, dynamic>>(),
+                      bookings: state.filteredBookings
+                          .cast<Map<String, dynamic>>(),
                     ),
                   );
                 }
@@ -449,7 +472,8 @@ class _StaggeredBookingListState extends State<_StaggeredBookingList>
     if (oldWidget.bookings != widget.bookings) {
       _controller.reset();
       _controller.duration = Duration(
-          milliseconds: 400 + widget.bookings.length * 60);
+        milliseconds: 400 + widget.bookings.length * 60,
+      );
       _controller.forward();
     }
   }
@@ -467,7 +491,11 @@ class _StaggeredBookingListState extends State<_StaggeredBookingList>
       builder: (context, _) {
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(
-              AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
+            AppSizes.lg,
+            AppSizes.sm,
+            AppSizes.lg,
+            AppSizes.lg,
+          ),
           itemCount: widget.bookings.length,
           separatorBuilder: (context, index) =>
               const SizedBox(height: AppSizes.md),
@@ -541,7 +569,9 @@ class _BookingCardState extends State<_BookingCard> {
     if (s.contains(' ') && !s.contains('T')) {
       s = s.replaceFirst(' ', 'T');
     }
-    if (!s.endsWith('Z') && !s.contains('+') && !RegExp(r'-\d{2}:?\d{2}$').hasMatch(s)) {
+    if (!s.endsWith('Z') &&
+        !s.contains('+') &&
+        !RegExp(r'-\d{2}:?\d{2}$').hasMatch(s)) {
       s = '${s}Z';
     }
     try {
@@ -656,8 +686,7 @@ class _BookingCardState extends State<_BookingCard> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) =>
-            BookingDetailsScreen(booking: widget.booking),
+        builder: (context) => BookingDetailsScreen(booking: widget.booking),
       ),
     );
     if (result == true && mounted) {
@@ -667,21 +696,21 @@ class _BookingCardState extends State<_BookingCard> {
 
   String _simplifyPeriod(String period) {
     if (!period.contains(',')) return period;
-    
+
     final parts = period.split(',').map((e) => e.trim()).toList();
     if (parts.isEmpty) return period;
-    
+
     List<String> merged = [];
     String? currentStart;
     String? currentEnd;
-    
+
     for (final p in parts) {
       final range = p.split('-').map((e) => e.trim()).toList();
       if (range.length != 2) return period;
-      
+
       final start = range[0];
       final end = range[1];
-      
+
       if (currentStart == null) {
         currentStart = start;
         currentEnd = end;
@@ -698,8 +727,66 @@ class _BookingCardState extends State<_BookingCard> {
     if (currentStart != null) {
       merged.add('$currentStart - $currentEnd');
     }
-    
+
     return merged.join(', ');
+  }
+
+  DateTime? _robustParse(dynamic value) {
+    if (value == null) return null;
+    final s = value.toString().trim();
+    if (s.isEmpty) return null;
+    debugPrint('[BOOKING_CARD] raw slot_time = $s');
+    final candidates = <String>[
+      s,
+      if (!s.endsWith('Z') &&
+          !s.contains('+') &&
+          !RegExp(r'-\d{2}:?\d{2}$').hasMatch(s))
+        '${s}Z',
+      s.replaceFirst(' ', 'T'),
+    ];
+    for (final c in candidates) {
+      final d = DateTime.tryParse(c);
+      if (d != null) {
+        final local = d.toLocal();
+        debugPrint('[BOOKING_CARD] parsed = $local (from $c)');
+        return local;
+      }
+    }
+    debugPrint('[BOOKING_CARD] FAILED to parse slot_time: $s');
+    return null;
+  }
+
+  String _formatBookingDate(DateTime? dt, String periodLabel) {
+    if (dt != null) return DateFormat('EEE, MMM d').format(dt);
+    if (periodLabel.isNotEmpty && periodLabel.toLowerCase() != 'day') {
+      return periodLabel;
+    }
+    return 'Scheduled';
+  }
+
+  String _extractTimeSlots(String period) {
+    if (period.isEmpty) return '';
+    final pipeIdx = period.indexOf('|');
+    if (pipeIdx < 0 || pipeIdx == period.length - 1) return '';
+    final slotsPart = period.substring(pipeIdx + 1).trim();
+    if (slotsPart.isEmpty) return '';
+    final slots = slotsPart
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (slots.isEmpty) return '';
+    if (slots.length == 1) return slots.first;
+    final simplified = _simplifyPeriod(slots.join(', '));
+    debugPrint('[BOOKING_CARD] slots = $slots -> simplified = $simplified');
+    return simplified;
+  }
+
+  String _extractPeriodLabel(String period) {
+    if (period.isEmpty) return 'Day';
+    final pipeIdx = period.indexOf('|');
+    if (pipeIdx < 0) return period;
+    return period.substring(0, pipeIdx).trim();
   }
 
   @override
@@ -707,12 +794,36 @@ class _BookingCardState extends State<_BookingCard> {
     final booking = widget.booking;
     final status = (booking['status'] ?? 'pending').toString();
 
-    final playerName = booking['player_name'] ?? 'Player Name';
-    final groundName = booking['ground_name'] ?? 'Court';
-    final rawPeriod = (booking['period'] ?? 'Time').toString();
-    final period = _simplifyPeriod(rawPeriod.split('|').first);
-    final sportName = booking['sport_name'] ?? 'Sport';
+    final playerName = booking['player_name']?.toString() ?? 'Player Name';
+    final groundName = booking['ground_name']?.toString() ?? 'Court';
+    final rawPeriod = (booking['period'] ?? '').toString();
+    final periodLabel = _extractPeriodLabel(rawPeriod);
+    final timeSlots = _extractTimeSlots(rawPeriod);
+    final sportName = (booking['sport_name'] ?? booking['sport'] ?? 'Sport')
+        .toString();
     final amount = booking['amount'] ?? booking['total_amount'] ?? 0;
+    final pastBookings = booking['past_bookings'] ?? 0;
+
+    debugPrint(
+      '[BOOKING_CARD] player=$playerName status=$status period=$rawPeriod sport=$sportName',
+    );
+
+    final slotTime = _robustParse(booking['slot_time']);
+    final dateText = _formatBookingDate(slotTime, periodLabel);
+
+    final String timeDisplay;
+    if (timeSlots.isNotEmpty) {
+      timeDisplay = timeSlots;
+    } else if (slotTime != null) {
+      final start = DateFormat('h:mm a').format(slotTime);
+      final end = DateFormat(
+        'h:mm a',
+      ).format(slotTime.add(const Duration(hours: 1)));
+      timeDisplay = '$start – $end';
+    } else {
+      timeDisplay = periodLabel;
+    }
+    debugPrint('[BOOKING_CARD] date=$dateText time=$timeDisplay');
 
     String displayId = booking['display_id']?.toString() ?? '';
     if (displayId.isEmpty) {
@@ -723,6 +834,10 @@ class _BookingCardState extends State<_BookingCard> {
     }
 
     final statusColor = AppColors.bookingStatusColor(status);
+    final outlineColor = statusColor.withValues(alpha: 0.35);
+
+    const double barWidth = 6;
+    const double outlineWidth = 1;
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
@@ -737,252 +852,328 @@ class _BookingCardState extends State<_BookingCard> {
           borderRadius: BorderRadius.circular(AppSizes.radiusLg),
           child: InkWell(
             onTap: _openDetails,
-            borderRadius:
-                BorderRadius.circular(AppSizes.radiusLg),
-            splashColor:
-                AppColors.primaryDarkGreen.withValues(alpha: 0.06),
-            highlightColor:
-                AppColors.primaryDarkGreen.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+            splashColor: AppColors.primaryDarkGreen.withValues(alpha: 0.06),
+            highlightColor: AppColors.primaryDarkGreen.withValues(alpha: 0.03),
             child: Container(
               decoration: BoxDecoration(
-                borderRadius:
-                    BorderRadius.circular(AppSizes.radiusLg),
-                border: Border.all(
-                  color: AppColors.borderLight,
-                  width: 1,
+                borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+                border: Border(
+                  left: BorderSide(color: statusColor, width: barWidth),
+                  top: BorderSide(color: outlineColor, width: outlineWidth),
+                  right: BorderSide(color: outlineColor, width: outlineWidth),
+                  bottom: BorderSide(color: outlineColor, width: outlineWidth),
                 ),
               ),
-              child: IntrinsicHeight(
-                child: Row(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  AppSizes.lg - (barWidth / 2 - outlineWidth).clamp(0, 8),
+                  AppSizes.lg,
+                  AppSizes.lg,
+                  AppSizes.lg,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Left color accent bar
-                    Container(
-                      width: 4,
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(AppSizes.radiusLg),
-                          bottomLeft:
-                              Radius.circular(AppSizes.radiusLg),
-                        ),
-                      ),
-                    ),
-                    // Card content
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppSizes.lg),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Player name + status badge
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: AppText(
-                                    text: playerName,
-                                    size: 15,
-                                    weight: FontWeight.w700,
+                    // ── Header: sport tile + player/ground + status ──
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primaryDarkGreen.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusSm,
                                   ),
                                 ),
-                                StatusBadge(status: status),
-                              ],
-                            ),
-                            const SizedBox(height: AppSizes.xs),
-
-                            // Ground + time
-                            AppText(
-                              text: "$groundName • $period",
-                              size: 13,
-                              color: AppColors.textSecondaryLight,
-                            ),
-                            const SizedBox(height: AppSizes.md),
-
-                            // Info chips in tinted row
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSizes.md,
-                                  vertical: AppSizes.sm),
-                              decoration: BoxDecoration(
-                                color: AppColors.bgLight,
-                                borderRadius: BorderRadius.circular(
-                                    AppSizes.radiusSm),
-                              ),
-                              child: Row(
-                                children: [
-                                  _InfoChip(
-                                    icon: sportIcon(
-                                        sportName.toString()),
-                                    text: formatSportName(
-                                        sportName.toString()),
-                                  ),
-                                  const SizedBox(width: AppSizes.lg),
-                                  _InfoChip(
-                                    icon: HugeIcons
-                                        .strokeRoundedUserGroup,
-                                    text: "Players",
-                                  ),
-                                  const SizedBox(width: AppSizes.lg),
-                                  _InfoChip(
-                                    icon: HugeIcons
-                                        .strokeRoundedMoneyBag01,
-                                    text: "₹$amount",
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: AppSizes.md),
-
-                            // Booking ID tag + View Details
-                            Row(
-                              mainAxisAlignment:
-                                  MainAxisAlignment.spaceBetween,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: AppSizes.sm,
-                                      vertical: AppSizes.xxs),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.borderLight,
-                                    borderRadius:
-                                        BorderRadius.circular(
-                                            AppSizes.radiusXs),
-                                  ),
-                                  child: AppText(
-                                    text: "CB$displayId",
-                                    size: 11,
-                                    weight: FontWeight.w600,
-                                    color:
-                                        AppColors.textSecondaryLight,
-                                  ),
+                                child: Icon(
+                                  sportIcon(sportName),
+                                  color: AppColors.primaryDarkGreen,
+                                  size: 20,
                                 ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
+                              ),
+                              const SizedBox(width: AppSizes.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     AppText(
-                                      text: "View Details",
-                                      size: 12,
+                                      text: playerName,
+                                      size: 15,
                                       weight: FontWeight.w700,
-                                      color: AppColors.primaryDarkGreen,
                                     ),
-                                    const SizedBox(width: AppSizes.xxs),
-                                    const Icon(
-                                      Icons.arrow_forward_ios_rounded,
-                                      size: 10,
-                                      color:
-                                          AppColors.primaryDarkGreen,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                            if (status.toLowerCase() == 'requested') ...[
-                              const SizedBox(height: AppSizes.md),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 7),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFF3E0),
-                                  borderRadius: BorderRadius.circular(
-                                      AppSizes.radiusSm),
-                                  border: Border.all(
-                                      color: const Color(0xFFFFB74D)),
-                                ),
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.timer_outlined,
-                                        size: 16, color: Color(0xFFE65100)),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: AppText(
-                                        text: _remainingSeconds > 0
-                                            ? "Expires in ${_formatTimer(_remainingSeconds)}"
-                                            : "Expired",
-                                        size: 12,
-                                        weight: FontWeight.w700,
-                                        color: const Color(0xFFE65100),
-                                      ),
-                                    ),
-                                    const AppText(
-                                      text: "Max 45m",
-                                      size: 11,
-                                      weight: FontWeight.w600,
-                                      color: Color(0xFFE65100),
+                                    const SizedBox(height: 2),
+                                    AppText(
+                                      text:
+                                          "$groundName • ${formatSportName(sportName)}",
+                                      size: 12,
+                                      color: AppColors.textSecondaryLight,
                                     ),
                                   ],
                                 ),
-                              ),
-                              const SizedBox(height: AppSizes.sm),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton(
-                                      onPressed: _isActionLoading
-                                          ? null
-                                          : _declineRequest,
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: AppColors.error,
-                                        side: const BorderSide(
-                                            color: AppColors.error),
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 8),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              AppSizes.radiusSm),
-                                        ),
-                                      ),
-                                      child: const AppText(
-                                        text: "Decline",
-                                        size: 12,
-                                        weight: FontWeight.w700,
-                                        color: AppColors.error,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: AppSizes.md),
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      onPressed: (_isActionLoading ||
-                                              _remainingSeconds <= 0)
-                                          ? null
-                                          : _approveRequest,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor:
-                                            AppColors.primaryDarkGreen,
-                                        foregroundColor: AppColors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 8),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              AppSizes.radiusSm),
-                                        ),
-                                      ),
-                                      child: _isActionLoading
-                                          ? const SizedBox(
-                                              width: 14,
-                                              height: 14,
-                                              child:
-                                                  CircularProgressIndicator(
-                                                color: Colors.white,
-                                                strokeWidth: 2,
-                                              ),
-                                            )
-                                          : const AppText(
-                                              text: "Approve",
-                                              size: 12,
-                                              weight: FontWeight.w700,
-                                              color: AppColors.white,
-                                            ),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSizes.sm),
+                        StatusBadge(status: status),
+                      ],
+                    ),
+                    const SizedBox(height: AppSizes.md),
+
+                    // ── Date + Time + Amount row ──
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSizes.md,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.bgLight,
+                        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 14,
+                            color: AppColors.textSecondaryLight,
+                          ),
+                          const SizedBox(width: 6),
+                          AppText(
+                            text: dateText,
+                            size: 12,
+                            weight: FontWeight.w600,
+                            color: AppColors.textPrimaryLight,
+                          ),
+                          Container(
+                            width: 1,
+                            height: 14,
+                            color: AppColors.borderLight,
+                            margin: const EdgeInsets.symmetric(horizontal: 12),
+                          ),
+                          const Icon(
+                            Icons.access_time_rounded,
+                            size: 14,
+                            color: AppColors.textSecondaryLight,
+                          ),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: AppText(
+                              text: timeDisplay,
+                              size: 12,
+                              weight: FontWeight.w600,
+                              color: AppColors.textPrimaryLight,
+                            ),
+                          ),
+                          AppText(
+                            text: "₹$amount",
+                            size: 13,
+                            weight: FontWeight.w700,
+                            color: AppColors.primaryDarkGreen,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.md),
+
+                    // ── Footer: booking id / customer tag / view details ──
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppSizes.sm,
+                                vertical: AppSizes.xxs,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.borderLight,
+                                borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusXs,
+                                ),
+                              ),
+                              child: AppText(
+                                text: "CB$displayId",
+                                size: 11,
+                                weight: FontWeight.w600,
+                                color: AppColors.textSecondaryLight,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: AppSizes.xxs,
+                              ),
+                              decoration: BoxDecoration(
+                                color: pastBookings > 0
+                                    ? AppColors.slotAvailableBg
+                                    : AppColors.statusPendingBg,
+                                borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusXs,
+                                ),
+                                border: Border.all(
+                                  color: pastBookings > 0
+                                      ? AppColors.slotAvailableBorder
+                                      : AppColors.statusPendingBorder,
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: AppText(
+                                text: pastBookings > 0
+                                    ? "$pastBookings prior"
+                                    : "New Customer",
+                                size: 10,
+                                weight: FontWeight.w700,
+                                color: pastBookings > 0
+                                    ? AppColors.statusConfirmed
+                                    : AppColors.statusPending,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AppText(
+                              text: "View Details",
+                              size: 12,
+                              weight: FontWeight.w700,
+                              color: AppColors.primaryDarkGreen,
+                            ),
+                            const SizedBox(width: AppSizes.xxs),
+                            const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 10,
+                              color: AppColors.primaryDarkGreen,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    // ── Requested-state timer + actions ──
+                    if (status.toLowerCase() == 'requested') ...[
+                      const SizedBox(height: AppSizes.md),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.statusPendingBg,
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.radiusSm,
+                          ),
+                          border: Border.all(
+                            color: AppColors.statusPendingBorder,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.timer_outlined,
+                              size: 16,
+                              color: AppColors.statusPending,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: AppText(
+                                text: _remainingSeconds > 0
+                                    ? "Expires in ${_formatTimer(_remainingSeconds)}"
+                                    : "Request Expired",
+                                size: 12,
+                                weight: FontWeight.w700,
+                                color: AppColors.statusPending,
+                              ),
+                            ),
+                            AppText(
+                              text: "Max 45m",
+                              size: 11,
+                              weight: FontWeight.w600,
+                              color: AppColors.statusPending,
+                            ),
                           ],
                         ),
                       ),
-                    ),
+                      const SizedBox(height: AppSizes.sm),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _isActionLoading
+                                  ? null
+                                  : _declineRequest,
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: AppColors.error,
+                                side: const BorderSide(color: AppColors.error),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusSm,
+                                  ),
+                                ),
+                              ),
+                              child: const AppText(
+                                text: "Decline",
+                                size: 12,
+                                weight: FontWeight.w700,
+                                color: AppColors.error,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSizes.md),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed:
+                                  (_isActionLoading || _remainingSeconds <= 0)
+                                  ? null
+                                  : _approveRequest,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primaryDarkGreen,
+                                foregroundColor: AppColors.white,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSizes.radiusSm,
+                                  ),
+                                ),
+                              ),
+                              child: _isActionLoading
+                                  ? const SizedBox(
+                                      width: 14,
+                                      height: 14,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const AppText(
+                                      text: "Approve",
+                                      size: 12,
+                                      weight: FontWeight.w700,
+                                      color: AppColors.white,
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -1016,11 +1207,9 @@ class _DateFilterChip extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOut,
-        padding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color:
-              selected ? AppColors.primaryDarkGreen : AppColors.surfaceLight,
+          color: selected ? AppColors.primaryDarkGreen : AppColors.surfaceLight,
           borderRadius: BorderRadius.circular(AppSizes.radiusFull),
           border: Border.all(
             color: selected
@@ -1031,8 +1220,7 @@ class _DateFilterChip extends StatelessWidget {
           boxShadow: selected
               ? [
                   BoxShadow(
-                    color: AppColors.primaryDarkGreen
-                        .withValues(alpha: 0.15),
+                    color: AppColors.primaryDarkGreen.withValues(alpha: 0.15),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
                   ),
@@ -1043,19 +1231,14 @@ class _DateFilterChip extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (!selected && icon != null) ...[
-              Icon(
-                icon,
-                size: 14,
-                color: AppColors.textSecondaryLight,
-              ),
+              Icon(icon, size: 14, color: AppColors.textSecondaryLight),
               const SizedBox(width: 5),
             ],
             AppText(
               text: label,
               size: 13,
               weight: FontWeight.w600,
-              color:
-                  selected ? AppColors.white : AppColors.textPrimaryLight,
+              color: selected ? AppColors.white : AppColors.textPrimaryLight,
             ),
             if (selected) ...[
               const SizedBox(width: 6),
@@ -1088,16 +1271,9 @@ class _InfoChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        HugeIcon(
-            icon: icon,
-            size: 13,
-            color: AppColors.textSecondaryLight),
+        HugeIcon(icon: icon, size: 13, color: AppColors.textSecondaryLight),
         const SizedBox(width: 4),
-        AppText(
-          text: text,
-          size: 12,
-          color: AppColors.textSecondaryLight,
-        ),
+        AppText(text: text, size: 12, color: AppColors.textSecondaryLight),
       ],
     );
   }
@@ -1132,16 +1308,14 @@ class _BookingSkeleton extends StatelessWidget {
             Expanded(
               child: Shimmer.fromColors(
                 baseColor: AppColors.borderLight,
-                highlightColor:
-                    AppColors.borderLight.withValues(alpha: 0.4),
+                highlightColor: AppColors.borderLight.withValues(alpha: 0.4),
                 child: Padding(
                   padding: const EdgeInsets.all(AppSizes.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
                             width: 120,
@@ -1156,8 +1330,9 @@ class _BookingSkeleton extends StatelessWidget {
                             height: 22,
                             decoration: BoxDecoration(
                               color: AppColors.surfaceLight,
-                              borderRadius:
-                                  BorderRadius.circular(AppSizes.radiusFull),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusFull,
+                              ),
                             ),
                           ),
                         ],
@@ -1176,22 +1351,23 @@ class _BookingSkeleton extends StatelessWidget {
                         height: 36,
                         decoration: BoxDecoration(
                           color: AppColors.surfaceLight,
-                          borderRadius:
-                              BorderRadius.circular(AppSizes.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.radiusSm,
+                          ),
                         ),
                       ),
                       const SizedBox(height: AppSizes.md),
                       Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
                             width: 80,
                             height: 18,
                             decoration: BoxDecoration(
                               color: AppColors.surfaceLight,
-                              borderRadius:
-                                  BorderRadius.circular(AppSizes.radiusXs),
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusXs,
+                              ),
                             ),
                           ),
                           Container(
@@ -1199,8 +1375,7 @@ class _BookingSkeleton extends StatelessWidget {
                             height: 14,
                             decoration: BoxDecoration(
                               color: AppColors.surfaceLight,
-                              borderRadius:
-                                  BorderRadius.circular(4),
+                              borderRadius: BorderRadius.circular(4),
                             ),
                           ),
                         ],
