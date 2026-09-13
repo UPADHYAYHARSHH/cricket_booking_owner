@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
@@ -66,8 +66,8 @@ class DashboardCubit extends Cubit<DashboardState> {
           ownerName: ownerName,
           venueName: venueName,
           activeCourts: 0,
-          todayRevenue: '₹0',
-          revenueChangeLabel: '—',
+          todayRevenue: 'â‚¹0',
+          revenueChangeLabel: 'â€”',
           todayBookingsCount: 0,
           pendingAcceptCount: 0,
           occupancyPercentage: '0%',
@@ -179,7 +179,7 @@ class DashboardCubit extends Cubit<DashboardState> {
 
         String revenueChangeLabel;
         if (yesterdayRevenue <= 0) {
-          revenueChangeLabel = todayRevenue > 0 ? 'New today' : '—';
+          revenueChangeLabel = todayRevenue > 0 ? 'New today' : '-';
         } else {
           final change = ((todayRevenue - yesterdayRevenue) / yesterdayRevenue) * 100;
           final sign = change >= 0 ? '+' : '';

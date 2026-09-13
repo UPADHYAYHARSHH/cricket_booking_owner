@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -36,15 +37,20 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
   Future<void> _fetchWalletAndHistory() async {
     setState(() => _isLoadingWallet = true);
     try {
+      final ownerId = FirebaseAuth.instance.currentUser?.uid;
+      if (ownerId == null) {
+        setState(() => _isLoadingWallet = false);
+        return;
+      }
+
       // Fetch Wallet
-      final walletResponse = await _supabase.rpc('get_owner_wallet');
+      final walletResponse = await _supabase.rpc('get_owner_wallet', params: {'p_owner_id': ownerId});
       
       // Fetch Withdrawals history
-      final ownerId = _supabase.auth.currentUser?.id;
       final withdrawalsResponse = await _supabase
           .from('withdrawals')
-          .select('*')
-          .eq('owner_id', ownerId ?? '')
+          .select()
+          .eq('owner_id', ownerId)
           .order('created_at', ascending: false);
 
       if (mounted) {
@@ -66,7 +72,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
     if (_isRequesting) return;
     setState(() => _isRequesting = true);
     try {
-      await _supabase.rpc('request_withdrawal', params: {'p_amount': amount});
+      await _supabase.rpc('request_withdrawal', params: {'p_owner_id': FirebaseAuth.instance.currentUser?.uid, 'p_amount': amount});
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -110,7 +116,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppText(text: 'Available: ?$available', color: AppColors.primaryDarkGreen, weight: FontWeight.w600),
+                  AppText(text: 'Available: ₹$available', color: AppColors.primaryDarkGreen, weight: FontWeight.w600),
                   const SizedBox(height: 16),
                   TextField(
                     controller: controller,
@@ -190,8 +196,8 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildWalletCard('Available', '?$availableBalance', AppColors.primaryDarkGreen),
-                    _buildWalletCard('Total Earned', '?$totalEarnings', Colors.grey.shade700),
+                    _buildWalletCard('Available', '₹$availableBalance', AppColors.primaryDarkGreen),
+                    _buildWalletCard('Total Earned', '₹$totalEarnings', Colors.grey.shade700),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -284,7 +290,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                AppText(text: '?$amount', weight: FontWeight.bold, size: 16),
+                AppText(text: '₹$amount', weight: FontWeight.bold, size: 16),
                 AppText(text: status, color: statusColor, size: 11, weight: FontWeight.w700),
               ],
             ),
@@ -318,18 +324,63 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
               final b = revenueBookings[index];
               final amount = b['owner_earnings'] ?? 0;
               final status = b['payout_status']?.toString().toUpperCase() ?? 'PENDING';
+              
+              final playerName = b['player_name']?.toString() ?? 'Player';
+              final rawPeriod = b['period']?.toString() ?? '';
+              final slotTime = b['slot_time']?.toString() ?? '';
+              
+              String dateStr = '';
+              if (slotTime.isNotEmpty) {
+                try {
+                  final d = DateTime.parse(slotTime).toLocal();
+                  dateStr = DateFormat('MMM d, yyyy').format(d);
+                } catch (_) {}
+              }
+              
+              final sportName = (b['sport_name']?.toString() ?? 'Sport').toUpperCase();
+
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  title: AppText(text: 'Booking #${b['id'].toString().substring(0, 8)}', weight: FontWeight.w600),
-                  subtitle: AppText(text: b['player_name'] ?? 'Player', size: 13),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
                     children: [
-                      AppText(text: '+ ?$amount', weight: FontWeight.bold, size: 15, color: Colors.green),
-                      AppText(text: status, color: status == 'SETTLED' ? Colors.green : Colors.orange, size: 11, weight: FontWeight.w700),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.sports_cricket_rounded, color: AppColors.primaryDarkGreen, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AppText(text: playerName, weight: FontWeight.w700, size: 14),
+                            const SizedBox(height: 2),
+                            AppText(text: '$sportName • $dateStr', size: 12, color: Colors.grey.shade600),
+                            AppText(text: rawPeriod.split('|').first, size: 12, color: Colors.grey.shade600),
+                          ],
+                        ),
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          AppText(text: '+ ₹$amount', weight: FontWeight.bold, size: 16, color: Colors.green),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: status == 'SETTLED' ? Colors.green.shade50 : Colors.orange.shade50,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: AppText(text: status, color: status == 'SETTLED' ? Colors.green : Colors.orange, size: 10, weight: FontWeight.w800),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

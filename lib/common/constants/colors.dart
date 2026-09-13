@@ -66,6 +66,7 @@ class AppColors {
       case 'requested':
         return const Color(0xFFF57C00);
       case 'pending':
+      case 'requested':
         return statusPending;
       case 'approved':
         return const Color(0xFF0288D1);
@@ -87,6 +88,7 @@ class AppColors {
       case 'requested':
         return const Color(0xFFFFF3E0);
       case 'pending':
+      case 'requested':
         return statusPendingBg;
       case 'approved':
         return const Color(0xFFE1F5FE);
@@ -104,16 +106,8 @@ class AppColors {
   }
 
   static Color bookingStatusBorderColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'requested':
-        return const Color(0xFFFFB74D);
-      case 'approved':
-        return const Color(0xFF81D4FA);
-      case 'pending':
-        return statusPendingBorder;
-      default:
-        return borderLight;
-    }
+    if (status.toLowerCase() == 'pending' || status.toLowerCase() == 'requested') return statusPendingBorder;
+    return borderLight;
   }
 
   static ThemeData getLightTheme() {

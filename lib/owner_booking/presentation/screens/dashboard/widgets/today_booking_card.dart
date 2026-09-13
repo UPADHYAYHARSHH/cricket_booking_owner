@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
@@ -18,6 +19,7 @@ class TodayBookingCard extends StatefulWidget {
 class _TodayBookingCardState extends State<TodayBookingCard>
     with SingleTickerProviderStateMixin {
   bool _isPressed = false;
+  bool _isProcessing = false;
 
   String _formatLabel(String raw) {
     if (raw.isEmpty) return raw;
@@ -64,6 +66,43 @@ class _TodayBookingCardState extends State<TodayBookingCard>
     return merged.join(', ');
   }
 
+  Future<void> _handleApprove() async {
+    setState(() => _isProcessing = true);
+    try {
+      await Supabase.instance.client.rpc('approve_booking', params: {
+        'p_booking_id': widget.booking['id'].toString()
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Booking Approved')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _handleDecline() async {
+    setState(() => _isProcessing = true);
+    try {
+      await Supabase.instance.client.rpc('delete_or_expire_booking', params: {
+        'p_booking_id': widget.booking['id'].toString(),
+        'p_reason': 'declined_by_owner'
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Booking Declined')));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final status = (widget.booking['status'] ?? 'pending').toString();
@@ -80,6 +119,20 @@ class _TodayBookingCardState extends State<TodayBookingCard>
     }
     final sportName = _formatLabel((widget.booking['sport_name'] ?? 'Sport').toString());
     final amount = widget.booking['amount'] ?? widget.booking['total_amount'] ?? 0;
+    
+    final slotTime = widget.booking['slot_time']?.toString() ?? widget.booking['created_at']?.toString() ?? '';
+    String dateStr = '';
+    if (slotTime.isNotEmpty) {
+      try {
+        final d = DateTime.parse(slotTime).toLocal();
+        final now = DateTime.now();
+        if (d.year != now.year || d.month != now.month || d.day != now.day) {
+           dateStr = "${d.day}/${d.month} • ";
+        }
+      } catch (_) {}
+    }
+
+    final isRequested = status == 'requested' || status == 'pending';
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
@@ -143,7 +196,7 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                                 overflow: TextOverflow.ellipsis,
                               ),
                               AppText(
-                                text: "$groundName Â· $period",
+                                text: "$groundName • $dateStr$period",
                                 size: 12,
                                 color: AppColors.textSecondaryLight,
                               ),
@@ -179,7 +232,7 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                   children: [
                     _InfoChip(
                       icon: HugeIcons.strokeRoundedMoneyBag01,
-                      text: "â‚¹$amount",
+                      text: "?$amount",
                     ),
                     const SizedBox(width: 16),
                     _InfoChip(
@@ -215,6 +268,38 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                   ],
                 ),
               ),
+              if (isRequested) ...[
+                const SizedBox(height: 12),
+                _isProcessing
+                  ? const Center(child: Padding(padding: EdgeInsets.all(8), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))))
+                  : Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _handleDecline,
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.red,
+                            side: const BorderSide(color: Colors.red),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: const Text('Decline'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: _handleApprove,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          child: const Text('Approve'),
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
             ],
           ),
         ),
