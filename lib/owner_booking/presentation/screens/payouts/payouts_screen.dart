@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -110,7 +110,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppText(text: 'Available: ?$available', color: AppColors.primaryDarkGreen, weight: FontWeight.w600),
+                  AppText(text: 'Available: ₹$available', color: AppColors.primaryDarkGreen, weight: FontWeight.w600),
                   const SizedBox(height: 16),
                   TextField(
                     controller: controller,
@@ -190,8 +190,8 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _buildWalletCard('Available', '?$availableBalance', AppColors.primaryDarkGreen),
-                    _buildWalletCard('Total Earned', '?$totalEarnings', Colors.grey.shade700),
+                    _buildWalletCard('Available', '₹$availableBalance', AppColors.primaryDarkGreen),
+                    _buildWalletCard('Total Earned', '₹$totalEarnings', Colors.grey.shade700),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -268,7 +268,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
         final amount = w['amount'];
         final status = w['status']?.toString().toUpperCase() ?? 'UNKNOWN';
         final date = DateTime.tryParse(w['created_at'].toString())?.toLocal();
-        final dateStr = date != null ? DateFormat('MMM d, yyyy � h:mm a').format(date) : '';
+        final dateStr = date != null ? DateFormat('MMM d, yyyy • h:mm a').format(date) : '';
         
         Color statusColor = Colors.orange;
         if (status == 'SUCCESS') statusColor = Colors.green;
@@ -284,7 +284,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                AppText(text: '?$amount', weight: FontWeight.bold, size: 16),
+                AppText(text: '₹$amount', weight: FontWeight.bold, size: 16),
                 AppText(text: status, color: statusColor, size: 11, weight: FontWeight.w700),
               ],
             ),
@@ -328,7 +328,7 @@ class _PayoutsScreenState extends State<PayoutsScreen> with SingleTickerProvider
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      AppText(text: '+ ?$amount', weight: FontWeight.bold, size: 15, color: Colors.green),
+                      AppText(text: '+ ₹$amount', weight: FontWeight.bold, size: 15, color: Colors.green),
                       AppText(text: status, color: status == 'SETTLED' ? Colors.green : Colors.orange, size: 11, weight: FontWeight.w700),
                     ],
                   ),
