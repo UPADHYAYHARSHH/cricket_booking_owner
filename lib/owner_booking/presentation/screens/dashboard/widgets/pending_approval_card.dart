@@ -262,8 +262,8 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
   Widget build(BuildContext context) {
     final booking = widget.booking;
     final isApproved = booking['status']?.toString().toLowerCase() == 'approved';
-    final accentColor = isApproved ? AppColors.primaryDarkGreen : accentColor;
-    final lightAccentColor = isApproved ? AppColors.primaryDarkGreen.withOpacity(0.4) : lightAccentColor;
+    final accentColor = isApproved ? AppColors.primaryDarkGreen : const Color(0xFFE65100);
+    final lightAccentColor = isApproved ? AppColors.primaryDarkGreen.withOpacity(0.4) : const Color(0xFFFFB74D);
 
     final playerName = booking['player_name'] ?? 'Customer';
     final groundName = booking['ground_name'] ?? 'Court';
@@ -462,7 +462,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.timer_outlined, size: 15, color: accentColor),
+                                  Icon(Icons.timer_outlined, size: 15, color: accentColor),
                                   const SizedBox(width: 6),
                                   Expanded(
                                     child: AppText(
@@ -474,7 +474,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                       color: accentColor,
                                     ),
                                   ),
-                                  const AppText(
+                                  AppText(
                                     text: "Max 45m",
                                     size: 11,
                                     weight: FontWeight.w600,
