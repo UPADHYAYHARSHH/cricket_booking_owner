@@ -64,6 +64,7 @@ class AppColors {
   static Color bookingStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
+      case 'requested':
         return statusPending;
       case 'confirmed':
       case 'completed':
@@ -78,6 +79,7 @@ class AppColors {
   static Color bookingStatusBgColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
+      case 'requested':
         return statusPendingBg;
       case 'confirmed':
       case 'completed':
@@ -90,7 +92,7 @@ class AppColors {
   }
 
   static Color bookingStatusBorderColor(String status) {
-    if (status.toLowerCase() == 'pending') return statusPendingBorder;
+    if (status.toLowerCase() == 'pending' || status.toLowerCase() == 'requested') return statusPendingBorder;
     return borderLight;
   }
 
