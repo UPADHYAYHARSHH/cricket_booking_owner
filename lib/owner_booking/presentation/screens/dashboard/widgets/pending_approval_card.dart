@@ -387,7 +387,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                     borderRadius: BorderRadius.circular(AppSizes.radiusFull),
                                     border: Border.all(color: const Color(0xFFFFB74D)),
                                   ),
-                                  child: const Row(
+                                  child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.hourglass_top_rounded, size: 12, color: Color(0xFFE65100)),
