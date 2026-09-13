@@ -180,27 +180,21 @@ class BookingRepositoryImpl implements BookingRepository {
 
 
 
-    // Bypass RPC because it incorrectly sets status to 'confirmed' instead of 'approved'
-    // Proceed directly to the fallback direct update
-
-    // Direct update fallback if RPC didn't return or failed
-    if (bookingData == null) {
-      try {
-        final updated = await _supabase
-            .from('bookings')
-            .update({
-              'status': 'approved',
-              'approved_at': DateTime.now().toUtc().toIso8601String(),
-            })
-            .eq('id', bookingId)
-            .select('*, grounds(name)')
-            .maybeSingle();
-        if (updated != null) {
-          bookingData = Map<String, dynamic>.from(updated);
-        }
-      } catch (e) {
-        print('[approveBooking] Direct update failed: $e');
+    try {
+      final updated = await _supabase
+          .from('bookings')
+          .update({
+            'status': 'approved',
+            'approved_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', bookingId)
+          .select('*, grounds(name)')
+          .maybeSingle();
+      if (updated != null) {
+        bookingData = Map<String, dynamic>.from(updated);
       }
+    } catch (e) {
+      print('[approveBooking] Direct update failed: $e');
     }
 
     // Ensure user notification and trigger push
