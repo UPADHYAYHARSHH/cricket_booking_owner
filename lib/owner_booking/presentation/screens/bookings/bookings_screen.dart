@@ -858,23 +858,26 @@ class _BookingCardState extends State<_BookingCard> {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(AppSizes.radiusLg),
-                border: Border(
-                  left: BorderSide(color: statusColor, width: barWidth),
-                  top: BorderSide(color: outlineColor, width: outlineWidth),
-                  right: BorderSide(color: outlineColor, width: outlineWidth),
-                  bottom: BorderSide(color: outlineColor, width: outlineWidth),
-                ),
+                border: Border.all(color: outlineColor, width: outlineWidth),
               ),
-              child: Padding(
-                padding: EdgeInsets.fromLTRB(
-                  AppSizes.lg - (barWidth / 2 - outlineWidth).clamp(0, 8),
-                  AppSizes.lg,
-                  AppSizes.lg,
-                  AppSizes.lg,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppSizes.radiusLg - outlineWidth),
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border(
+                      left: BorderSide(color: statusColor, width: barWidth),
+                    ),
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      AppSizes.lg - (barWidth / 2 - outlineWidth).clamp(0, 8),
+                      AppSizes.lg,
+                      AppSizes.lg,
+                      AppSizes.lg,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                     // ── Header: sport tile + player/ground + status ──
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1181,7 +1184,9 @@ class _BookingCardState extends State<_BookingCard> {
           ),
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 }
 

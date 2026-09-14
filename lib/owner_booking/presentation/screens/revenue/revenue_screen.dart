@@ -684,92 +684,187 @@ class _TrendChartCard extends StatelessWidget {
           else
             SizedBox(
               height: 220,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final minBarWidth = 45.0;
-                  final chartWidth = points.length * minBarWidth;
-                  final width = chartWidth > constraints.maxWidth ? chartWidth : constraints.maxWidth;
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Container(
-                      width: width,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: BarChart(
-                        BarChartData(
-                          maxY: maxY,
-                          alignment: BarChartAlignment.spaceAround,
-                          gridData: const FlGridData(show: false),
-                          borderData: FlBorderData(show: false),
-                          barTouchData: BarTouchData(
-                            touchTooltipData: BarTouchTooltipData(
-                              getTooltipItem: (group, rodIndex, rod, mouse) => BarTooltipItem(
-                                '₹${rod.toY.toInt()}',
-                                const TextStyle(
-                                  color: AppColors.white,
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
+              child: Row(
+                children: [
+                  // Sticky Y-Axis
+                  SizedBox(
+                    width: 50,
+                    child: LineChart(
+                      LineChartData(
+                        maxY: maxY,
+                        minY: 0,
+                        minX: 0,
+                        maxX: 1,
+                        gridData: const FlGridData(show: false),
+                        borderData: FlBorderData(
+                          show: true,
+                          border: const Border(
+                            bottom: BorderSide(color: AppColors.borderLight, width: 1),
+                            right: BorderSide(color: AppColors.borderLight, width: 1),
                           ),
-                          titlesData: FlTitlesData(
-                            leftTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            rightTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            topTitles: const AxisTitles(
-                              sideTitles: SideTitles(showTitles: false),
-                            ),
-                            bottomTitles: AxisTitles(
-                              sideTitles: SideTitles(
-                                showTitles: true,
-                                getTitlesWidget: (value, meta) {
-                                  final i = value.toInt();
-                                  if (i < 0 || i >= points.length) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Text(
-                                      points[i].label,
-                                      style: const TextStyle(
-                                        fontSize: 10,
-                                        color: AppColors.textSecondaryLight,
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                          barGroups: [
-                            for (int i = 0; i < points.length; i++)
-                              BarChartGroupData(
-                                x: i,
-                                barRods: [
-                                  BarChartRodData(
-                                    toY: points[i].amount,
-                                    width: 20,
-                                    borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(6),
-                                    ),
-                                    backDrawRodData: BackgroundBarChartRodData(
-                                      show: true,
-                                      toY: maxY,
-                                      color: AppColors.borderLight,
-                                    ),
-                                    color: AppColors.primaryDarkGreen,
-                                  ),
-                                ],
-                              ),
-                          ],
                         ),
+                        lineTouchData: const LineTouchData(enabled: false),
+                        titlesData: FlTitlesData(
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 42,
+                              getTitlesWidget: (value, meta) {
+                                if (value == maxY || value == 0) return const SizedBox.shrink();
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 6),
+                                  child: Text(
+                                    '₹${value.toInt()}',
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      color: AppColors.textSecondaryLight,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 30, // matches X axis height
+                              getTitlesWidget: (value, meta) => const SizedBox.shrink(),
+                            ),
+                          ),
+                        ),
+                        lineBarsData: [
+                          LineChartBarData(spots: const [], show: false),
+                        ],
                       ),
                     ),
-                  );
-                },
+                  ),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final minBarWidth = 45.0;
+                        final chartWidth = points.length * minBarWidth;
+                        final width = chartWidth > constraints.maxWidth ? chartWidth : constraints.maxWidth;
+                        final lineBarData = LineChartBarData(
+                          spots: [
+                            for (int i = 0; i < points.length; i++)
+                              FlSpot(i.toDouble(), points[i].amount),
+                          ],
+                          isCurved: false,
+                          color: AppColors.primaryDarkGreen,
+                          barWidth: 3,
+                          isStrokeCapRound: true,
+                          dotData: FlDotData(
+                            show: true,
+                            getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
+                              radius: 4,
+                              color: AppColors.primaryDarkGreen,
+                              strokeWidth: 1.5,
+                              strokeColor: AppColors.white,
+                            ),
+                          ),
+                          belowBarData: BarAreaData(show: false),
+                        );
+
+                        return SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Container(
+                            width: width,
+                            padding: const EdgeInsets.only(right: 16),
+                            child: LineChart(
+                              LineChartData(
+                                showingTooltipIndicators: points.isEmpty ? [] : [
+                                  for (int i = 0; i < points.length; i++)
+                                    ShowingTooltipIndicators([
+                                      LineBarSpot(lineBarData, 0, lineBarData.spots[i]),
+                                    ])
+                                ],
+                                maxY: maxY,
+                                minY: 0,
+                                minX: 0,
+                                maxX: points.isEmpty ? 1 : (points.length - 1).toDouble(),
+                                gridData: FlGridData(
+                                  show: true,
+                                  drawVerticalLine: false,
+                                  getDrawingHorizontalLine: (value) => const FlLine(
+                                    color: AppColors.borderLight,
+                                    strokeWidth: 0.5,
+                                    dashArray: [4, 4],
+                                  ),
+                                ),
+                                borderData: FlBorderData(
+                                  show: true,
+                                  border: const Border(
+                                    bottom: BorderSide(color: AppColors.borderLight, width: 1),
+                                  ),
+                                ),
+                                lineTouchData: LineTouchData(
+                                  enabled: false,
+                                  touchTooltipData: LineTouchTooltipData(
+                                    getTooltipColor: (spot) => Colors.transparent,
+                                    tooltipPadding: EdgeInsets.zero,
+                                    tooltipMargin: 8,
+                                    getTooltipItems: (touchedSpots) {
+                                      return touchedSpots.map((spot) => LineTooltipItem(
+                                        '₹${spot.y.toInt()}',
+                                        const TextStyle(
+                                          color: AppColors.textSecondaryLight,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 10,
+                                        ),
+                                      )).toList();
+                                    },
+                                  ),
+                                ),
+                                titlesData: FlTitlesData(
+                                  leftTitles: const AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  rightTitles: const AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  topTitles: const AxisTitles(
+                                    sideTitles: SideTitles(showTitles: false),
+                                  ),
+                                  bottomTitles: AxisTitles(
+                                    sideTitles: SideTitles(
+                                      showTitles: true,
+                                      reservedSize: 30,
+                                      interval: 1,
+                                      getTitlesWidget: (value, meta) {
+                                        final i = value.toInt();
+                                        if (value != i.toDouble() || i < 0 || i >= points.length) {
+                                          return const SizedBox.shrink();
+                                        }
+                                        return Padding(
+                                          padding: const EdgeInsets.only(top: 8),
+                                          child: Text(
+                                            points[i].label,
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              color: AppColors.textSecondaryLight,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                lineBarsData: [lineBarData],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
         ],

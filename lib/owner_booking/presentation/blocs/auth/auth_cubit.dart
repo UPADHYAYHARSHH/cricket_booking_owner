@@ -335,16 +335,19 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> _emitOnboardingStep(String userId) async {
     try {
       final d = await _ownerRepository.getOwnerDetails(userId);
+      print('DEBUG [AuthCubit]: Owner details status: ${d?['status']} for user: $userId');
 
       // Already approved — go to dashboard
       if (d?['status'] == 'approved') {
         final locations = await _locationRepository.getOwnerLocations(userId);
+        print('DEBUG [AuthCubit]: Locations count: ${locations.length}');
         if (locations.isEmpty) {
           emit(AuthLocationRequired());
           return;
         }
         
         final grounds = await _groundRepository.getOwnerGrounds(userId);
+        print('DEBUG [AuthCubit]: Grounds count: ${grounds.length}');
         if (grounds.isEmpty) {
           emit(AuthGroundRequired(locations.first['id'].toString()));
           return;

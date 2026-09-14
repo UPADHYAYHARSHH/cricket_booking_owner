@@ -142,32 +142,36 @@ double averageBookingValue(List<Map<String, dynamic>> bookings) {
   return count == 0 ? 0 : totalRevenue(bookings) / count;
 }
 
-/// Daily revenue for the last 7 days (oldest first), labeled "d MMM".
+/// Weekly revenue for the current month, labeled "Week 1", "Week 2", etc.
 List<RevenuePoint> weeklySeries(List<Map<String, dynamic>> bookings) {
-  final today = DateTime.now();
-  final days = List.generate(7, (i) => DateTime(today.year, today.month, today.day)
-      .subtract(Duration(days: 6 - i)));
+  final now = DateTime.now();
+  final lastDay = DateTime(now.year, now.month + 1, 0).day;
+  final numWeeks = (lastDay / 7).ceil();
 
-  final totals = {for (final d in days) d: 0.0};
+  final weeks = List.generate(numWeeks, (i) => i + 1);
+  final totals = {for (final w in weeks) w: 0.0};
+
   for (final b in bookings) {
     if (!_countsTowardsRevenue(b)) continue;
     final date = _dateOf(b);
     if (date == null) continue;
-    final key = DateTime(date.year, date.month, date.day);
-    if (totals.containsKey(key)) {
-      totals[key] = totals[key]! + _amountOf(b);
+    if (date.year == now.year && date.month == now.month) {
+      final weekNum = ((date.day - 1) ~/ 7) + 1;
+      if (totals.containsKey(weekNum)) {
+        totals[weekNum] = totals[weekNum]! + _amountOf(b);
+      }
     }
   }
 
-  return days
-      .map((d) => RevenuePoint(DateFormat('d MMM').format(d), totals[d]!))
+  return weeks
+      .map((w) => RevenuePoint('Week $w', totals[w]!))
       .toList();
 }
 
-/// Monthly revenue for the last 6 months (oldest first), labeled "MMM".
+/// Monthly revenue for the last 12 months (oldest first), labeled "MMM".
 List<RevenuePoint> monthlySeries(List<Map<String, dynamic>> bookings) {
   final now = DateTime.now();
-  final months = List.generate(6, (i) => DateTime(now.year, now.month - (5 - i), 1));
+  final months = List.generate(12, (i) => DateTime(now.year, now.month - (11 - i), 1));
 
   final totals = {for (final m in months) m: 0.0};
   for (final b in bookings) {
