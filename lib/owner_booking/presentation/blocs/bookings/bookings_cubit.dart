@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
+import 'package:turfpro_owner/common/utils/booking_id_util.dart';
 import 'bookings_state.dart';
 
 class BookingsCubit extends Cubit<BookingsState> {
@@ -331,9 +332,6 @@ String bookingId) async {
   /// Matches the "CB..." id shown to the owner on the booking cards/details
   /// screen, since that's what an owner would actually type into search.
   String _displayId(dynamic booking) {
-    final raw = booking['display_id']?.toString();
-    if (raw != null && raw.isNotEmpty && raw != '0') return 'cb$raw';
-    final fullId = booking['id']?.toString() ?? '';
-    return 'cb${fullId.length > 5 ? fullId.substring(0, 5) : fullId}';
+    return 'cb${BookingIdUtil.formatBookingId(booking['display_id'], booking['id'])}';
   }
 }

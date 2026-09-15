@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -6,8 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
-import 'package:turfpro_owner/common/services/app_config_service.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
+import 'package:turfpro_owner/common/utils/booking_id_util.dart';
+import 'package:turfpro_owner/common/utils/booking_time_util.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart';
@@ -550,7 +552,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     final sportName = _formatSportSlug(rawSport);
 
     // ---------- robust slot_time + period parsing ----------
-    DateTime? _parseSlot(dynamic v) {
+    DateTime? parseSlot(dynamic v) {
       if (v == null) return null;
       final s = v.toString().trim();
       if (s.isEmpty) return null;
@@ -569,133 +571,110 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
       return null;
     }
 
-    String _mergeSlotRange(String csvStartTimes) {
-      // csv like "6:00 AM,7:00 AM,8:00 AM"  →  "6:00 AM – 9:00 AM"
-      final slots = csvStartTimes
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-      if (slots.isEmpty) return '';
-      if (slots.length == 1) return slots.first;
-
-      DateTime? first;
-      DateTime? lastEnd;
-      final refYear = 2000;
-      for (final raw in slots) {
-        final baseParsed = DateFormat('h:mm a').parseLoose(raw);
-        final t = DateTime(refYear, 1, 1, baseParsed.hour, baseParsed.minute);
-        final end = t.add(const Duration(hours: 1));
-        first ??= t;
-        lastEnd ??= end;
-        // Only merge if contiguous / within 15 min of last end
-        final gap = t.difference(lastEnd!).inMinutes;
-        if (gap >= -1 && gap <= 15) {
-          lastEnd = end;
-        } else {
-          // Non-contiguous — bail out to comma list
-          return '${slots.first} – ${slots.last}';
-        }
-      }
-      return '${DateFormat('h:mm a').format(first!)} – ${DateFormat('h:mm a').format(lastEnd!)}';
-    }
-
-    final slotTime = _parseSlot(booking['slot_time']);
+    final slotTime = parseSlot(booking['slot_time']);
     final dateFormatted = slotTime != null
         ? DateFormat('EEEE, MMM d, yyyy').format(slotTime)
         : 'N/A';
 
-    // Period = "PeriodLabel|slotStart1,slotStart2,..."
-    final periodFromDb = booking['period']?.toString() ?? '';
-    final pipeIdx = periodFromDb.indexOf('|');
-    final periodLabel = pipeIdx >= 0
-        ? periodFromDb.substring(0, pipeIdx).trim()
-        : periodFromDb.trim();
-    final slotCsv = pipeIdx >= 0 && pipeIdx < periodFromDb.length - 1
-        ? periodFromDb.substring(pipeIdx + 1).trim()
-        : '';
-
-    final String timeFormatted;
-    final mergedSlots = slotCsv.isNotEmpty ? _mergeSlotRange(slotCsv) : '';
-    if (mergedSlots.isNotEmpty && periodLabel.isNotEmpty) {
-      timeFormatted = '$periodLabel · $mergedSlots';
-    } else if (mergedSlots.isNotEmpty) {
-      timeFormatted = mergedSlots;
-    } else if (periodLabel.isNotEmpty) {
-      timeFormatted = periodLabel;
-    } else if (slotTime != null) {
-      timeFormatted =
-          "${DateFormat('h:mm a').format(slotTime)} – ${DateFormat('h:mm a').format(slotTime.add(const Duration(hours: 1)))}";
-    } else {
-      timeFormatted = 'N/A';
-    }
-    debugPrint(
-      '[BOOKING_DETAILS] period=$periodFromDb periodLabel=$periodLabel slotsCsv=$slotCsv -> time=$timeFormatted slotTime=$slotTime',
+    final String timeFormatted = BookingTimeUtil.formatBookingTime(
+      period: booking['period']?.toString(),
+      slotTime: slotTime,
     );
 
     // Booking ID
-    final rawDisplayId = booking['display_id'];
-    String displayId = (rawDisplayId != null && rawDisplayId.toString() != '0')
-        ? rawDisplayId.toString()
-        : '';
-    if (displayId.isEmpty) {
-      final fullId = booking['id']?.toString() ?? '';
-      displayId = fullId.length > 5
-          ? fullId.substring(0, 5).toUpperCase()
-          : fullId.toUpperCase();
+    final String displayId = BookingIdUtil.formatBookingId(
+      booking['display_id'],
+      booking['id'],
+    );
+
+    // Financial details strictly from database booking snapshot (notes or column values)
+    // NOTE: Isolated from live Remote Config so future config updates never alter past bookings.
+    Map<String, dynamic>? parsedNotes;
+    if (booking['notes'] != null) {
+      if (booking['notes'] is Map<String, dynamic>) {
+        parsedNotes = booking['notes'] as Map<String, dynamic>;
+      } else if (booking['notes'] is String) {
+        final str = (booking['notes'] as String).trim();
+        if (str.startsWith('{') && str.endsWith('}')) {
+          try {
+            parsedNotes = jsonDecode(str) as Map<String, dynamic>?;
+          } catch (_) {}
+        }
+      }
     }
 
-    // Amount & Fee Snapshot — stored in rupees per booking
-    final platformFee =
-        (booking['platform_fee'] as num?)?.toDouble() ??
-        AppConfigService.instance.platformFee;
-    final commissionRate =
-        (booking['commission_rate'] as num?)?.toDouble() ??
-        AppConfigService.instance.commissionRate;
-    final commissionIsPercentage = booking['commission_is_percentage'] != null
-        ? (booking['commission_is_percentage'] == true)
-        : AppConfigService.instance.commissionIsPercentage;
-
     final rawAmount =
-        (booking['amount'] as num?) ?? (booking['total_amount'] as num?) ?? 0;
+        (booking['amount'] as num?) ?? (booking['total_amount'] as num?) ?? (parsedNotes?['grand_total'] as num?) ?? 0;
     final totalAmount = rawAmount.toDouble();
-    final baseAmount =
-        (booking['base_amount'] as num?)?.toDouble() ??
-        (totalAmount - platformFee).clamp(0.0, totalAmount);
+
+    final double rawSlotPrice = parsedNotes?['slot_price'] != null
+        ? (parsedNotes!['slot_price'] as num).toDouble()
+        : ((booking['base_amount'] as num?)?.toDouble() ?? 0.0);
+
+    final double gstAmount = parsedNotes?['gst_amount'] != null
+        ? (parsedNotes!['gst_amount'] as num).toDouble()
+        : ((booking['gst_amount'] as num?)?.toDouble() ?? 0.0);
+
+    final double platformFee = parsedNotes?['platform_fee'] != null
+        ? (parsedNotes!['platform_fee'] as num).toDouble()
+        : ((booking['platform_fee'] as num?)?.toDouble() ?? 0.0);
+
+    final bool isPlatformFeeFree = parsedNotes != null
+        ? (parsedNotes['is_platform_fee_free'] == true)
+        : (booking['is_platform_fee_free'] == true ||
+            (platformFee > 0 && rawSlotPrice >= totalAmount));
+
+    final commissionRate =
+        (booking['commission_rate'] as num?)?.toDouble() ?? 0.0;
+    final commissionIsPercentage = booking['commission_is_percentage'] == null
+        ? true
+        : (booking['commission_is_percentage'] == true);
+
+    final double slotPrice = rawSlotPrice > 0
+        ? rawSlotPrice
+        : (isPlatformFeeFree
+            ? totalAmount
+            : (totalAmount - platformFee - gstAmount).clamp(0.0, totalAmount));
 
     final commissionFee = commissionIsPercentage
-        ? baseAmount * commissionRate / 100
+        ? slotPrice * commissionRate / 100
         : commissionRate;
-    final groundRate =
-        (booking['owner_earnings'] as num?)?.toDouble() ??
-        (baseAmount - commissionFee).clamp(0.0, baseAmount);
+
+    // Owner earned prioritizes the database stored owner_earnings, or slot price minus platform commission.
+    // Platform fee (whether charged to customer or waived/free) is never deducted from the owner.
+    final double? dbOwnerEarnings = (booking['owner_earnings'] as num?)?.toDouble() ??
+        (parsedNotes?['owner_earnings'] as num?)?.toDouble();
+    final groundRate = dbOwnerEarnings ?? (slotPrice - commissionFee).clamp(0.0, slotPrice);
 
     // Player info
     final playerImage = booking['player_image']?.toString() ?? '';
     final memberSinceStr = booking['member_since']?.toString() ?? '';
     String memberSinceFormatted = '';
     if (memberSinceStr.isNotEmpty) {
-      final msDate = DateTime.tryParse(memberSinceStr)?.toLocal();
-      if (msDate != null)
+      final msDate = _parseUtcToLocal(memberSinceStr);
+      if (msDate != null) {
         memberSinceFormatted = DateFormat('MMM yyyy').format(msDate);
+      }
     }
     // Check-in
     final isCheckedIn = booking['checked_in'] == true;
     final checkedInAtStr = booking['checked_in_at']?.toString() ?? '';
     String? checkedInFormatted;
     if (checkedInAtStr.isNotEmpty) {
-      final ciDate = DateTime.tryParse(checkedInAtStr)?.toLocal();
-      if (ciDate != null)
+      final ciDate = _parseUtcToLocal(checkedInAtStr);
+      if (ciDate != null) {
         checkedInFormatted = DateFormat('d MMM yyyy, h:mm a').format(ciDate);
+      }
     }
 
     // Booked on date
     final createdAtStr = booking['created_at']?.toString() ?? '';
     String bookedOnFormatted = '';
     if (createdAtStr.isNotEmpty) {
-      final caDate = DateTime.tryParse(createdAtStr)?.toLocal();
-      if (caDate != null)
+      final caDate = _parseUtcToLocal(createdAtStr);
+      if (caDate != null) {
         bookedOnFormatted = DateFormat('d MMM yyyy, h:mm a').format(caDate);
+      }
     }
 
     // Payment reference
@@ -1050,14 +1029,46 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       child: Column(
                         children: [
                           _PaymentRow(
-                            label: "Customer Paid",
-                            value: "₹${totalAmount.toStringAsFixed(0)}",
+                            label: "Slot Price",
+                            value: "₹${slotPrice.toStringAsFixed(0)}",
+                          ),
+                          const _RowDivider(),
+                          _PaymentRow(
+                            label: "GST",
+                            value: "₹${gstAmount.toStringAsFixed(0)}",
                           ),
                           const _RowDivider(),
                           _PaymentRow(
                             label: "Platform Fee",
-                            value: "– ₹${platformFee.toStringAsFixed(0)}",
-                            valueColor: AppColors.error,
+                            customValue: isPlatformFeeFree
+                                ? Row(
+                                    children: [
+                                      Text(
+                                        "₹${platformFee.toStringAsFixed(0)}",
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.textSecondaryLight,
+                                          decoration: TextDecoration.lineThrough,
+                                          decorationColor:
+                                              AppColors.textSecondaryLight,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      const Text(
+                                        "Free",
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF22C55E),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : null,
+                            value: isPlatformFeeFree
+                                ? null
+                                : "₹${platformFee.toStringAsFixed(0)}",
                           ),
                           if (commissionRate > 0) ...[
                             const _RowDivider(),
@@ -1070,13 +1081,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                             ),
                           ],
                           const _RowDivider(),
-                          _PaymentRow(
-                            label: "Taxes & Charges",
-                            value: "Included",
-                            valueColor: AppColors.textSecondaryLight,
-                          ),
-                          const _RowDivider(),
-                          // You earn — highlighted section
+                          // Owner Earned — highlighted section
                           Container(
                             margin: const EdgeInsets.only(
                               top: AppSizes.sm,
@@ -1128,7 +1133,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                           CrossAxisAlignment.start,
                                       children: [
                                         const AppText(
-                                          text: "You Earn",
+                                          text: "Owner Earned",
                                           size: 14,
                                           weight: FontWeight.bold,
                                           color: AppColors.primaryDarkGreen,
@@ -1529,12 +1534,14 @@ class _DetailRow extends StatelessWidget {
 
 class _PaymentRow extends StatelessWidget {
   final String label;
-  final String value;
+  final String? value;
+  final Widget? customValue;
   final Color? valueColor;
 
   const _PaymentRow({
     required this.label,
-    required this.value,
+    this.value,
+    this.customValue,
     this.valueColor,
   });
 
@@ -1546,12 +1553,13 @@ class _PaymentRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           AppText(text: label, size: 13, color: AppColors.textSecondaryLight),
-          AppText(
-            text: value,
-            size: 13,
-            weight: FontWeight.w600,
-            color: valueColor ?? AppColors.textPrimaryLight,
-          ),
+          customValue ??
+              AppText(
+                text: value ?? '',
+                size: 13,
+                weight: FontWeight.w600,
+                color: valueColor ?? AppColors.textPrimaryLight,
+              ),
         ],
       ),
     );

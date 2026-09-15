@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
+import 'package:turfpro_owner/common/utils/booking_financial_util.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
 
@@ -131,7 +132,8 @@ class _TodayBookingCardState extends State<TodayBookingCard>
       period = "$dateLabel - $simplified";
     }
     final sportName = _formatLabel((widget.booking['sport_name'] ?? 'Sport').toString());
-    final amount = widget.booking['amount'] ?? widget.booking['total_amount'] ?? 0;
+    final ownerEarnings = BookingFinancialUtil.getOwnerEarnings(widget.booking);
+    final displayAmount = BookingFinancialUtil.formatAmount(ownerEarnings);
     
     final slotTime = widget.booking['slot_time']?.toString() ?? widget.booking['created_at']?.toString() ?? '';
     String dateStr = '';
@@ -245,7 +247,7 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                   children: [
                     _InfoChip(
                       icon: HugeIcons.strokeRoundedMoneyBag01,
-                      text: "₹$amount",
+                      text: "₹$displayAmount",
                     ),
                     const SizedBox(width: 16),
                     _InfoChip(

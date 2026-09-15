@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +7,7 @@ import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
+import 'package:turfpro_owner/common/utils/booking_financial_util.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
@@ -289,13 +290,8 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
       period = "$dateLabel - $simplified";
     }
     final sportName = (booking['sport_name'] ?? 'Sport').toString();
-    final amount = booking['amount'] ?? booking['total_amount'] ?? 0;
-
-    String displayId = booking['display_id']?.toString() ?? '';
-    if (displayId.isEmpty) {
-      final fullId = booking['id']?.toString() ?? '';
-      displayId = fullId.length > 5 ? fullId.substring(0, 5).toUpperCase() : fullId;
-    }
+    final ownerEarnings = BookingFinancialUtil.getOwnerEarnings(booking);
+    final displayAmount = BookingFinancialUtil.formatAmount(ownerEarnings);
 
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
@@ -442,7 +438,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                   ),
                                   const SizedBox(width: 4),
                                   AppText(
-                                    text: "₹$amount",
+                                    text: "₹$displayAmount",
                                     size: 13,
                                     weight: FontWeight.w700,
                                     color: AppColors.primaryDarkGreen,

@@ -7,6 +7,9 @@ import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
+import 'package:turfpro_owner/common/utils/booking_id_util.dart';
+import 'package:turfpro_owner/common/utils/booking_time_util.dart';
+import 'package:turfpro_owner/common/utils/booking_financial_util.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/common/widgets/status_badge.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
@@ -764,24 +767,6 @@ class _BookingCardState extends State<_BookingCard> {
     return 'Scheduled';
   }
 
-  String _extractTimeSlots(String period) {
-    if (period.isEmpty) return '';
-    final pipeIdx = period.indexOf('|');
-    if (pipeIdx < 0 || pipeIdx == period.length - 1) return '';
-    final slotsPart = period.substring(pipeIdx + 1).trim();
-    if (slotsPart.isEmpty) return '';
-    final slots = slotsPart
-        .split(',')
-        .map((s) => s.trim())
-        .where((s) => s.isNotEmpty)
-        .toList();
-    if (slots.isEmpty) return '';
-    if (slots.length == 1) return slots.first;
-    final simplified = _simplifyPeriod(slots.join(', '));
-    debugPrint('[BOOKING_CARD] slots = $slots -> simplified = $simplified');
-    return simplified;
-  }
-
   String _extractPeriodLabel(String period) {
     if (period.isEmpty) return 'Day';
     final pipeIdx = period.indexOf('|');
@@ -798,10 +783,10 @@ class _BookingCardState extends State<_BookingCard> {
     final groundName = booking['ground_name']?.toString() ?? 'Court';
     final rawPeriod = (booking['period'] ?? '').toString();
     final periodLabel = _extractPeriodLabel(rawPeriod);
-    final timeSlots = _extractTimeSlots(rawPeriod);
     final sportName = (booking['sport_name'] ?? booking['sport'] ?? 'Sport')
         .toString();
-    final amount = booking['amount'] ?? booking['total_amount'] ?? 0;
+    final ownerEarnings = BookingFinancialUtil.getOwnerEarnings(booking);
+    final displayAmount = BookingFinancialUtil.formatAmount(ownerEarnings);
     final pastBookings = booking['past_bookings'] ?? 0;
 
     debugPrint(
@@ -811,27 +796,16 @@ class _BookingCardState extends State<_BookingCard> {
     final slotTime = _robustParse(booking['slot_time']);
     final dateText = _formatBookingDate(slotTime, periodLabel);
 
-    final String timeDisplay;
-    if (timeSlots.isNotEmpty) {
-      timeDisplay = timeSlots;
-    } else if (slotTime != null) {
-      final start = DateFormat('h:mm a').format(slotTime);
-      final end = DateFormat(
-        'h:mm a',
-      ).format(slotTime.add(const Duration(hours: 1)));
-      timeDisplay = '$start – $end';
-    } else {
-      timeDisplay = periodLabel;
-    }
+    final String timeDisplay = BookingTimeUtil.formatBookingTime(
+      period: rawPeriod,
+      slotTime: slotTime,
+    );
     debugPrint('[BOOKING_CARD] date=$dateText time=$timeDisplay');
 
-    String displayId = booking['display_id']?.toString() ?? '';
-    if (displayId.isEmpty) {
-      final fullId = booking['id']?.toString() ?? '';
-      displayId = fullId.length > 5
-          ? fullId.substring(0, 5).toUpperCase()
-          : fullId;
-    }
+    final String displayId = BookingIdUtil.formatBookingId(
+      booking['display_id'],
+      booking['id'],
+    );
 
     final statusColor = AppColors.bookingStatusColor(status);
     final outlineColor = statusColor.withValues(alpha: 0.35);
@@ -978,7 +952,7 @@ class _BookingCardState extends State<_BookingCard> {
                             ),
                           ),
                           AppText(
-                            text: "₹$amount",
+                            text: "₹$displayAmount",
                             size: 13,
                             weight: FontWeight.w700,
                             color: AppColors.primaryDarkGreen,

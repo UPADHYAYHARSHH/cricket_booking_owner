@@ -9,6 +9,9 @@ class AppConfigService {
   static final AppConfigService instance = AppConfigService._();
 
   double _platformFee = 0.0;
+  bool _isPlatformFeeFree = false;
+  double _gstRate = 0.0;
+  bool _isGstEnabled = false;
   double _commissionRate = 0.0;
   bool _commissionIsPercentage = true;
   bool _ownerAppMaintenance = false;
@@ -21,6 +24,9 @@ class AppConfigService {
   StreamSubscription? _remoteConfigSubscription;
 
   double get platformFee => _platformFee;
+  bool get isPlatformFeeFree => _isPlatformFeeFree;
+  double get gstRate => _gstRate;
+  bool get isGstEnabled => _isGstEnabled;
   double get commissionRate => _commissionRate;
   bool get commissionIsPercentage => _commissionIsPercentage;
   bool get ownerAppMaintenance => _ownerAppMaintenance;
@@ -91,6 +97,26 @@ class AppConfigService {
           _platformFee = double.tryParse(remoteConfig.getString('platform_fee')) ?? 0.0;
         }
       }
+      if (keys.containsKey('platform_fee_is_free')) {
+        _isPlatformFeeFree = remoteConfig.getBool('platform_fee_is_free') ||
+            remoteConfig.getString('platform_fee_is_free') == 'true';
+      } else if (keys.containsKey('convenience_fee_is_free')) {
+        _isPlatformFeeFree = remoteConfig.getBool('convenience_fee_is_free') ||
+            remoteConfig.getString('convenience_fee_is_free') == 'true';
+      } else if (keys.containsKey('is_platform_fee_free')) {
+        _isPlatformFeeFree = remoteConfig.getBool('is_platform_fee_free') ||
+            remoteConfig.getString('is_platform_fee_free') == 'true';
+      }
+      if (keys.containsKey('gst_rate')) {
+        _gstRate = remoteConfig.getDouble('gst_rate');
+        if (_gstRate == 0) {
+          _gstRate = double.tryParse(remoteConfig.getString('gst_rate')) ?? 0.0;
+        }
+      }
+      if (keys.containsKey('is_gst_enabled')) {
+        _isGstEnabled = remoteConfig.getBool('is_gst_enabled') ||
+            remoteConfig.getString('is_gst_enabled') == 'true';
+      }
       if (keys.containsKey('commission_rate')) {
         _commissionRate = remoteConfig.getDouble('commission_rate');
         if (_commissionRate == 0) {
@@ -133,6 +159,18 @@ class AppConfigService {
             final parsedFee = double.tryParse(val);
             if (parsedFee != null) _platformFee = parsedFee;
             break;
+          case 'platform_fee_is_free':
+          case 'convenience_fee_is_free':
+          case 'is_platform_fee_free':
+            _isPlatformFeeFree = val == 'true' || val == '1';
+            break;
+          case 'gst_rate':
+            final parsedGst = double.tryParse(val);
+            if (parsedGst != null) _gstRate = parsedGst;
+            break;
+          case 'is_gst_enabled':
+            _isGstEnabled = val == 'true' || val == '1';
+            break;
           case 'commission_rate':
             final parsedComm = double.tryParse(val);
             if (parsedComm != null) _commissionRate = parsedComm;
@@ -156,7 +194,7 @@ class AppConfigService {
             if (val.isNotEmpty) _iosStoreUrl = val;
         }
       }
-      debugPrint('🚀 FETCH OWNER CONFIG SUCCESS: platformFee=$_platformFee');
+      debugPrint('🚀 FETCH OWNER CONFIG SUCCESS: platformFee=$_platformFee, isFree=$_isPlatformFeeFree, gstRate=$_gstRate');
     } catch (e) {
       debugPrint('❌ FETCH OWNER CONFIG FAILED: $e');
     }

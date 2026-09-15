@@ -81,6 +81,8 @@ class Step4Summary extends StatelessWidget {
         _summaryItem('Description', data.description),
         _buildAmenities(data.amenities),
         _summaryItem('Property Status', data.propertyStatus),
+        if (data.privacyPolicy.isNotEmpty)
+          _summaryItem('Refund Policy', data.privacyPolicy),
 
         const SizedBox(height: AppSizes.md),
         const AppText(

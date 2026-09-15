@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:turfpro_owner/owner_booking/domain/models/virtual_slot.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/slot_repository.dart';
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
+import 'package:turfpro_owner/common/utils/booking_financial_util.dart';
 import 'slot_state.dart';
 
 class SlotCubit extends Cubit<SlotState> {
@@ -244,7 +245,7 @@ class SlotCubit extends Cubit<SlotState> {
     int todayRevenue = 0;
     for (var b in bookingsForDate) {
       if (b['user_id'] != null) {
-        todayRevenue += (b['amount'] as num?)?.toInt() ?? _defaultPrice;
+        todayRevenue += BookingFinancialUtil.getOwnerEarnings(b).toInt();
       }
     }
 

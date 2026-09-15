@@ -11,6 +11,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings
 import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_state.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
+import 'package:turfpro_owner/common/utils/booking_id_util.dart';
 
 class PayoutsScreen extends StatefulWidget {
   const PayoutsScreen({super.key});
@@ -1606,14 +1607,11 @@ class _PayoutsScreenState extends State<PayoutsScreen>
     final slotTime = b['slot_time']?.toString() ?? '';
     final sportName = b['sport_name']?.toString() ?? 'Cricket';
 
-    String displayId = b['display_id']?.toString() ?? '';
-    if (displayId.isEmpty) {
-      final fullId = b['id']?.toString() ?? '';
-      displayId = fullId.length > 6
-          ? fullId.substring(0, 6).toUpperCase()
-          : fullId.toUpperCase();
-    }
-    final bookingIdText = '#$displayId';
+    final String displayId = BookingIdUtil.formatBookingId(
+      b['display_id'],
+      b['id'],
+    );
+    final bookingIdText = '#CB$displayId';
 
     String dateStr = '';
     String timeDisplay = '';
