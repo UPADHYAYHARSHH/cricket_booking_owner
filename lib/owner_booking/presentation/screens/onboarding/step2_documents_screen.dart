@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -244,6 +246,37 @@ class _Step2DocumentsScreenState extends State<Step2DocumentsScreen> {
     }
 
     setState(() => _isUploading = true);
+
+    try {
+      final ifsc = _ifscCtrl.text.trim().toUpperCase();
+      final response = await http.get(Uri.parse('https://ifsc.razorpay.com/$ifsc'));
+      if (response.statusCode != 200) {
+        if (mounted) {
+          toastification.show(
+            context: context,
+            type: ToastificationType.error,
+            title: const Text('Invalid IFSC'),
+            description: const Text('The provided IFSC code is invalid or not found.'),
+            autoCloseDuration: const Duration(seconds: 5),
+          );
+          setState(() => _isUploading = false);
+        }
+        return;
+      }
+    } catch (e) {
+      if (mounted) {
+        toastification.show(
+          context: context,
+          type: ToastificationType.error,
+          title: const Text('Verification Failed'),
+          description: const Text('Failed to verify IFSC code. Please check your internet connection.'),
+          autoCloseDuration: const Duration(seconds: 5),
+        );
+        setState(() => _isUploading = false);
+      }
+      return;
+    }
+
     try {
       final panUrl = await _uploadFile(_panFile, _panBytes, _panFileName, 'pan');
       final aadharUrl = await _uploadFile(_aadharFile, _aadharBytes, _aadharFileName, 'aadhar');

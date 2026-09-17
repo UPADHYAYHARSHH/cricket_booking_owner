@@ -19,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.11.0
+  sdk: ^3.9.0
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -45,11 +45,11 @@ dependencies:
   intl: any
   pinput: ^6.0.2
   image_picker: ^1.1.2
-  google_maps_flutter: ^2.17.0
+  google_maps_flutter: ^2.14.2
   geolocator: ^14.0.2
   geocoding: ^4.0.0
   permission_handler: ^12.0.1
-  toastification: ^3.2.0
+  toastification: any
   url_launcher: ^6.3.1
   fluttertoast: ^8.2.10
   file_picker: ^11.0.2
@@ -64,7 +64,6 @@ dependencies:
   cached_network_image: ^3.4.1
   syncfusion_flutter_pdfviewer: ^33.2.13
   encrypt: ^5.0.3
-  firebase_remote_config: ^6.5.6
 
 dev_dependencies:
   flutter_test:

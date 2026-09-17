@@ -29,6 +29,7 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
   final _venueNameCtrl = TextEditingController();
   final _addressCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
+  final _mapsCtrl = TextEditingController();
   final _latCtrl = TextEditingController();
   final _lngCtrl = TextEditingController();
 
@@ -48,6 +49,7 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
     _venueNameCtrl.dispose();
     _addressCtrl.dispose();
     _descriptionCtrl.dispose();
+    _mapsCtrl.dispose();
     _latCtrl.dispose();
     _lngCtrl.dispose();
     super.dispose();
@@ -70,6 +72,7 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
       if (mounted && data != null) {
         _venueNameCtrl.text = data['venue_name'] ?? '';
         _addressCtrl.text = data['address'] ?? '';
+        _mapsCtrl.text = data['google_maps_link'] ?? '';
         final lat = (data['latitude'] as num?)?.toDouble() ?? 0.0;
         final lng = (data['longitude'] as num?)?.toDouble() ?? 0.0;
         _latCtrl.text = lat != 0.0 ? lat.toString() : '';
@@ -102,7 +105,7 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
       address: _addressCtrl.text.trim(),
       city: city,
       description: _descriptionCtrl.text.trim(),
-      googleMapsLink: '',
+      googleMapsLink: _mapsCtrl.text.trim(),
       latitude: double.tryParse(_latCtrl.text.trim()) ?? 0.0,
       longitude: double.tryParse(_lngCtrl.text.trim()) ?? 0.0,
       amenities: _selectedAmenities.toList(),
@@ -213,28 +216,37 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
                         ),
                         const SizedBox(height: AppSizes.xxl),
 
-                        AppTextField(
-                          label: 'Venue Name',
-                          controller: _venueNameCtrl,
-                          prefixIcon: Icons.stadium_outlined,
-                          validator: (v) => v == null || v.trim().isEmpty
+                        _label('VENUE NAME *'),
+                        _field(
+                          _venueNameCtrl,
+                          hint: 'Enter venue name',
+                          icon: Icons.stadium_outlined,
+                          validator: (v) => (v == null || v.trim().isEmpty)
                               ? 'Venue name is required'
                               : null,
                         ),
-                        const SizedBox(height: AppSizes.xxl),
+                        const AppSizedBox(height: AppSizes.xxl),
 
                         _label('FULL ADDRESS *'),
-                        AppTextField(
-                          hint:
-                              'Plot 42, Prahlad Nagar, Near ISCON Cross Roads',
-                          controller: _addressCtrl,
-                          prefixIcon: Icons.location_on_outlined,
+                        _field(
+                          _addressCtrl,
+                          hint: 'Plot 42, Prahlad Nagar, Near ISCON Cross Roads',
                           maxLines: 2,
-                          validator: (v) => v == null || v.trim().isEmpty
+                          icon: Icons.location_on_outlined,
+                          validator: (v) => (v == null || v.trim().isEmpty)
                               ? 'Address is required'
                               : null,
                         ),
-                        const SizedBox(height: AppSizes.xxl),
+                        const AppSizedBox(height: AppSizes.xxl),
+
+                        _label('DESCRIPTION'),
+                        _field(
+                          _descriptionCtrl,
+                          hint: 'Describe what makes this venue special — surface quality, lighting, rules, nearby landmarks...',
+                          maxLines: 4,
+                          icon: Icons.description_outlined,
+                        ),
+                        const AppSizedBox(height: AppSizes.xxl),
 
                         _label('CITY *'),
                         CitySearchField(
@@ -242,32 +254,38 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
                           initialCity: _initialCity,
                           onCityChanged: (city) => _cityValue = city ?? '',
                         ),
-                        const SizedBox(height: AppSizes.xxl),
+                        const AppSizedBox(height: AppSizes.xxl),
+
+                        _label('GOOGLE MAPS LINK (Optional)'),
+                        _field(
+                          _mapsCtrl,
+                          hint: 'Paste Google Maps URL here',
+                          icon: Icons.link,
+                        ),
+                        const AppSizedBox(height: AppSizes.xxl),
 
                         _label('GPS COORDINATES (Optional)'),
                         Row(
                           children: [
                             Expanded(
-                              child: AppTextField(
+                              child: _field(
+                                _latCtrl,
                                 hint: 'Latitude (e.g. 23.0225)',
-                                controller: _latCtrl,
-                                prefixIcon: Icons.my_location,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
+                                icon: Icons.my_location,
+                                keyboardType: const TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
                               ),
                             ),
                             const AppSizedBox(width: AppSizes.md),
                             Expanded(
-                              child: AppTextField(
+                              child: _field(
+                                _lngCtrl,
                                 hint: 'Longitude (e.g. 72.5714)',
-                                controller: _lngCtrl,
-                                prefixIcon: Icons.explore_outlined,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                      decimal: true,
-                                    ),
+                                icon: Icons.explore_outlined,
+                                keyboardType: const TextInputType.numberWithOptions(
+                                  decimal: true,
+                                ),
                               ),
                             ),
                           ],
@@ -338,6 +356,70 @@ class _Step3VenueDetailsScreenState extends State<Step3VenueDetailsScreen> {
                     ),
                   ),
                 ),
+        ),
+      ),
+    );
+  }
+
+  Widget _field(
+    TextEditingController ctrl, {
+    required String hint,
+    int maxLines = 1,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    IconData? icon,
+  }) {
+    return TextFormField(
+      controller: ctrl,
+      maxLines: maxLines,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimaryLight,
+      ),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(
+          color: AppColors.textSecondaryLight.withValues(alpha: 0.4),
+          fontSize: 13,
+        ),
+        filled: true,
+        fillColor: AppColors.inputFillLight,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        prefixIcon: icon != null
+            ? Icon(
+                icon,
+                size: 20,
+                color: AppColors.primaryDarkGreen.withValues(alpha: 0.6),
+              )
+            : null,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderSide: BorderSide(
+            color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderSide: BorderSide(
+            color: AppColors.primaryDarkGreen.withValues(alpha: 0.1),
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderSide: const BorderSide(
+            color: AppColors.primaryDarkGreen,
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          borderSide: const BorderSide(color: AppColors.error, width: 1.5),
         ),
       ),
     );
