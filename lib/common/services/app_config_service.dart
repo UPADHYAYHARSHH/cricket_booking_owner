@@ -90,59 +90,62 @@ class AppConfigService {
 
   void _readFromFirebase(FirebaseRemoteConfig remoteConfig) {
     try {
-      final keys = remoteConfig.getAll();
-        if (keys.containsKey('platform_fee')) {
-        _platformFee = remoteConfig.getDouble('platform_fee');
-        if (_platformFee == 0) {
-          _platformFee = double.tryParse(remoteConfig.getString('platform_fee')) ?? 0.0;
+      final pfStr = remoteConfig.getString('platform_fee');
+      if (pfStr.isNotEmpty) {
+        final parsed = double.tryParse(pfStr);
+        if (parsed != null) _platformFee = parsed;
+      }
+
+      final pfFreeStr = remoteConfig.getString('platform_fee_is_free');
+      if (pfFreeStr.isNotEmpty) {
+        _isPlatformFeeFree = pfFreeStr.toLowerCase() == 'true' || pfFreeStr == '1';
+      } else {
+        final convFreeStr = remoteConfig.getString('convenience_fee_is_free');
+        if (convFreeStr.isNotEmpty) {
+          _isPlatformFeeFree = convFreeStr.toLowerCase() == 'true' || convFreeStr == '1';
         }
       }
-      if (keys.containsKey('platform_fee_is_free')) {
-        _isPlatformFeeFree = remoteConfig.getBool('platform_fee_is_free') ||
-            remoteConfig.getString('platform_fee_is_free') == 'true';
-      } else if (keys.containsKey('convenience_fee_is_free')) {
-        _isPlatformFeeFree = remoteConfig.getBool('convenience_fee_is_free') ||
-            remoteConfig.getString('convenience_fee_is_free') == 'true';
-      } else if (keys.containsKey('is_platform_fee_free')) {
-        _isPlatformFeeFree = remoteConfig.getBool('is_platform_fee_free') ||
-            remoteConfig.getString('is_platform_fee_free') == 'true';
+
+      final gstStr = remoteConfig.getString('gst_rate');
+      if (gstStr.isNotEmpty) {
+        final parsed = double.tryParse(gstStr);
+        if (parsed != null) _gstRate = parsed;
       }
-      if (keys.containsKey('gst_rate')) {
-        _gstRate = remoteConfig.getDouble('gst_rate');
-        if (_gstRate == 0) {
-          _gstRate = double.tryParse(remoteConfig.getString('gst_rate')) ?? 0.0;
-        }
+
+      final gstEnabledStr = remoteConfig.getString('is_gst_enabled');
+      if (gstEnabledStr.isNotEmpty) {
+        _isGstEnabled = gstEnabledStr.toLowerCase() == 'true' || gstEnabledStr == '1';
       }
-      if (keys.containsKey('is_gst_enabled')) {
-        _isGstEnabled = remoteConfig.getBool('is_gst_enabled') ||
-            remoteConfig.getString('is_gst_enabled') == 'true';
+
+      final commStr = remoteConfig.getString('commission_rate');
+      if (commStr.isNotEmpty) {
+        final parsed = double.tryParse(commStr);
+        if (parsed != null) _commissionRate = parsed;
       }
-      if (keys.containsKey('commission_rate')) {
-        _commissionRate = remoteConfig.getDouble('commission_rate');
-        if (_commissionRate == 0) {
-          _commissionRate = double.tryParse(remoteConfig.getString('commission_rate')) ?? 0.0;
-        }
+
+      final commPercStr = remoteConfig.getString('commission_is_percentage');
+      if (commPercStr.isNotEmpty) {
+        _commissionIsPercentage = commPercStr.toLowerCase() == 'true' || commPercStr == '1';
       }
-      if (keys.containsKey('commission_is_percentage')) {
-        _commissionIsPercentage = remoteConfig.getBool('commission_is_percentage') ||
-            remoteConfig.getString('commission_is_percentage') == 'true';
+
+      final maintStr = remoteConfig.getString('owner_app_maintenance');
+      if (maintStr.isNotEmpty) {
+        _ownerAppMaintenance = maintStr.toLowerCase() == 'true' || maintStr == '1';
       }
-      if (keys.containsKey('owner_app_maintenance')) {
-        _ownerAppMaintenance = remoteConfig.getBool('owner_app_maintenance') ||
-            remoteConfig.getString('owner_app_maintenance') == 'true';
-      }
-      if (keys.containsKey('owner_android_min_version')) {
-        _androidMinVersion = remoteConfig.getString('owner_android_min_version');
-      }
-      if (keys.containsKey('owner_ios_min_version')) {
-        _iosMinVersion = remoteConfig.getString('owner_ios_min_version');
-      }
-      if (keys.containsKey('owner_android_store_url')) {
-        _androidStoreUrl = remoteConfig.getString('owner_android_store_url');
-      }
-      if (keys.containsKey('owner_ios_store_url')) {
-        _iosStoreUrl = remoteConfig.getString('owner_ios_store_url');
-      }
+
+      final androidVer = remoteConfig.getString('owner_android_min_version');
+      if (androidVer.isNotEmpty) _androidMinVersion = androidVer;
+
+      final iosVer = remoteConfig.getString('owner_ios_min_version');
+      if (iosVer.isNotEmpty) _iosMinVersion = iosVer;
+
+      final androidUrl = remoteConfig.getString('owner_android_store_url');
+      if (androidUrl.isNotEmpty) _androidStoreUrl = androidUrl;
+
+      final iosUrl = remoteConfig.getString('owner_ios_store_url');
+      if (iosUrl.isNotEmpty) _iosStoreUrl = iosUrl;
+
+      debugPrint('🔥 OWNER CONFIG LOADED FROM FIREBASE: platformFee=$_platformFee, isFree=$_isPlatformFeeFree, commission=$_commissionRate ($_commissionIsPercentage%), gst=$_gstRate');
     } catch (e) {
       debugPrint('⚠️ Error reading Firebase Remote Config values: $e');
     }
@@ -198,6 +201,22 @@ class AppConfigService {
     } catch (e) {
       debugPrint('❌ FETCH OWNER CONFIG FAILED: $e');
     }
+  }
+
+  Future<void> refresh() async {
+    try {
+      final remoteConfig = FirebaseRemoteConfig.instance;
+      await remoteConfig.setConfigSettings(RemoteConfigSettings(
+        fetchTimeout: const Duration(seconds: 10),
+        minimumFetchInterval: Duration.zero,
+      ));
+      await remoteConfig.fetchAndActivate();
+      _readFromFirebase(remoteConfig);
+      _maintenanceController.add(_ownerAppMaintenance);
+    } catch (e) {
+      debugPrint('ℹ️ Remote Config refresh error in owner app: $e');
+    }
+    await _fetchValues();
   }
 
   void dispose() {

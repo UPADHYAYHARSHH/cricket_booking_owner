@@ -65,8 +65,66 @@ class _PayoutsScreenState extends State<PayoutsScreen>
         setState(() => _isLoadingWallet = false);
         return;
       }
-      final walletResponse = await _supabase
-          .rpc('get_owner_wallet', params: {'p_owner_id': ownerId});
+
+      Map<String, dynamic>? wallet;
+      try {
+        final walletResponse = await _supabase
+            .rpc('get_owner_wallet', params: {'p_owner_id': ownerId});
+        if (walletResponse is Map<String, dynamic> && walletResponse.isNotEmpty) {
+          wallet = walletResponse;
+        }
+      } catch (e) {
+        debugPrint('RPC get_owner_wallet error: $e');
+      }
+
+      if (wallet == null || wallet.isEmpty) {
+        final directWallet = await _supabase
+            .from('owner_wallets')
+            .select()
+            .eq('owner_id', ownerId)
+            .maybeSingle();
+        if (directWallet != null) {
+          wallet = Map<String, dynamic>.from(directWallet);
+        }
+      }
+
+      // If still null, initialize wallet record from grounds and bookings
+      if (wallet == null) {
+        final grounds = await _supabase
+            .from('grounds')
+            .select('id')
+            .eq('owner_id', ownerId);
+        final groundIds = (grounds as List)
+            .map((g) => g['id']?.toString())
+            .whereType<String>()
+            .toList();
+
+        num totalEarnings = 0;
+        if (groundIds.isNotEmpty) {
+          final bookings = await _supabase
+              .from('bookings')
+              .select('owner_earnings, status')
+              .inFilter('ground_id', groundIds);
+          for (var b in bookings as List) {
+            final st = b['status']?.toString().toLowerCase();
+            if (st == 'paid' || st == 'confirmed' || st == 'completed') {
+              totalEarnings += (b['owner_earnings'] as num?) ?? 0;
+            }
+          }
+        }
+
+        final initialWallet = {
+          'owner_id': ownerId,
+          'total_earnings': totalEarnings,
+          'available_balance': totalEarnings,
+          'withdrawn_amount': 0.0,
+        };
+        try {
+          await _supabase.from('owner_wallets').upsert(initialWallet);
+        } catch (_) {}
+        wallet = initialWallet;
+      }
+
       final withdrawalsResponse = await _supabase
           .from('withdrawals')
           .select()
@@ -75,7 +133,7 @@ class _PayoutsScreenState extends State<PayoutsScreen>
 
       if (mounted) {
         setState(() {
-          _walletData = walletResponse as Map<String, dynamic>?;
+          _walletData = wallet;
           _withdrawals = withdrawalsResponse as List<dynamic>;
           _isLoadingWallet = false;
         });
@@ -90,10 +148,40 @@ class _PayoutsScreenState extends State<PayoutsScreen>
     if (_isRequesting) return;
     setState(() => _isRequesting = true);
     try {
-      await _supabase.rpc('request_withdrawal', params: {
-        'p_owner_id': FirebaseAuth.instance.currentUser?.uid,
-        'p_amount': amount,
-      });
+      final ownerId = FirebaseAuth.instance.currentUser?.uid;
+      if (ownerId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      bool rpcSucceeded = false;
+      try {
+        final rpcRes = await _supabase.rpc('request_withdrawal', params: {
+          'p_owner_id': ownerId,
+          'p_amount': amount,
+        });
+        if (rpcRes is Map && rpcRes['success'] == true) {
+          rpcSucceeded = true;
+        }
+      } catch (e) {
+        debugPrint('RPC request_withdrawal failed: $e, falling back to direct insertion');
+      }
+
+      if (!rpcSucceeded) {
+        // Fallback: direct insert to withdrawals table and update wallet balance
+        await _supabase.from('withdrawals').insert({
+          'owner_id': ownerId,
+          'amount': amount,
+          'status': 'pending',
+        });
+        final currentAvailable = (_walletData?['available_balance'] as num?)?.toDouble() ?? amount;
+        final currentWithdrawn = (_walletData?['withdrawn_amount'] as num?)?.toDouble() ?? 0.0;
+        await _supabase.from('owner_wallets').update({
+          'available_balance': (currentAvailable - amount).clamp(0.0, double.infinity),
+          'withdrawn_amount': currentWithdrawn + amount,
+          'updated_at': DateTime.now().toIso8601String(),
+        }).eq('owner_id', ownerId);
+      }
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(

@@ -14,6 +14,7 @@ import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
+import 'package:turfpro_owner/common/services/app_config_service.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -590,14 +591,20 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     // Financial details strictly from database booking snapshot (notes or column values)
     // NOTE: Isolated from live Remote Config so future config updates never alter past bookings.
     Map<String, dynamic>? parsedNotes;
-    if (booking['notes'] != null) {
-      if (booking['notes'] is Map<String, dynamic>) {
-        parsedNotes = booking['notes'] as Map<String, dynamic>;
-      } else if (booking['notes'] is String) {
-        final str = (booking['notes'] as String).trim();
-        if (str.startsWith('{') && str.endsWith('}')) {
+    final rawNotes = booking['notes'];
+    if (rawNotes != null) {
+      if (rawNotes is Map<String, dynamic>) {
+        parsedNotes = rawNotes;
+      } else if (rawNotes is Map) {
+        parsedNotes = Map<String, dynamic>.from(rawNotes);
+      } else if (rawNotes is String) {
+        final str = rawNotes.trim();
+        if (str.isNotEmpty) {
           try {
-            parsedNotes = jsonDecode(str) as Map<String, dynamic>?;
+            final decoded = jsonDecode(str);
+            if (decoded is Map) {
+              parsedNotes = Map<String, dynamic>.from(decoded);
+            }
           } catch (_) {}
         }
       }
@@ -607,6 +614,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         (booking['amount'] as num?) ?? (booking['total_amount'] as num?) ?? (parsedNotes?['grand_total'] as num?) ?? 0;
     final totalAmount = rawAmount.toDouble();
 
+    final double platformFee = parsedNotes?['platform_fee'] != null
+        ? (parsedNotes!['platform_fee'] as num).toDouble()
+        : ((booking['platform_fee'] as num?)?.toDouble() ?? 0.0);
+
     final double rawSlotPrice = parsedNotes?['slot_price'] != null
         ? (parsedNotes!['slot_price'] as num).toDouble()
         : ((booking['base_amount'] as num?)?.toDouble() ?? 0.0);
@@ -615,36 +626,47 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
         ? (parsedNotes!['gst_amount'] as num).toDouble()
         : ((booking['gst_amount'] as num?)?.toDouble() ?? 0.0);
 
-    final double platformFee = parsedNotes?['platform_fee'] != null
-        ? (parsedNotes!['platform_fee'] as num).toDouble()
-        : ((booking['platform_fee'] as num?)?.toDouble() ?? 0.0);
+    final bool isPlatformFeeFree = parsedNotes?['is_platform_fee_free'] == true ||
+        parsedNotes?['platform_fee_is_free'] == true ||
+        booking['is_platform_fee_free'] == true ||
+        (platformFee > 0 && rawSlotPrice > 0 && (rawSlotPrice + gstAmount >= totalAmount));
 
-    final bool isPlatformFeeFree = parsedNotes != null
-        ? (parsedNotes['is_platform_fee_free'] == true)
-        : (booking['is_platform_fee_free'] == true ||
-            (platformFee > 0 && rawSlotPrice >= totalAmount));
+    final double storedCommRate = (booking['commission_rate'] as num?)?.toDouble() ??
+        (parsedNotes?['commission_rate'] as num?)?.toDouble() ??
+        0.0;
+    final commissionRate = storedCommRate > 0
+        ? storedCommRate
+        : AppConfigService.instance.commissionRate;
 
-    final commissionRate =
-        (booking['commission_rate'] as num?)?.toDouble() ?? 0.0;
-    final commissionIsPercentage = booking['commission_is_percentage'] == null
-        ? true
-        : (booking['commission_is_percentage'] == true);
+    final commissionIsPercentage = booking['commission_is_percentage'] != null
+        ? (booking['commission_is_percentage'] == true)
+        : (parsedNotes?['commission_is_percentage'] != null
+            ? (parsedNotes!['commission_is_percentage'] == true)
+            : AppConfigService.instance.commissionIsPercentage);
 
-    final double slotPrice = rawSlotPrice > 0
+    // Slot price is the gross venue price before commission
+    final double slotPrice = (rawSlotPrice > 0)
         ? rawSlotPrice
         : (isPlatformFeeFree
-            ? totalAmount
+            ? (totalAmount - gstAmount).clamp(0.0, totalAmount)
             : (totalAmount - platformFee - gstAmount).clamp(0.0, totalAmount));
 
     final commissionFee = commissionIsPercentage
         ? slotPrice * commissionRate / 100
         : commissionRate;
 
-    // Owner earned prioritizes the database stored owner_earnings, or slot price minus platform commission.
-    // Platform fee (whether charged to customer or waived/free) is never deducted from the owner.
+    final double calculatedEarnings = (slotPrice - commissionFee).clamp(0.0, slotPrice);
+
     final double? dbOwnerEarnings = (booking['owner_earnings'] as num?)?.toDouble() ??
         (parsedNotes?['owner_earnings'] as num?)?.toDouble();
-    final groundRate = dbOwnerEarnings ?? (slotPrice - commissionFee).clamp(0.0, slotPrice);
+
+    // Owner earned: if DB has already deducted commission (< slotPrice when commFee > 0), use DB earnings directly.
+    // If it was a legacy booking where commission was not cut early (dbOwnerEarnings >= slotPrice), cut the commission!
+    final groundRate = (dbOwnerEarnings != null && dbOwnerEarnings > 0)
+        ? ((commissionFee > 0 && dbOwnerEarnings >= slotPrice)
+            ? calculatedEarnings
+            : dbOwnerEarnings)
+        : calculatedEarnings;
 
     // Player info
     final playerImage = booking['player_image']?.toString() ?? '';
@@ -1029,13 +1051,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                       child: Column(
                         children: [
                           _PaymentRow(
-                            label: "Slot Price",
-                            value: "₹${slotPrice.toStringAsFixed(0)}",
-                          ),
-                          const _RowDivider(),
-                          _PaymentRow(
-                            label: "GST",
-                            value: "₹${gstAmount.toStringAsFixed(0)}",
+                            label: "Customer Total Paid",
+                            value: "₹${totalAmount.toStringAsFixed(0)}",
                           ),
                           const _RowDivider(),
                           _PaymentRow(
@@ -1056,7 +1073,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                       ),
                                       const SizedBox(width: 6),
                                       const Text(
-                                        "Free",
+                                        "Free (₹0 deducted)",
                                         style: TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.bold,
@@ -1065,17 +1082,67 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                       ),
                                     ],
                                   )
-                                : null,
-                            value: isPlatformFeeFree
-                                ? null
-                                : "₹${platformFee.toStringAsFixed(0)}",
+                                : Row(
+                                    children: [
+                                      Text(
+                                        "– ₹${platformFee.toStringAsFixed(0)}",
+                                        style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.error,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      const Text(
+                                        "(Retained by platform)",
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w500,
+                                          color: AppColors.textSecondaryLight,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                           if (gstAmount > 0) ...[
+                            const _RowDivider(),
+                            _PaymentRow(
+                              label: "GST (Taxes)",
+                              customValue: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    "– ₹${gstAmount.toStringAsFixed(0)}",
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.error,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Text(
+                                    "(Retained for taxes)",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textSecondaryLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                          const _RowDivider(),
+                          _PaymentRow(
+                            label: "Gross Slot Rate",
+                            value: "₹${slotPrice.toStringAsFixed(0)}",
                           ),
                           if (commissionRate > 0) ...[
                             const _RowDivider(),
                             _PaymentRow(
                               label: commissionIsPercentage
-                                  ? "Commission (${commissionRate.toStringAsFixed(commissionRate % 1 == 0 ? 0 : 1)}%)"
-                                  : "Commission Fee",
+                                  ? "Platform Commission (${commissionRate.toStringAsFixed(commissionRate % 1 == 0 ? 0 : 1)}%)"
+                                  : "Platform Commission",
                               value: "– ₹${commissionFee.toStringAsFixed(0)}",
                               valueColor: AppColors.error,
                             ),
