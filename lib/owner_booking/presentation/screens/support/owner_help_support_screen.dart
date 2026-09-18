@@ -72,6 +72,77 @@ class OwnerHelpSupportScreen extends StatelessWidget {
                 ),
               ],
             ),
+            body: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 40),
+                    Icon(
+                      Icons.support_agent_rounded,
+                      size: 120,
+                      color: AppColors.primaryDarkGreen.withAlpha(200),
+                    ),
+                    const SizedBox(height: 30),
+                    Text(
+                      "Need quick help? Reach out anytime.",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Our support team is available to assist you with bookings, payments, venue listings, and live score inquiries.",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 40),
+                    _buildContactRow(
+                      icon: Icons.email_rounded,
+                      text: "support@bookysta.com",
+                      onTap: () => _launchUrl("mailto:support@bookysta.com"),
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: 16),
+                    _buildContactRow(
+                      icon: Icons.chat_rounded,
+                      text: "+918401188401",
+                      onTap: () => _launchUrl("https://wa.me/918401188401"),
+                      isDark: isDark,
+                    ),
+                    const Spacer(),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: () => _launchUrl("https://wa.me/918401188401"),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryDarkGreen,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          "Contact us",
+                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              ),
+            ),
+            /* --- OLD UI COMMENTED OUT ---
             body: BlocBuilder<OwnerSupportCubit, OwnerSupportState>(
               builder: (context, state) {
                 Map<String, dynamic>? ownerContext;
@@ -190,8 +261,43 @@ class OwnerHelpSupportScreen extends StatelessWidget {
                 );
               },
             ),
+            */
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildContactRow({
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.surfaceDark : Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 24, color: isDark ? Colors.grey.shade400 : Colors.grey.shade700),
+            const SizedBox(width: 16),
+            Text(
+              text,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

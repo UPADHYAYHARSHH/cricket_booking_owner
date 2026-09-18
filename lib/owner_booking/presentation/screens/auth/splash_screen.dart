@@ -39,18 +39,25 @@ class _SplashScreenState extends State<SplashScreen> {
         }
 
         if (state is AuthInitial || state is AuthUnauthenticated) {
+          print('DEBUG [SplashScreen]: State is ${state.runtimeType} -> routing to / (login)');
           clearAndGo('/');
         } else if (state is AuthSuccess) {
+          print('DEBUG [SplashScreen]: AuthSuccess -> routing to /dashboard');
           clearAndGo('/dashboard');
         } else if (state is AuthLocationRequired) {
+          print('DEBUG [SplashScreen]: AuthLocationRequired -> routing to /add-location');
           clearAndGo('/add-location');
         } else if (state is AuthStep1Required) {
+          print('DEBUG [SplashScreen]: AuthStep1Required -> routing to /onboarding/step1');
           clearAndGo('/onboarding/step1');
         } else if (state is AuthStep2Required) {
+          print('DEBUG [SplashScreen]: AuthStep2Required -> routing to /onboarding/step2');
           clearAndGo('/onboarding/step2');
         } else if (state is AuthStep3Required) {
+          print('DEBUG [SplashScreen]: AuthStep3Required -> routing to /onboarding/step3');
           clearAndGo('/onboarding/step3');
         } else if (state is AuthGroundRequired) {
+          print('DEBUG [SplashScreen]: AuthGroundRequired -> routing to GroundFormFlow (Add Sport)');
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(

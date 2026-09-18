@@ -120,7 +120,7 @@ class _Step1SportsState extends State<Step1Sports> with TickerProviderStateMixin
                     // Icon container with gradient on select
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 250),
-                      padding: const EdgeInsets.all(AppSizes.md),
+                      padding: EdgeInsets.zero,
                       decoration: BoxDecoration(
                         gradient: isSelected
                             ? const LinearGradient(
@@ -139,17 +139,17 @@ class _Step1SportsState extends State<Step1Sports> with TickerProviderStateMixin
                           ? ClipOval(
                               child: CachedNetworkImage(
                                 imageUrl: sport.iconUrl,
-                                width: AppSizes.iconLg,
-                                height: AppSizes.iconLg,
+                                width: 48,
+                                height: 48,
                                 fit: BoxFit.cover,
                                 placeholder: (_, _) => SizedBox(
-                                  width: AppSizes.iconLg,
-                                  height: AppSizes.iconLg,
+                                  width: 48,
+                                  height: 48,
                                 ),
                                 errorWidget: (_, _, _) => Icon(
                                   Icons.sports,
                                   color: isSelected ? AppColors.white : AppColors.primaryDarkGreen,
-                                  size: AppSizes.iconLg,
+                                  size: 28,
                                 ),
                               ),
                             )
@@ -157,20 +157,20 @@ class _Step1SportsState extends State<Step1Sports> with TickerProviderStateMixin
                               ? ClipOval(
                                   child: Image.asset(
                                     sport.localAsset,
-                                    width: AppSizes.iconLg,
-                                    height: AppSizes.iconLg,
+                                    width: 48,
+                                    height: 48,
                                     fit: BoxFit.cover,
                                     errorBuilder: (_, _, _) => Icon(
                                       Icons.sports,
                                       color: isSelected ? AppColors.white : AppColors.primaryDarkGreen,
-                                      size: AppSizes.iconLg,
+                                      size: 28,
                                     ),
                                   ),
                                 )
                               : Icon(
                                   Icons.sports,
                                   color: isSelected ? AppColors.white : AppColors.primaryDarkGreen,
-                                  size: AppSizes.iconLg,
+                                  size: 28,
                                 ),
                     ),
                     const SizedBox(width: AppSizes.lg),

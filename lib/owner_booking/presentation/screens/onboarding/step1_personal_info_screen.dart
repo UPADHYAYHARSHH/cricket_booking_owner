@@ -23,11 +23,8 @@ class Step1PersonalInfoScreen extends StatefulWidget {
 
 class _Step1PersonalInfoScreenState extends State<Step1PersonalInfoScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _cityFieldKey = GlobalKey<CitySearchFieldState>();
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
-  String? _initialCity;
-  String _selectedCity = '';
   bool _isLoading = true;
 
   @override
@@ -58,9 +55,6 @@ class _Step1PersonalInfoScreenState extends State<Step1PersonalInfoScreen> {
       if (mounted && data != null) {
         _nameCtrl.text = data['owner_name'] ?? '';
         _phoneCtrl.text = data['phone'] ?? '';
-        final city = (data['city'] as String? ?? '').trim();
-        _initialCity = city.isEmpty ? null : city;
-        _selectedCity = city;
       }
     } catch (_) {}
     if (mounted) setState(() => _isLoading = false);
@@ -68,20 +62,10 @@ class _Step1PersonalInfoScreenState extends State<Step1PersonalInfoScreen> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
-    final city = _cityFieldKey.currentState?.selectedCity ?? _selectedCity;
-    if (city.isEmpty) {
-      toastification.show(
-        context: context,
-        type: ToastificationType.warning,
-        title: const Text('Please search and select a city'),
-        autoCloseDuration: const Duration(seconds: 3),
-      );
-      return;
-    }
     context.read<AuthCubit>().saveStep1(
       fullName: _nameCtrl.text.trim(),
       phone: _phoneCtrl.text.trim(),
-      city: city,
+      city: '',
     );
   }
 
@@ -103,6 +87,12 @@ class _Step1PersonalInfoScreenState extends State<Step1PersonalInfoScreen> {
           Navigator.pushNamedAndRemoveUntil(
             context,
             '/dashboard',
+            (r) => false,
+          );
+        } else if (state is AuthLocationRequired || state is AuthGroundRequired) {
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            '/splash',
             (r) => false,
           );
         } else if (state is AuthError) {
@@ -184,15 +174,6 @@ class _Step1PersonalInfoScreenState extends State<Step1PersonalInfoScreen> {
                               return 'Enter a valid phone number';
                             }
                             return null;
-                          },
-                        ),
-                        const SizedBox(height: AppSizes.md),
-                        CitySearchField(
-                          key: _cityFieldKey,
-                          label: 'City',
-                          initialCity: _initialCity,
-                          onCityChanged: (city) {
-                            _selectedCity = city ?? '';
                           },
                         ),
                         const SizedBox(height: AppSizes.xxl),

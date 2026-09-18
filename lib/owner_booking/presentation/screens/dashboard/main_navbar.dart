@@ -1,5 +1,8 @@
 import 'package:turfpro_owner/common/services/notification_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -23,6 +26,14 @@ class _MainNavbarState extends State<MainNavbar> {
   void initState() {
     super.initState();
     NotificationService.updateFcmToken();
+    
+    // If the app was hot restarted or deep-linked directly to /dashboard,
+    // AuthCubit won't be initialized. Redirect to splash to enforce onboarding checks.
+    if (context.read<AuthCubit>().state is AuthInitial) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacementNamed(context, '/splash');
+      });
+    }
   }
 
   static final List<Widget> _screens = [

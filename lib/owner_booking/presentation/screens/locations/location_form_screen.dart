@@ -84,9 +84,11 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
             );
             context.read<LocationCubit>().fetchOwnerLocations();
             if (Navigator.canPop(context)) {
+              print('DEBUG [LocationFormScreen]: canPop is true, popping back.');
               Navigator.pop(context, state.locationId);
             } else {
-              Navigator.pushReplacementNamed(context, '/dashboard');
+              print('DEBUG [LocationFormScreen]: canPop is false, routing to /splash to re-evaluate onboarding step.');
+              Navigator.pushReplacementNamed(context, '/splash');
             }
           } else if (state is LocationFormError) {
             toastification.show(

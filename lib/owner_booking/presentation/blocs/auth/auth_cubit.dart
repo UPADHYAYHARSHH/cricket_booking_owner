@@ -337,6 +337,52 @@ class AuthCubit extends Cubit<AuthState> {
       final d = await _ownerRepository.getOwnerDetails(userId);
       print('DEBUG [AuthCubit]: Owner details status: ${d?['status']} for user: $userId');
 
+      final status = d?['status']?.toString().toLowerCase();
+
+      // Check name and phone first
+      final name = _asTrimmedString(d?['owner_name']);
+      final phone = _asTrimmedString(d?['phone']);
+      if (name.isEmpty || phone.isEmpty) {
+        print('DEBUG [AuthCubit._emitOnboardingStep]: Name or phone is missing -> emitting AuthStep1Required');
+        emit(AuthStep1Required());
+        return;
+      }
+
+      // Bypass personal info, KYC, and venue steps. Directly check for locations and grounds.
+      final locations = await _locationRepository.getOwnerLocations(userId);
+      print('DEBUG [AuthCubit._emitOnboardingStep]: Found ${locations.length} locations for user: $userId');
+      if (locations.isEmpty) {
+        print('DEBUG [AuthCubit._emitOnboardingStep]: locations.isEmpty -> emitting AuthLocationRequired');
+        emit(AuthLocationRequired());
+        return;
+      }
+      
+      if (status == 'pending' || status == 'submitted') {
+        print('DEBUG [AuthCubit._emitOnboardingStep]: User status is pending -> emitting AuthPendingApproval');
+        emit(AuthPendingApproval());
+        return;
+      }
+
+      if (status == 'rejected') {
+        print('DEBUG [AuthCubit._emitOnboardingStep]: User status is rejected -> emitting AuthRejected');
+        emit(AuthRejected(d?['rejection_reason'] as String? ?? 'Your application was rejected.'));
+        return;
+      }
+      
+      final grounds = await _groundRepository.getOwnerGrounds(userId);
+      print('DEBUG [AuthCubit._emitOnboardingStep]: Found ${grounds.length} grounds for user: $userId');
+      if (grounds.isEmpty) {
+        print('DEBUG [AuthCubit._emitOnboardingStep]: grounds.isEmpty -> emitting AuthGroundRequired for location ${locations.first['id']}');
+        emit(AuthGroundRequired(locations.first['id'].toString()));
+        return;
+      }
+
+      print('DEBUG [AuthCubit._emitOnboardingStep]: Both locations and grounds exist -> emitting AuthSuccess (Dashboard)');
+      await NotificationService.initialize();
+      emit(AuthSuccess());
+      return;
+
+      /*
       // Already approved — go to dashboard
       if (d?['status'] == 'approved') {
         final locations = await _locationRepository.getOwnerLocations(userId);
@@ -404,6 +450,7 @@ class AuthCubit extends Cubit<AuthState> {
       // All steps done but status not yet submitted — auto-submit
       await _ownerRepository.submitApplication(userId);
       emit(AuthPendingApproval());
+      */
     } catch (e) {
       emit(AuthError('Failed to verify status: ${e.toString()}'));
     }

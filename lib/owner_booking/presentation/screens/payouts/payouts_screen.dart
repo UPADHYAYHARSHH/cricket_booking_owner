@@ -424,6 +424,8 @@ class _PayoutsScreenState extends State<PayoutsScreen>
                             decoration: const InputDecoration(
                               hintText: '0',
                               border: InputBorder.none,
+                              enabledBorder: InputBorder.none,
+                              focusedBorder: InputBorder.none,
                               contentPadding: EdgeInsets.zero,
                             ),
                             onChanged: (val) {
@@ -505,7 +507,7 @@ class _PayoutsScreenState extends State<PayoutsScreen>
                       ),
                       const SizedBox(width: 8),
                       _QuickChip(
-                        label: 'Max (100%)',
+                        label: '100%',
                         isHighlighted: true,
                         onTap: () {
                           setModalState(() {

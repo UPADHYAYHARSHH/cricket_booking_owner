@@ -18,8 +18,6 @@ class EditOwnerProfileScreen extends StatefulWidget {
 class _EditOwnerProfileScreenState extends State<EditOwnerProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
-  late TextEditingController _venueNameController;
-  late TextEditingController _cityController;
   bool _isSaving = false;
 
   @override
@@ -28,16 +26,12 @@ class _EditOwnerProfileScreenState extends State<EditOwnerProfileScreen> {
     final data = widget.ownerDetails;
     _nameController = TextEditingController(text: data?['owner_name'] as String? ?? '');
     _phoneController = TextEditingController(text: data?['phone'] as String? ?? '');
-    _venueNameController = TextEditingController(text: data?['venue_name'] as String? ?? '');
-    _cityController = TextEditingController(text: data?['city'] as String? ?? '');
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
-    _venueNameController.dispose();
-    _cityController.dispose();
     super.dispose();
   }
 
@@ -61,8 +55,6 @@ class _EditOwnerProfileScreenState extends State<EditOwnerProfileScreen> {
       await Supabase.instance.client.from('owner_details').update({
         'owner_name': _nameController.text.trim(),
         'phone': _phoneController.text.trim(),
-        'venue_name': _venueNameController.text.trim(),
-        'city': _cityController.text.trim(),
         'updated_at': DateTime.now().toIso8601String(),
       }).eq('id', userId);
 
@@ -166,24 +158,6 @@ class _EditOwnerProfileScreenState extends State<EditOwnerProfileScreen> {
               hint: 'Enter your phone number',
               icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
-            ),
-            const SizedBox(height: AppSizes.xxl),
-
-            // Venue Name field
-            _label('VENUE NAME'),
-            _field(
-              _venueNameController,
-              hint: 'Enter your venue name',
-              icon: Icons.store_outlined,
-            ),
-            const SizedBox(height: AppSizes.xxl),
-
-            // City field
-            _label('CITY'),
-            _field(
-              _cityController,
-              hint: 'Enter your city',
-              icon: Icons.location_city_outlined,
             ),
             const SizedBox(height: AppSizes.xxxxl),
 
