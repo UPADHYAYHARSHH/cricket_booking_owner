@@ -150,6 +150,12 @@ class _TodayBookingCardState extends State<TodayBookingCard>
     final isRequested = status == 'requested' || status == 'pending';
 
     return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BookingDetailsScreen(booking: widget.booking),
+        ),
+      ),
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) => setState(() => _isPressed = false),
       onTapCancel: () => setState(() => _isPressed = false),
