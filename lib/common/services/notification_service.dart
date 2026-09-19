@@ -98,7 +98,7 @@ class NotificationService {
       );
       await androidPlugin.createNotificationChannel(
         const AndroidNotificationChannel(
-          'new_booking_channel',
+          'new_booking_channel_v2',
           'New Booking Alert',
           description: 'Plays a cricket sound when a new booking arrives',
           importance: Importance.max,
@@ -175,7 +175,7 @@ class NotificationService {
     // Other notifications → default channel
     final AndroidNotificationDetails androidDetails = isBookingSound
         ? AndroidNotificationDetails(
-            'new_booking_channel',
+            'new_booking_channel_v2',
             'New Booking Alert',
             channelDescription: 'Plays a cricket sound when a new booking arrives',
             importance: Importance.max,
