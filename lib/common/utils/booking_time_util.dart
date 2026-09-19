@@ -151,9 +151,7 @@ class BookingTimeUtil {
       mergedTime = '$start – $end';
     }
 
-    if (mergedTime.isNotEmpty && displayLabel.isNotEmpty) {
-      return '$displayLabel · $mergedTime';
-    } else if (mergedTime.isNotEmpty) {
+    if (mergedTime.isNotEmpty) {
       return mergedTime;
     } else if (displayLabel.isNotEmpty) {
       return displayLabel;
