@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -29,6 +30,8 @@ class _PayoutsScreenState extends State<PayoutsScreen>
   List<dynamic> _withdrawals = [];
   bool _isLoadingWallet = true;
   bool _isRequesting = false;
+  Map<String, dynamic>? _bankDetails;
+  bool _isLoadingBank = true;
 
   // Filter states
   String _withdrawalFilter = 'all'; // 'all', 'pending', 'success', 'failed'
@@ -49,6 +52,7 @@ class _PayoutsScreenState extends State<PayoutsScreen>
     });
     context.read<BookingsCubit>().fetchBookings();
     _fetchWalletAndHistory();
+    _fetchBankDetails();
   }
 
   @override
@@ -144,6 +148,52 @@ class _PayoutsScreenState extends State<PayoutsScreen>
     }
   }
 
+  /// Payout destination (bank) stored in owner_details.kyc_config.
+  /// process-payout (admin Approve & Pay) transfers to this account.
+  Future<void> _fetchBankDetails() async {
+    try {
+      final ownerId = FirebaseAuth.instance.currentUser?.uid;
+      if (ownerId == null) {
+        if (mounted) setState(() => _isLoadingBank = false);
+        return;
+      }
+      final res = await _supabase
+          .from('owner_details')
+          .select('kyc_config')
+          .eq('id', ownerId)
+          .maybeSingle();
+      final kyc = res?['kyc_config'];
+      if (mounted) {
+        setState(() {
+          _bankDetails = kyc is Map ? Map<String, dynamic>.from(kyc) : null;
+          _isLoadingBank = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching bank details: $e');
+      if (mounted) setState(() => _isLoadingBank = false);
+    }
+  }
+
+  bool get _hasBankDetails {
+    final kyc = _bankDetails;
+    if (kyc == null) return false;
+    final acc = (kyc['account_number'] ?? kyc['acc_number'])?.toString().trim() ?? '';
+    final ifsc = (kyc['ifsc_code'] ?? kyc['ifsc'])?.toString().trim() ?? '';
+    return acc.isNotEmpty && ifsc.isNotEmpty;
+  }
+
+  Future<void> _saveBankDetails(Map<String, String> bank) async {
+    final ownerId = FirebaseAuth.instance.currentUser?.uid;
+    if (ownerId == null) throw Exception('User not authenticated');
+    final merged = <String, dynamic>{...?_bankDetails, ...bank};
+    await _supabase.from('owner_details').update({
+      'kyc_config': merged,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('id', ownerId);
+    if (mounted) setState(() => _bankDetails = merged);
+  }
+
   Future<void> _requestWithdrawal(double amount) async {
     if (_isRequesting) return;
     setState(() => _isRequesting = true);
@@ -228,6 +278,13 @@ class _PayoutsScreenState extends State<PayoutsScreen>
   }
 
   void _showWithdrawBottomSheet() {
+    // Payout destination is mandatory: without bank details in kyc_config,
+    // admin Approve & Pay has nowhere to transfer. Collect first, then proceed.
+    if (_isLoadingBank) return;
+    if (!_hasBankDetails) {
+      _showBankDetailsSheet(onSaved: _showWithdrawBottomSheet);
+      return;
+    }
     final available = (_walletData?['available_balance'] ?? 0.0) as num;
     if (available <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -635,6 +692,178 @@ class _PayoutsScreenState extends State<PayoutsScreen>
                     ],
                   ),
                 ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// Collects the owner's payout destination when kyc_config has no bank
+  /// details. Saved to owner_details.kyc_config; process-payout transfers
+  /// the approved amount to this account, so this must exist first.
+  void _showBankDetailsSheet({VoidCallback? onSaved}) {
+    final nameCtrl = TextEditingController(text: _bankDetails?['account_name']?.toString() ?? '');
+    final accCtrl = TextEditingController(text: (_bankDetails?['account_number'] ?? _bankDetails?['acc_number'])?.toString() ?? '');
+    final confirmCtrl = TextEditingController();
+    final ifscCtrl = TextEditingController(text: (_bankDetails?['ifsc_code'] ?? _bankDetails?['ifsc'])?.toString() ?? '');
+    final formKey = GlobalKey<FormState>();
+    bool isSaving = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          Future<void> submit() async {
+            if (!(formKey.currentState?.validate() ?? false)) return;
+            if (accCtrl.text.trim() != confirmCtrl.text.trim()) {
+              ScaffoldMessenger.of(ctx).showSnackBar(
+                const SnackBar(content: Text('Account numbers do not match')),
+              );
+              return;
+            }
+            setModalState(() => isSaving = true);
+            try {
+              final ifsc = ifscCtrl.text.trim().toUpperCase();
+              final resp = await http.get(Uri.parse('https://ifsc.razorpay.com/$ifsc'));
+              if (resp.statusCode != 200) {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    const SnackBar(content: Text('Invalid IFSC code')),
+                  );
+                }
+                setModalState(() => isSaving = false);
+                return;
+              }
+              await _saveBankDetails({
+                'account_name': nameCtrl.text.trim(),
+                'account_number': accCtrl.text.trim(),
+                'ifsc_code': ifsc,
+              });
+              if (ctx.mounted) Navigator.pop(ctx);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Payout account saved. You can now request a withdrawal.'),
+                    backgroundColor: AppColors.success,
+                  ),
+                );
+              }
+              onSaved?.call();
+            } catch (e) {
+              if (ctx.mounted) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  SnackBar(content: Text('Could not save bank details: $e')),
+                );
+              }
+            } finally {
+              if (ctx.mounted) setModalState(() => isSaving = false);
+            }
+          }
+
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const AppText(
+                      text: 'Add Payout Account',
+                      size: 18,
+                      weight: FontWeight.bold,
+                      color: AppColors.textPrimaryLight,
+                    ),
+                    const SizedBox(height: 4),
+                    const AppText(
+                      text: 'Withdrawals are transferred to this bank account after admin approval.',
+                      size: 12,
+                      color: AppColors.textSecondaryLight,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: nameCtrl,
+                      textCapitalization: TextCapitalization.words,
+                      decoration: const InputDecoration(
+                        labelText: 'Account holder name',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: accCtrl,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: const InputDecoration(
+                        labelText: 'Account number',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) => (v == null || v.trim().length < 9) ? 'Enter a valid account number' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: confirmCtrl,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      decoration: const InputDecoration(
+                        labelText: 'Confirm account number',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: ifscCtrl,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: const InputDecoration(
+                        labelText: 'IFSC code',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) => (v == null || v.trim().length != 11) ? 'Enter 11-character IFSC' : null,
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isSaving ? null : submit,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryDarkGreen,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: isSaving
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : const AppText(text: 'Save & Continue', color: Colors.white, weight: FontWeight.bold, size: 15),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
