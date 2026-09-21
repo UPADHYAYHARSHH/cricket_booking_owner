@@ -1,15 +1,22 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
 
 class NotificationService {
   static const String _fcmTokenKey = 'owner_fcm_token';
   static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
   static bool _isInitialized = false;
+
+  /// Global navigator key so foreground notifications can trigger in-app refreshes
+  static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   static Future<void> initialize() async {
     if (_isInitialized) {
@@ -43,10 +50,10 @@ class NotificationService {
       FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
     }
 
-    // 7. Handle background tap
+    // 7. Handle notification taps when app is in background/terminated
     FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageTap);
 
-    // 8. Check if app opened from a notification
+    // Check if app was opened from a notification
     final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null) {
       _handleMessageTap(initialMessage);
@@ -87,36 +94,65 @@ class NotificationService {
     final androidPlugin = _localNotifications.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
-      await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'owner_notifications',
-          'Owner Notifications',
-          description: 'General notifications for venue owners',
-          importance: Importance.high,
-          playSound: true,
-          sound: RawResourceAndroidNotificationSound('general_notification_sound'),
-        ),
-      );
-      await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'new_booking_channel_v2',
-          'New Booking Alert',
-          description: 'Plays a cricket sound when a new booking arrives',
-          importance: Importance.max,
-          playSound: true,
-          sound: RawResourceAndroidNotificationSound('booking_confirmed'),
-        ),
-      );
-      await androidPlugin.createNotificationChannel(
-        const AndroidNotificationChannel(
-          'user_notifications',
-          'User Notifications',
-          description: 'User Notifications',
-          importance: Importance.high,
-          playSound: true,
-          sound: RawResourceAndroidNotificationSound('general_notification_sound'),
-        ),
-      );
+      try {
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'owner_notifications',
+            'Owner Notifications',
+            description: 'General notifications for venue owners',
+            importance: Importance.high,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('general_notification_sound'),
+          ),
+        );
+      } catch (e) {
+        debugPrint('Owner App - Failed to create owner_notifications channel: $e');
+      }
+
+      try {
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'new_booking_channel',
+            'New Booking Alert',
+            description: 'Plays a cricket sound when a new booking arrives',
+            importance: Importance.max,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('booking_confirmed'),
+          ),
+        );
+      } catch (e) {
+        debugPrint('Owner App - Failed to create new_booking_channel: $e');
+      }
+
+      try {
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'new_booking_channel_v2',
+            'New Booking Alert',
+            description: 'Plays a cricket sound when a new booking arrives',
+            importance: Importance.max,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('booking_confirmed'),
+          ),
+        );
+      } catch (e) {
+        debugPrint('Owner App - Failed to create new_booking_channel_v2: $e');
+      }
+
+      try {
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'user_notifications',
+            'User Notifications',
+            description: 'User Notifications',
+            importance: Importance.high,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('general_notification_sound'),
+          ),
+        );
+      } catch (e) {
+        debugPrint('Owner App - Failed to create user_notifications channel: $e');
+      }
     }
   }
 
@@ -144,8 +180,25 @@ class NotificationService {
     }
     _recentNotificationKeys[notifKey] = now;
 
-    final type = message.data['type']?.toString() ?? '';
-    final isNewBooking = type == 'new_booking' || type == 'booking_confirmed' || type == 'booking_request';
+    final type = (message.data['type']?.toString() ?? '').toLowerCase();
+    final isNewBooking = type == 'booking' ||
+        type == 'new_booking' ||
+        type == 'booking_confirmed' ||
+        type == 'booking_request' ||
+        type.contains('booking');
+
+    // Trigger instant refresh of Bookings & Dashboard in the owner app
+    if (isNewBooking) {
+      final context = navigatorKey.currentContext;
+      if (context != null && context.mounted) {
+        try {
+          context.read<BookingsCubit>().fetchBookings();
+        } catch (_) {}
+        try {
+          context.read<DashboardCubit>().fetchDashboardData();
+        } catch (_) {}
+      }
+    }
 
     final int localId = notifKey.hashCode & 0x7FFFFFFF;
 
@@ -208,7 +261,29 @@ class NotificationService {
       iOS: iosDetails,
     );
 
-    await _localNotifications.show(id, title, body, details, payload: payload);
+    try {
+      await _localNotifications.show(id, title, body, details, payload: payload);
+    } catch (e) {
+      debugPrint('Owner App - Error showing local notification with custom sound: $e. Retrying with system default sound.');
+      try {
+        final fallbackDetails = NotificationDetails(
+          android: AndroidNotificationDetails(
+            'owner_notifications_fallback',
+            'Owner Notifications',
+            channelDescription: 'General notifications channel',
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: true,
+            tag: tag,
+            onlyAlertOnce: true,
+          ),
+          iOS: const DarwinNotificationDetails(),
+        );
+        await _localNotifications.show(id, title, body, fallbackDetails, payload: payload);
+      } catch (inner) {
+        debugPrint('Owner App - Fallback notification display also failed: $inner');
+      }
+    }
   }
 
   static Future<void> updateFcmToken() async {

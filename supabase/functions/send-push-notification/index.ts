@@ -92,7 +92,7 @@ serve(async (req) => {
     let channelId = "user_notifications";
     let soundName: string | undefined = undefined;
 
-    if (type === "booking_request" || type === "new_booking" || type === "booking_confirmed") {
+    if (type === "booking_request" || type === "new_booking" || type === "booking_confirmed" || type === "booking") {
       channelId = "new_booking_channel";
       soundName = "booking_confirmed";
     } else if (type === "booking_approved") {
@@ -118,7 +118,7 @@ serve(async (req) => {
     }
 
     let appTarget = "both";
-    if (type.includes("booking_request") || type.includes("new_booking") || type.includes("booking_confirmed") || type.includes("owner")) {
+    if (type.includes("booking_request") || type.includes("new_booking") || type.includes("booking_confirmed") || type === "booking" || type.includes("owner")) {
        appTarget = "owner";
     } else if (type.includes("booking_approved") || type.includes("booking_checked_in") || type.includes("booking_cancelled") || type.includes("payment_required")) {
        appTarget = "user";

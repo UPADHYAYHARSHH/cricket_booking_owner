@@ -74,7 +74,7 @@ void main() async {
   runApp(const MyApp());
 }
 
-final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> navigatorKey = NotificationService.navigatorKey;
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
