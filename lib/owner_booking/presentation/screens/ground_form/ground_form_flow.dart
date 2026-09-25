@@ -127,11 +127,21 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
                 ),
               ),
               const SizedBox(width: 16), // AppSizes.md
+              Expanded(
+                child: Text(
+                  _isEdit ? 'Edit Ground' : 'Add New Ground',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: AppColors.white.withValues(alpha: 0.8),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
               Text(
-                _isEdit ? 'Edit Ground' : 'Add New Ground',
+                'Step $currentStep of $kGroundFormTotalSteps',
                 style: TextStyle(
-                  fontSize: 15,
-                  color: AppColors.white.withValues(alpha: 0.8),
+                  fontSize: 13,
+                  color: AppColors.white.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -162,32 +172,6 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
                 ),
               );
             }),
-          ),
-          const SizedBox(height: 24), // AppSizes.lg
-          Text(
-            'Step $currentStep of $kGroundFormTotalSteps',
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.white.withValues(alpha: 0.7),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 4), // AppSizes.xs
-          Text(
-            _getTitle(currentStep),
-            style: const TextStyle(
-              fontSize: 26,
-              color: AppColors.white,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 4), // AppSizes.xs
-          Text(
-            _getSubtitle(currentStep),
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.white.withValues(alpha: 0.7),
-            ),
           ),
         ],
       ),

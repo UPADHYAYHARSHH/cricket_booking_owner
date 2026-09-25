@@ -871,8 +871,8 @@ class _BookingCardState extends State<_BookingCard> {
                                     AppSizes.radiusSm,
                                   ),
                                 ),
-                                child: HugeIcon(
-                                  icon: sportIcon(sportName),
+                                child: SportIcon(
+                                  sport: sportName,
                                   color: AppColors.primaryDarkGreen,
                                   size: 20,
                                 ),
@@ -944,12 +944,30 @@ class _BookingCardState extends State<_BookingCard> {
                           ),
                           const SizedBox(width: 6),
                           Expanded(
-                            child: AppText(
-                              text: timeDisplay,
-                              size: 12,
-                              weight: FontWeight.w600,
-                              color: AppColors.textPrimaryLight,
-                            ),
+                            child: timeDisplay.contains(',')
+                                ? Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: timeDisplay
+                                        .split(',')
+                                        .map(
+                                          (t) => Padding(
+                                            padding: const EdgeInsets.only(bottom: 2),
+                                            child: AppText(
+                                              text: t.trim(),
+                                              size: 12,
+                                              weight: FontWeight.w600,
+                                              color: AppColors.textPrimaryLight,
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                  )
+                                : AppText(
+                                    text: timeDisplay,
+                                    size: 12,
+                                    weight: FontWeight.w600,
+                                    color: AppColors.textPrimaryLight,
+                                  ),
                           ),
                           AppText(
                             text: "₹$displayAmount",
@@ -1009,7 +1027,7 @@ class _BookingCardState extends State<_BookingCard> {
                               ),
                               child: AppText(
                                 text: pastBookings > 0
-                                    ? "$pastBookings prior"
+                                    ? "$pastBookings past bookings"
                                     : "New Customer",
                                 size: 10,
                                 weight: FontWeight.w700,

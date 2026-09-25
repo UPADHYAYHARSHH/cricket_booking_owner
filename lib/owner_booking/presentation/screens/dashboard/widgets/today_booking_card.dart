@@ -109,7 +109,9 @@ class _TodayBookingCardState extends State<TodayBookingCard>
   Widget build(BuildContext context) {
     final status = (widget.booking['status'] ?? 'pending').toString();
     final playerName = widget.booking['player_name'] ?? 'Customer';
+    final locName = widget.booking['location_name'] ?? 'Location';
     final groundName = widget.booking['ground_name'] ?? 'Court';
+    final displayVenue = "$locName - $groundName";
     final rawPeriod = (widget.booking['period'] ?? 'Time').toString();
     String period = rawPeriod;
     
@@ -197,8 +199,8 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                             borderRadius: BorderRadius.circular(AppSizes.radiusSm),
                           ),
                           child: Center(
-                            child: HugeIcon(
-                              icon: sportIcon((widget.booking['sport_name'] ?? '').toString()),
+                            child: SportIcon(
+                              sport: (widget.booking['sport_name'] ?? '').toString(),
                               size: 18,
                               color: AppColors.bookingStatusColor(status),
                             ),
@@ -217,7 +219,7 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                                 overflow: TextOverflow.ellipsis,
                               ),
                               AppText(
-                                text: "$groundName • $dateStr$period",
+                                text: "$displayVenue • $dateStr$period",
                                 size: 12,
                                 color: AppColors.textSecondaryLight,
                               ),
@@ -257,7 +259,11 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                     ),
                     const SizedBox(width: 16),
                     _InfoChip(
-                      icon: sportIcon((widget.booking['sport_name'] ?? '').toString()),
+                      customIcon: SportIcon(
+                        sport: (widget.booking['sport_name'] ?? '').toString(),
+                        size: 14,
+                        color: AppColors.textSecondaryLight,
+                      ),
                       text: sportName,
                     ),
                     const Spacer(),
@@ -331,16 +337,20 @@ class _TodayBookingCardState extends State<TodayBookingCard>
 
 class _InfoChip extends StatelessWidget {
   final dynamic icon;
+  final Widget? customIcon;
   final String text;
 
-  const _InfoChip({required this.icon, required this.text});
+  const _InfoChip({this.icon, this.customIcon, required this.text});
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        HugeIcon(icon: icon, size: 14, color: AppColors.textSecondaryLight),
+        if (customIcon != null)
+          customIcon!
+        else if (icon != null)
+          HugeIcon(icon: icon, size: 14, color: AppColors.textSecondaryLight),
         const SizedBox(width: 4),
         AppText(
           text: text,

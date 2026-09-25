@@ -34,6 +34,15 @@ class LocationRepositoryImpl implements LocationRepository {
     required double longitude,
     required List<String> amenities,
   }) async {
+    final existingLocations = await _supabase
+        .from('locations')
+        .select('id')
+        .eq('owner_id', ownerId)
+        .isFilter('deleted_at', null)
+        .limit(1);
+
+    final bool autoApprove = (existingLocations as List).isNotEmpty;
+
     final response = await _supabase
         .from('locations')
         .insert({
@@ -47,6 +56,8 @@ class LocationRepositoryImpl implements LocationRepository {
           'latitude': latitude,
           'longitude': longitude,
           'amenities': amenities,
+          if (autoApprove) 'documents_verified': true,
+          if (autoApprove) 'is_active': true,
         })
         .select()
         .single();

@@ -101,6 +101,18 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
           }
         });
       });
+    } else {
+      // Already expired when loaded. Trigger expiration immediately.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final id = widget.booking['id']?.toString();
+        if (id != null) {
+          context.read<BookingsCubit>().expireBooking(id);
+          try {
+            context.read<DashboardCubit>().fetchDashboardData();
+          } catch (_) {}
+        }
+      });
     }
   }
 
@@ -267,7 +279,9 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
     final lightAccentColor = isApproved ? AppColors.primaryDarkGreen.withOpacity(0.4) : const Color(0xFFFFB74D);
 
     final playerName = booking['player_name'] ?? 'Customer';
+    final locName = booking['location_name'] ?? 'Location';
     final groundName = booking['ground_name'] ?? 'Court';
+    final displayVenue = "$locName - $groundName";
     final rawPeriod = (booking['period'] ?? 'Time').toString();
     String period = rawPeriod;
     
@@ -347,8 +361,8 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                           borderRadius: BorderRadius.circular(8),
                                         ),
                                         child: Center(
-                                          child: HugeIcon(
-                                            icon: sportIcon(sportName),
+                                          child: SportIcon(
+                                            sport: sportName,
                                             size: 16,
                                             color: accentColor,
                                           ),
@@ -368,7 +382,7 @@ class _PendingApprovalCardState extends State<PendingApprovalCard> {
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             AppText(
-                                              text: groundName,
+                                              text: displayVenue,
                                               size: 12,
                                               color: AppColors.textSecondaryLight,
                                               maxLines: 1,

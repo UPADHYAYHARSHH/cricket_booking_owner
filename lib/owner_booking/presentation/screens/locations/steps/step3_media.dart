@@ -49,21 +49,6 @@ class Step3MediaState extends State<Step3Media> {
     });
   }
 
-  Future<void> _pickDocument(bool isNoc) async {
-    final result = await FilePicker.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-    );
-    if (result != null && result.files.single.path != null) {
-      setState(() {
-        if (isNoc) {
-          _nocUrl = result.files.single.path;
-        } else {
-          _propertyDocumentUrl = result.files.single.path;
-        }
-      });
-    }
-  }
 
   bool validateAndSave() {
     if (_images.isEmpty) {
@@ -77,35 +62,12 @@ class Step3MediaState extends State<Step3Media> {
       return false;
     }
 
-    if (_propertyDocumentUrl == null || _propertyDocumentUrl!.isEmpty) {
-      toastification.show(
-        context: context,
-        type: ToastificationType.error,
-        title: const Text('Validation Error'),
-        description: const Text('Please upload the property document'),
-        autoCloseDuration: const Duration(seconds: 3),
-      );
-      return false;
-    }
-
-    if (_nocUrl == null || _nocUrl!.isEmpty) {
-      toastification.show(
-        context: context,
-        type: ToastificationType.error,
-        title: const Text('Validation Error'),
-        description: const Text('Please upload the NOC document'),
-        autoCloseDuration: const Duration(seconds: 3),
-      );
-      return false;
-    }
 
     final cubit = context.read<LocationFormCubit>();
     cubit.updateData(
       cubit.data.copyWith(
         images: _images,
         propertyStatus: _propertyStatus,
-        propertyDocumentUrl: _propertyDocumentUrl,
-        nocUrl: _nocUrl,
       ),
     );
     return true;
@@ -202,163 +164,6 @@ class Step3MediaState extends State<Step3Media> {
             ),
           ],
         ),
-        const SizedBox(height: AppSizes.xxxxl),
-        const AppText(
-          text: 'Property Documents *',
-          size: 16,
-          weight: FontWeight.w600,
-        ),
-        const SizedBox(height: AppSizes.md),
-        const AppText(
-          text: 'Property Status',
-          size: 13,
-          color: AppColors.textSecondaryLight,
-        ),
-        const SizedBox(height: AppSizes.xs),
-        DropdownButtonFormField<String>(
-          initialValue: _propertyStatus,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            ),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-          ),
-          items: const [
-            DropdownMenuItem(
-              value: 'Owned Property',
-              child: Text('Owned Property'),
-            ),
-            DropdownMenuItem(
-              value: 'Leased Property',
-              child: Text('Leased Property'),
-            ),
-          ],
-          onChanged: (val) {
-            if (val != null) setState(() => _propertyStatus = val);
-          },
-        ),
-        const SizedBox(height: AppSizes.xl),
-        _buildDocUpload(
-          'Property Document (Lease/Deed) *',
-          _propertyDocumentUrl,
-          false,
-        ),
-        const SizedBox(height: AppSizes.xl),
-        _buildDocUpload('NOC Document *', _nocUrl, true),
-      ],
-    );
-  }
-
-  Widget _buildDocUpload(String label, String? url, bool isNoc) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppText(text: label, size: 13, color: AppColors.textSecondaryLight),
-        const SizedBox(height: AppSizes.xs),
-        if (url == null || url.isEmpty)
-          GestureDetector(
-            onTap: () => _pickDocument(isNoc),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: AppColors.inputFillLight,
-                borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-                border: Border.all(
-                  color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
-                ),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.upload_file, color: AppColors.primaryDarkGreen),
-                  const SizedBox(width: AppSizes.md),
-                  const Expanded(
-                    child: AppText(
-                      text: 'Upload File',
-                      size: 14,
-                      color: AppColors.textSecondaryLight,
-                      maxLines: 1,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          )
-        else
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppColors.white,
-              borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              border: Border.all(
-                color: AppColors.primaryDarkGreen.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => _showDocumentDialog(url),
-                    child: Row(
-                      children: [
-                        // Preview
-                        Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: AppColors.inputFillLight,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: _buildPreview(url),
-                        ),
-                        const SizedBox(width: 12),
-                        // File info
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              AppText(
-                                text: label.replaceAll(' *', ''),
-                                size: 14,
-                                weight: FontWeight.w600,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              AppText(
-                                text: 'Tap to view document',
-                                size: 12,
-                                color: AppColors.primaryDarkGreen,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                // Actions
-                IconButton(
-                  icon: const Icon(Icons.edit_outlined, color: AppColors.primaryDarkGreen),
-                  tooltip: 'Change Document',
-                  onPressed: () => _pickDocument(isNoc),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                  tooltip: 'Remove Document',
-                  onPressed: () {
-                    setState(() {
-                      if (isNoc) _nocUrl = null;
-                      else _propertyDocumentUrl = null;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
       ],
     );
   }

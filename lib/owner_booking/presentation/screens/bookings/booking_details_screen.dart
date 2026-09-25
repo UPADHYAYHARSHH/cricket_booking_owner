@@ -1016,8 +1016,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         _DetailRow(
                           label: "Sport",
                           value: sportName,
-                          icon: sportIcon(
-                            rawSport.isNotEmpty ? rawSport : sportName,
+                          customIcon: SportIcon(
+                            sport: rawSport.isNotEmpty ? rawSport : sportName,
+                            size: 16,
+                            color: AppColors.primaryDarkGreen,
                           ),
                         ),
                         const _RowDivider(),
@@ -1030,6 +1032,19 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                         _DetailRow(
                           label: "Time",
                           value: timeFormatted,
+                          customValue: timeFormatted.contains(',') ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: timeFormatted.split(',').map((e) => Padding(
+                              padding: const EdgeInsets.only(bottom: 2),
+                              child: AppText(
+                                text: e.trim(),
+                                size: 13,
+                                weight: FontWeight.w600,
+                                color: AppColors.textPrimaryLight,
+                                align: TextAlign.right,
+                              ),
+                            )).toList(),
+                          ) : null,
                           iconData: Icons.access_time_rounded,
                         ),
                         const _RowDivider(),
@@ -1545,12 +1560,16 @@ class _DetailRow extends StatelessWidget {
   final String value;
   final dynamic icon;
   final IconData? iconData;
+  final Widget? customIcon;
+  final Widget? customValue;
 
   const _DetailRow({
     required this.label,
     required this.value,
     this.icon,
     this.iconData,
+    this.customIcon,
+    this.customValue,
   });
 
   @override
@@ -1558,10 +1577,13 @@ class _DetailRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSizes.md),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: customValue != null ? CrossAxisAlignment.start : CrossAxisAlignment.center,
         children: [
           // Icon + label
-          if (iconData != null) ...[
+          if (customIcon != null) ...[
+            customIcon!,
+            const SizedBox(width: AppSizes.sm),
+          ] else if (iconData != null) ...[
             Icon(iconData, size: 16, color: AppColors.primaryDarkGreen),
             const SizedBox(width: AppSizes.sm),
           ] else if (icon != null) ...[
@@ -1580,9 +1602,10 @@ class _DetailRow extends StatelessWidget {
             flex: 3,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Flexible(
-                  child: AppText(
+                  child: customValue ?? AppText(
                     text: value,
                     size: 13,
                     weight: FontWeight.w600,
