@@ -72,6 +72,7 @@ class LocationFormCubit extends Cubit<LocationFormState> {
       // Handle Documents
       String? propDocUrl = _data.propertyDocumentUrl;
       String? nocUrl = _data.nocUrl;
+      String? refundPolicyUrl = _data.refundPolicyUrl;
 
       if (propDocUrl != null && !propDocUrl.startsWith('http')) {
         propDocUrl = await _repo.uploadLocationDocument(
@@ -81,11 +82,16 @@ class LocationFormCubit extends Cubit<LocationFormState> {
         nocUrl = await _repo.uploadLocationDocument(
             ownerId: userId, locationId: locId, filePath: nocUrl);
       }
+      if (refundPolicyUrl != null && !refundPolicyUrl.startsWith('http')) {
+        refundPolicyUrl = await _repo.uploadLocationDocument(
+            ownerId: userId, locationId: locId, filePath: refundPolicyUrl);
+      }
 
       await _repo.updateLocation(locationId: locId, data: {
         'property_status': _data.propertyStatus,
-        ? 'property_document_url': propDocUrl,
-        ? 'noc_url': nocUrl,
+        if (propDocUrl != null) 'property_document_url': propDocUrl,
+        if (nocUrl != null) 'noc_url': nocUrl,
+        if (refundPolicyUrl != null) 'refund_policy_url': refundPolicyUrl,
       });
 
       // Handle Images

@@ -6,6 +6,7 @@ import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_form_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/map_picker_screen.dart';
+import 'package:file_picker/file_picker.dart';
 
 class Step1BasicInfo extends StatefulWidget {
   const Step1BasicInfo({super.key});
@@ -24,6 +25,8 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
   late final TextEditingController lngCtrl;
   bool _isLocationFromMap = false;
   bool _showPolicyPreview = false;
+  String? _refundPolicyUrl;
+  bool _showRefundPolicyError = false;
 
   void _insertBullet() {
     final text = privacyPolicyCtrl.text;
@@ -64,6 +67,20 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
       );
     }
     if (_showPolicyPreview) setState(() {});
+  }
+
+  Future<void> _pickRefundPolicyFile() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+    );
+    if (result != null && result.files.single.path != null) {
+      setState(() {
+        _refundPolicyUrl = result.files.single.path;
+        privacyPolicyCtrl.clear();
+        _showRefundPolicyError = false;
+      });
+    }
   }
 
   Widget _formatButton({
@@ -224,6 +241,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
       text: data.longitude != 0.0 ? data.longitude.toString() : '',
     );
     _isLocationFromMap = data.latitude != 0.0 && data.longitude != 0.0;
+    _refundPolicyUrl = data.refundPolicyUrl;
   }
 
   @override
@@ -247,6 +265,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
         address: addressCtrl.text.trim(),
         description: descriptionCtrl.text.trim(),
         privacyPolicy: privacyPolicyCtrl.text.trim(),
+        refundPolicyUrl: _refundPolicyUrl,
         city: '',
         googleMapsLink: '',
         latitude: double.tryParse(latCtrl.text.trim()) ?? 0.0,
@@ -368,35 +387,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
               ),
             ),
           ),
-          const SizedBox(height: AppSizes.md),
-          // Manual lat/lng fields as fallback
-          Row(
-            children: [
-              Expanded(
-                child: _field(
-                  latCtrl,
-                  hint: 'Latitude (e.g. 23.0225)',
-                  icon: Icons.my_location,
-                  readOnly: _isLocationFromMap,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSizes.md),
-              Expanded(
-                child: _field(
-                  lngCtrl,
-                  hint: 'Longitude (e.g. 72.5714)',
-                  icon: Icons.explore_outlined,
-                  readOnly: _isLocationFromMap,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-              ),
-            ],
-          ),
+
           const SizedBox(height: AppSizes.xxl),
           _label('FULL ADDRESS *'),
           _field(
@@ -462,8 +453,16 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
                   '• Bookings can be cancelled only if requested **more than 6 hours** before slot time.\n• **No cancellation or refund** within 6 hours of slot time.',
               maxLines: 5,
               icon: Icons.assignment_return_outlined,
-              validator: (v) => (v == null || v.trim().isEmpty)
-                  ? 'Refund Policy is required'
+              readOnly: _refundPolicyUrl != null,
+              errorText: _showRefundPolicyError ? 'Remove uploaded file to type here.' : null,
+              onTap: _refundPolicyUrl != null ? () {
+                setState(() => _showRefundPolicyError = true);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please remove the uploaded file first to add text.')),
+                );
+              } : null,
+              validator: (v) => ((v == null || v.trim().isEmpty) && _refundPolicyUrl == null)
+                  ? 'Refund Policy text or document is required'
                   : null,
             ),
             const SizedBox(height: 6),
@@ -480,6 +479,60 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
               ],
             ),
           ],
+          const SizedBox(height: AppSizes.md),
+          Row(
+            children: [
+              const Expanded(child: Divider()),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text('OR', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.bold)),
+              ),
+              const Expanded(child: Divider()),
+            ],
+          ),
+          const SizedBox(height: AppSizes.md),
+          _refundPolicyUrl != null
+              ? Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryLightGreen.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.primaryDarkGreen.withValues(alpha: 0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.description, color: AppColors.primaryDarkGreen),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _refundPolicyUrl!.split('/').last.split('\\').last,
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.red, size: 20),
+                        onPressed: () => setState(() {
+                          _refundPolicyUrl = null;
+                          _showRefundPolicyError = false;
+                        }),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                )
+              : OutlinedButton.icon(
+                  onPressed: _pickRefundPolicyFile,
+                  icon: const Icon(Icons.upload_file, size: 18),
+                  label: const Text('Upload Photo or PDF'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primaryDarkGreen,
+                    side: const BorderSide(color: AppColors.primaryDarkGreen),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  ),
+                ),
         ],
       ),
     );
@@ -517,10 +570,13 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
     String? Function(String?)? validator,
     IconData? icon,
     bool readOnly = false,
+    String? errorText,
+    VoidCallback? onTap,
   }) {
     return TextFormField(
       controller: ctrl,
       readOnly: readOnly,
+      onTap: onTap,
       maxLines: maxLines,
       keyboardType: keyboardType,
       validator: validator,
@@ -531,6 +587,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
       ),
       decoration: InputDecoration(
         hintText: hint,
+        errorText: errorText,
         hintStyle: TextStyle(
           color: AppColors.textSecondaryLight.withValues(alpha: 0.4),
           fontSize: 13,

@@ -73,238 +73,278 @@ class Step4Summary extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const AppText(text: 'Summary', size: 20, weight: FontWeight.w700),
-        const SizedBox(height: AppSizes.xl),
-        _summaryItem('Location Name', data.name),
-        _summaryItem('Address', data.address),
-        _summaryItem('GPS', '${data.latitude}, ${data.longitude}'),
-        _summaryItem('Description', data.description),
-        _buildAmenities(data.amenities),
-        _summaryItem('Property Status', data.propertyStatus),
-        if (data.privacyPolicy.isNotEmpty)
-          _summaryItem('Refund Policy', data.privacyPolicy),
-
-        const SizedBox(height: AppSizes.md),
         const AppText(
-          text: 'Location Images',
-          size: 14,
-          weight: FontWeight.w600,
+          text: 'Review & Submit',
+          size: 22,
+          weight: FontWeight.w800,
+          color: AppColors.textPrimaryLight,
         ),
-        const SizedBox(height: AppSizes.md),
+        const SizedBox(height: 6),
+        const AppText(
+          text: 'Please verify all details before submitting',
+          size: 14,
+          color: AppColors.textSecondaryLight,
+        ),
+        const SizedBox(height: AppSizes.xxl),
+
+        _buildCard(
+          'Location Details',
+          Icons.location_city_rounded,
+          [
+            _summaryItem('Location Name', data.name, icon: Icons.storefront_outlined),
+            const Divider(height: 24, color: AppColors.inputFillLight),
+            _summaryItem('Address', data.address, icon: Icons.location_on_outlined),
+            const Divider(height: 24, color: AppColors.inputFillLight),
+            _summaryItem('GPS Coordinates', '${data.latitude}, ${data.longitude}', icon: Icons.my_location),
+            if (data.description.isNotEmpty) ...[
+              const Divider(height: 24, color: AppColors.inputFillLight),
+              _summaryItem('Description', data.description, icon: Icons.description_outlined),
+            ]
+          ],
+        ),
+
+        if (data.amenities.isNotEmpty)
+          _buildCard(
+            'Amenities',
+            Icons.featured_play_list_outlined,
+            [_buildAmenities(data.amenities)],
+          ),
+
         if (data.images.isNotEmpty)
-          SizedBox(
-            height: 100,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: data.images.length,
-              separatorBuilder: (context, index) =>
-                  const SizedBox(width: AppSizes.sm),
-              itemBuilder: (context, index) {
-                final path = data.images[index];
-                final isNetworkOrBlob =
-                    path.startsWith('http') ||
-                    path.startsWith('blob:') ||
-                    path.startsWith('data:');
-                return GestureDetector(
-                  onTap: () => _showDocumentDialog(context, path),
-                  child: Container(
-                    width: 100,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-                      image: DecorationImage(
-                        image: isNetworkOrBlob
-                            ? NetworkImage(path)
-                            : FileImage(File(path)) as ImageProvider,
-                        fit: BoxFit.cover,
+          _buildCard(
+            'Location Images',
+            Icons.photo_library_outlined,
+            [
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: data.images.map((path) {
+                  final isNetworkOrBlob = path.startsWith('http') || path.startsWith('blob:') || path.startsWith('data:');
+                  return GestureDetector(
+                    onTap: () => _showDocumentDialog(context, path),
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                        border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.1)),
+                        image: DecorationImage(
+                          image: isNetworkOrBlob ? NetworkImage(path) : FileImage(File(path)) as ImageProvider,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
-                  ),
-                );
-              },
-            ),
-          )
-        else
-          const AppText(
-            text: 'No images provided',
-            size: 13,
-            color: AppColors.textSecondaryLight,
+                  );
+                }).toList(),
+              ),
+            ],
           ),
 
-        const SizedBox(height: AppSizes.xl),
-        const AppText(
-          text: 'Uploaded Documents',
-          size: 14,
-          weight: FontWeight.w600,
-        ),
-        const SizedBox(height: AppSizes.md),
-        if (data.propertyDocumentUrl != null &&
-            data.propertyDocumentUrl!.isNotEmpty)
-          _buildDocPreview(
-            context,
-            'Property Document',
-            data.propertyDocumentUrl!,
+        if (data.privacyPolicy.isNotEmpty || (data.refundPolicyUrl != null && data.refundPolicyUrl!.isNotEmpty))
+          _buildCard(
+            'Policies & Documents',
+            Icons.policy_outlined,
+            [
+              if (data.privacyPolicy.isNotEmpty)
+                _summaryItem('Refund Policy Text', data.privacyPolicy, icon: Icons.text_snippet_outlined),
+              if (data.privacyPolicy.isNotEmpty && data.refundPolicyUrl != null && data.refundPolicyUrl!.isNotEmpty)
+                const Divider(height: 24, color: AppColors.inputFillLight),
+              if (data.refundPolicyUrl != null && data.refundPolicyUrl!.isNotEmpty)
+                _buildDocPreview(context, 'Refund Policy Document', data.refundPolicyUrl!),
+            ],
           ),
-        if (data.nocUrl != null && data.nocUrl!.isNotEmpty)
-          _buildDocPreview(context, 'NOC Document', data.nocUrl!),
       ],
+    );
+  }
+
+  Widget _buildCard(String title, IconData icon, List<Widget> children) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSizes.xxl),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(AppSizes.radiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+        border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.08)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.primaryLightGreen.withOpacity(0.1),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSizes.radiusLg - 1)),
+              border: Border(bottom: BorderSide(color: AppColors.primaryDarkGreen.withOpacity(0.08))),
+            ),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: AppColors.primaryDarkGreen),
+                const SizedBox(width: 8),
+                AppText(
+                  text: title,
+                  size: 15,
+                  weight: FontWeight.w700,
+                  color: AppColors.primaryDarkGreen,
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildDocPreview(BuildContext context, String label, String url) {
     final isImage = _isImageUrl(url);
-    final isNetworkOrBlob =
-        url.startsWith('http') ||
-        url.startsWith('blob:') ||
-        url.startsWith('data:');
+    final isNetworkOrBlob = url.startsWith('http') || url.startsWith('blob:') || url.startsWith('data:');
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.md),
-      child: GestureDetector(
-        onTap: () => _showDocumentDialog(context, url),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.inputFillLight,
-            borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-            border: Border.all(
-              color: AppColors.primaryDarkGreen.withValues(alpha: 0.2),
-            ),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: isImage
-                    ? Image(
-                        image: isNetworkOrBlob
-                            ? NetworkImage(url) as ImageProvider
-                            : FileImage(File(url)),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Center(
-                          child: Icon(
-                            Icons.image_outlined,
-                            color: AppColors.primaryDarkGreen,
-                          ),
-                        ),
-                      )
-                    : const Center(
-                        child: Icon(
-                          Icons.picture_as_pdf,
-                          color: Colors.redAccent,
-                          size: 24,
-                        ),
+    return GestureDetector(
+      onTap: () => _showDocumentDialog(context, url),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.inputFillLight.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(AppSizes.radiusMd),
+          border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.15)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: isImage
+                  ? Image(
+                      image: isNetworkOrBlob ? NetworkImage(url) as ImageProvider : FileImage(File(url)),
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Center(
+                        child: Icon(Icons.image_outlined, color: AppColors.primaryDarkGreen),
                       ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppText(text: label, size: 14, weight: FontWeight.w600),
-                    const SizedBox(height: 2),
-                    AppText(
-                      text: 'Tap to view',
-                      size: 12,
-                      color: AppColors.primaryDarkGreen,
+                    )
+                  : const Center(
+                      child: Icon(Icons.picture_as_pdf, color: Colors.redAccent, size: 22),
                     ),
-                  ],
-                ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AppText(text: label, size: 14, weight: FontWeight.w600, color: AppColors.textPrimaryLight),
+                  const SizedBox(height: 2),
+                  AppText(text: 'Tap to view', size: 12, color: AppColors.primaryDarkGreen),
+                ],
               ),
-            ],
-          ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: AppColors.primaryDarkGreen.withOpacity(0.5)),
+          ],
         ),
       ),
     );
   }
 
-  Widget _summaryItem(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          AppText(text: label, size: 12, color: AppColors.textSecondaryLight),
-          const SizedBox(height: 4),
-          AppText(
-            text: value.isEmpty ? 'N/A' : value,
-            size: 15,
-            weight: FontWeight.w500,
+  Widget _summaryItem(String label, String value, {IconData? icon}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (icon != null) ...[
+          Container(
+            margin: const EdgeInsets.only(top: 2),
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.inputFillLight,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(icon, size: 16, color: AppColors.textSecondaryLight),
           ),
+          const SizedBox(width: 12),
         ],
-      ),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              AppText(text: label, size: 12, color: AppColors.textSecondaryLight, weight: FontWeight.w500),
+              const SizedBox(height: 4),
+              AppText(
+                text: value.isEmpty ? 'N/A' : value,
+                size: 14,
+                weight: FontWeight.w600,
+                color: AppColors.textPrimaryLight,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildAmenities(List<String> amenities) {
-    if (amenities.isEmpty) {
-      return _summaryItem('Amenities', 'N/A');
-    }
+    return Wrap(
+      spacing: AppSizes.sm,
+      runSpacing: AppSizes.sm,
+      children: amenities.map((id) {
+        final amenity = kVenueAmenities.firstWhere(
+          (a) => a['id'] == id,
+          orElse: () => {'label': id, 'icon': null},
+        );
+        final label = amenity['label'] as String;
+        final icon = amenity['icon'];
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const AppText(
-            text: 'Amenities',
-            size: 12,
-            color: AppColors.textSecondaryLight,
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.inputFillLight.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(AppSizes.radiusRound),
+            border: Border.all(color: AppColors.primaryDarkGreen.withOpacity(0.2), width: 1),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: AppSizes.sm,
-            runSpacing: AppSizes.sm,
-            children: amenities.map((id) {
-              final amenity = kVenueAmenities.firstWhere(
-                (a) => a['id'] == id,
-                orElse: () => {'label': id, 'icon': null},
-              );
-              final label = amenity['label'] as String;
-              final icon = amenity['icon'];
-
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSizes.md,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.inputFillLight,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusRound),
-                  border: Border.all(
-                    color: AppColors.primaryDarkGreen,
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (icon != null) ...[
-                      HugeIcon(
-                        icon: icon,
-                        size: 14,
-                        color: AppColors.primaryDarkGreen,
-                      ),
-                      const SizedBox(width: AppSizes.sm),
-                    ],
-                    AppText(
-                      text: label,
-                      size: 12,
-                      weight: FontWeight.w600,
-                      color: AppColors.primaryDarkGreen,
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                HugeIcon(icon: icon, size: 14, color: AppColors.primaryDarkGreen),
+                const SizedBox(width: AppSizes.sm),
+              ],
+              AppText(
+                text: label,
+                size: 12,
+                weight: FontWeight.w600,
+                color: AppColors.primaryDarkGreen,
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      }).toList(),
     );
   }
 }

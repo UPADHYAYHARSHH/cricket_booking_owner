@@ -8,7 +8,7 @@ import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location_state.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/grounds/grounds_at_location_screen.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_documents_screen.dart';
+
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_form_screen.dart';
 
 /// Location management screen, reached from the "Grounds" tab's app bar:
@@ -55,15 +55,19 @@ class _LocationsScreenState extends State<LocationsScreen>
     );
     if (newLocationId == null || !mounted) return;
 
-    // Collect property/ownership documents for this venue. The location
-    // stays "Pending Approval" until the admin reviews it, but the owner
-    // can add grounds right away — approval only gates user-facing visibility.
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => LocationDocumentsScreen(locationId: newLocationId),
-      ),
-    );
+    await context.read<LocationCubit>().fetchOwnerLocations();
+    if (!mounted) return;
+
+    final state = context.read<LocationCubit>().state;
+    if (state is LocationLoaded) {
+      final newLoc = state.locations.firstWhere(
+        (loc) => loc['id'] == newLocationId,
+        orElse: () => <String, dynamic>{},
+      );
+      if (newLoc.isNotEmpty && newLoc['documents_verified'] == true) {
+        _openGrounds(newLoc);
+      }
+    }
   }
 
   Future<void> _openEditLocation(Map<String, dynamic> location) async {
@@ -148,19 +152,6 @@ class _LocationsScreenState extends State<LocationsScreen>
     );
   }
 
-  Future<void> _openDocuments(Map<String, dynamic> location) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => LocationDocumentsScreen(
-          locationId: location['id'] as String,
-          locationData: location,
-        ),
-      ),
-    );
-    if (!mounted) return;
-    context.read<LocationCubit>().fetchOwnerLocations();
-  }
 
   void _openGrounds(Map<String, dynamic> location) {
     final isVerified = location['documents_verified'] == true;
@@ -344,7 +335,6 @@ class _LocationsScreenState extends State<LocationsScreen>
                       onTap: () => _openGrounds(location),
                       onEdit: () => _openEditLocation(location),
                       onDelete: () => _confirmDelete(location),
-                      onDocuments: () => _openDocuments(location),
                       onActiveChanged: (value) =>
                           context.read<LocationCubit>().updateLocation(
                             locationId: location['id'] as String,
@@ -386,7 +376,6 @@ class _LocationCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
-  final VoidCallback onDocuments;
   final ValueChanged<bool> onActiveChanged;
 
   const _LocationCard({
@@ -394,7 +383,6 @@ class _LocationCard extends StatelessWidget {
     required this.onTap,
     required this.onEdit,
     required this.onDelete,
-    required this.onDocuments,
     required this.onActiveChanged,
   });
 
@@ -670,64 +658,6 @@ class _LocationCard extends StatelessWidget {
                           onChanged: onActiveChanged,
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(width: AppSizes.lg),
-                  GestureDetector(
-                    onTap: onDocuments,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSizes.md,
-                        vertical: AppSizes.sm,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isRejected
-                            ? Colors.red.withValues(alpha: 0.08)
-                            : hasDocuments
-                            ? AppColors.primaryDarkGreen.withValues(alpha: 0.08)
-                            : AppColors.bgLight,
-                        borderRadius: BorderRadius.circular(AppSizes.radiusSm),
-                        border: Border.all(
-                          color: isRejected
-                              ? Colors.red.withValues(alpha: 0.2)
-                              : hasDocuments
-                              ? AppColors.primaryDarkGreen.withValues(alpha: 0.2)
-                              : AppColors.borderLight,
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            isRejected
-                                ? Icons.refresh
-                                : hasDocuments
-                                ? Icons.description
-                                : Icons.upload_file_outlined,
-                            size: 14,
-                            color: isRejected
-                                ? Colors.red
-                                : hasDocuments
-                                ? AppColors.primaryDarkGreen
-                                : AppColors.textSecondaryLight,
-                          ),
-                          const SizedBox(width: AppSizes.xs),
-                          AppText(
-                            text: isRejected
-                                ? 'Re-upload'
-                                : hasDocuments
-                                ? 'View Docs'
-                                : 'Add Docs',
-                            size: 11,
-                            weight: FontWeight.w600,
-                            color: isRejected
-                                ? Colors.red
-                                : hasDocuments
-                                ? AppColors.primaryDarkGreen
-                                : AppColors.textSecondaryLight,
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ],

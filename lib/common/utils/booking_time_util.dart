@@ -56,7 +56,7 @@ class BookingTimeUtil {
 
   /// Merges a list of comma-separated slot start times (e.g. "08:00 PM, 09:00 PM")
   /// or ranges (e.g. "08:00 PM - 09:00 PM, 09:00 PM - 10:00 PM") into
-  /// a unified contiguous display range (e.g. "08:00 PM – 10:00 PM").
+  /// a unified contiguous display range (e.g. "08:00 PM - 10:00 PM (2 slots)").
   static String mergeSlotRange(String slotCsv) {
     if (slotCsv.trim().isEmpty) return '';
 
@@ -67,51 +67,49 @@ class BookingTimeUtil {
         .toList();
     if (rawSlots.isEmpty) return '';
 
-    final parsedRanges = <Map<String, String>>[];
-    for (final slot in rawSlots) {
-      if (slot.contains('-')) {
-        final parts = slot.split('-').map((s) => s.trim()).toList();
-        if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
-          parsedRanges.add({'start': parts[0], 'end': parts[1]});
-          continue;
-        }
+    List<int> hours24 = [];
+    for (String slot in rawSlots) {
+      final startTimeStr = slot.contains('-') ? slot.split('-').first.trim() : slot;
+      final timeParts = startTimeStr.split(':');
+      if (timeParts.length >= 2) {
+        int h = int.tryParse(timeParts[0]) ?? 0;
+        final mPart = timeParts[1].trim().split(' ');
+        final amPm = mPart.length > 1 ? mPart[1].toUpperCase() : '';
+        if (amPm == 'PM' && h != 12) h += 12;
+        if (amPm == 'AM' && h == 12) h = 0;
+        hours24.add(h);
       }
-      final start = slot;
-      final end = calculateEndTime(start);
-      parsedRanges.add({'start': start, 'end': end.isNotEmpty ? end : start});
     }
 
-    if (parsedRanges.isEmpty) return '';
-    if (parsedRanges.length == 1) {
-      final item = parsedRanges.first;
-      if (item['start'] == item['end']) return item['start']!;
-      return '${item['start']} – ${item['end']}';
+    if (hours24.isEmpty) return '';
+    hours24.sort();
+
+    List<String> ranges = [];
+    int blockStart = hours24.first;
+    int prevHour = hours24.first;
+
+    String formatHour(int h) {
+      int wrappedH = h % 24;
+      final amPm = wrappedH >= 12 ? 'PM' : 'AM';
+      int hour12 =
+          wrappedH > 12 ? wrappedH - 12 : (wrappedH == 0 ? 12 : wrappedH);
+      return '${hour12.toString().padLeft(2, '0')}:00 $amPm';
     }
 
-    // Merge contiguous blocks
-    final mergedBlocks = <String>[];
-    String currentStart = parsedRanges.first['start']!;
-    String currentEnd = parsedRanges.first['end']!;
-
-    for (int i = 1; i < parsedRanges.length; i++) {
-      final nextStart = parsedRanges[i]['start']!;
-      final nextEnd = parsedRanges[i]['end']!;
-
-      if (_normalizeTime(currentEnd) == _normalizeTime(nextStart)) {
-        currentEnd = nextEnd;
+    for (int i = 1; i < hours24.length; i++) {
+      if (hours24[i] == prevHour + 1) {
+        prevHour = hours24[i];
       } else {
-        mergedBlocks.add('$currentStart – $currentEnd');
-        currentStart = nextStart;
-        currentEnd = nextEnd;
+        ranges.add('${formatHour(blockStart)} - ${formatHour(prevHour + 1)}');
+        blockStart = hours24[i];
+        prevHour = hours24[i];
       }
     }
-    mergedBlocks.add('$currentStart – $currentEnd');
+    ranges.add('${formatHour(blockStart)} - ${formatHour(prevHour + 1)}');
 
-    return mergedBlocks.join(', ');
-  }
-
-  static String _normalizeTime(String time) {
-    return time.replaceAll(' ', '').toUpperCase();
+    final count = hours24.length;
+    final slotText = count == 1 ? '1 slot' : '$count slots';
+    return '${ranges.join(', ')} ($slotText)';
   }
 
   /// Formats the complete display time for a booking given its DB period and slotTime

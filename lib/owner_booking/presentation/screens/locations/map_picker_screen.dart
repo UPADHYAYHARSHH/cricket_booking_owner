@@ -173,27 +173,20 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location services are disabled.')),
-          );
-        }
+        await Geolocator.openLocationSettings();
         return;
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) return;
-      }
-      if (permission == LocationPermission.deniedForever) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Location permissions are permanently denied.'),
-            ),
-          );
+        if (permission == LocationPermission.denied) {
+          return;
         }
+      }
+      
+      if (permission == LocationPermission.deniedForever) {
+        await Geolocator.openAppSettings();
         return;
       }
 
