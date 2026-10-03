@@ -20,6 +20,17 @@ class AppConfigService {
   String _androidStoreUrl = '';
   String _iosStoreUrl = '';
 
+  // Cancellation Policy & Coin Recovery (Loaded dynamically from app_config)
+  double _cancellationTier1Hours = 24.0;
+  double _cancellationTier1Percent = 100.0;
+  double _cancellationTier2Hours = 12.0;
+  double _cancellationTier2Percent = 75.0;
+  double _cancellationTier3Hours = 3.0;
+  double _cancellationTier3Percent = 50.0;
+  double _cancellationTier4Percent = 25.0;
+  int _coinExpiryDays = 60;
+  double _maxCoinRedemptionPercent = 40.0;
+
   final StreamController<bool> _maintenanceController = StreamController<bool>.broadcast();
   StreamSubscription? _remoteConfigSubscription;
 
@@ -34,6 +45,17 @@ class AppConfigService {
   String get iosMinVersion => _iosMinVersion;
   String get androidStoreUrl => _androidStoreUrl;
   String get iosStoreUrl => _iosStoreUrl;
+
+  // Cancellation Getters
+  double get cancellationTier1Hours => _cancellationTier1Hours;
+  double get cancellationTier1Percent => _cancellationTier1Percent;
+  double get cancellationTier2Hours => _cancellationTier2Hours;
+  double get cancellationTier2Percent => _cancellationTier2Percent;
+  double get cancellationTier3Hours => _cancellationTier3Hours;
+  double get cancellationTier3Percent => _cancellationTier3Percent;
+  double get cancellationTier4Percent => _cancellationTier4Percent;
+  int get coinExpiryDays => _coinExpiryDays;
+  double get maxCoinRedemptionPercent => _maxCoinRedemptionPercent;
 
   Stream<bool> get maintenanceModeStream => _maintenanceController.stream;
 
@@ -145,6 +167,31 @@ class AppConfigService {
       final iosUrl = remoteConfig.getString('owner_ios_store_url');
       if (iosUrl.isNotEmpty) _iosStoreUrl = iosUrl;
 
+      // Cancellation & Coin Recovery
+      final t1h = double.tryParse(remoteConfig.getString('cancellation_tier1_hours'));
+      if (t1h != null) _cancellationTier1Hours = t1h;
+      final t1p = double.tryParse(remoteConfig.getString('cancellation_tier1_percent'));
+      if (t1p != null) _cancellationTier1Percent = t1p;
+
+      final t2h = double.tryParse(remoteConfig.getString('cancellation_tier2_hours'));
+      if (t2h != null) _cancellationTier2Hours = t2h;
+      final t2p = double.tryParse(remoteConfig.getString('cancellation_tier2_percent'));
+      if (t2p != null) _cancellationTier2Percent = t2p;
+
+      final t3h = double.tryParse(remoteConfig.getString('cancellation_tier3_hours'));
+      if (t3h != null) _cancellationTier3Hours = t3h;
+      final t3p = double.tryParse(remoteConfig.getString('cancellation_tier3_percent'));
+      if (t3p != null) _cancellationTier3Percent = t3p;
+
+      final t4p = double.tryParse(remoteConfig.getString('cancellation_tier4_percent'));
+      if (t4p != null) _cancellationTier4Percent = t4p;
+
+      final exp = int.tryParse(remoteConfig.getString('coin_expiry_days'));
+      if (exp != null) _coinExpiryDays = exp;
+
+      final maxRedeem = double.tryParse(remoteConfig.getString('max_coin_redemption_percent'));
+      if (maxRedeem != null) _maxCoinRedemptionPercent = maxRedeem;
+
       debugPrint('🔥 OWNER CONFIG LOADED FROM FIREBASE: platformFee=$_platformFee, isFree=$_isPlatformFeeFree, commission=$_commissionRate ($_commissionIsPercentage%), gst=$_gstRate');
     } catch (e) {
       debugPrint('⚠️ Error reading Firebase Remote Config values: $e');
@@ -195,6 +242,43 @@ class AppConfigService {
             break;
           case 'owner_ios_store_url':
             if (val.isNotEmpty) _iosStoreUrl = val;
+            break;
+          case 'cancellation_tier1_hours':
+            final t1h = double.tryParse(val);
+            if (t1h != null) _cancellationTier1Hours = t1h;
+            break;
+          case 'cancellation_tier1_percent':
+            final t1p = double.tryParse(val);
+            if (t1p != null) _cancellationTier1Percent = t1p;
+            break;
+          case 'cancellation_tier2_hours':
+            final t2h = double.tryParse(val);
+            if (t2h != null) _cancellationTier2Hours = t2h;
+            break;
+          case 'cancellation_tier2_percent':
+            final t2p = double.tryParse(val);
+            if (t2p != null) _cancellationTier2Percent = t2p;
+            break;
+          case 'cancellation_tier3_hours':
+            final t3h = double.tryParse(val);
+            if (t3h != null) _cancellationTier3Hours = t3h;
+            break;
+          case 'cancellation_tier3_percent':
+            final t3p = double.tryParse(val);
+            if (t3p != null) _cancellationTier3Percent = t3p;
+            break;
+          case 'cancellation_tier4_percent':
+            final t4p = double.tryParse(val);
+            if (t4p != null) _cancellationTier4Percent = t4p;
+            break;
+          case 'coin_expiry_days':
+            final exp = int.tryParse(val);
+            if (exp != null) _coinExpiryDays = exp;
+            break;
+          case 'max_coin_redemption_percent':
+            final mr = double.tryParse(val);
+            if (mr != null) _maxCoinRedemptionPercent = mr;
+            break;
         }
       }
       debugPrint('🚀 FETCH OWNER CONFIG SUCCESS: platformFee=$_platformFee, isFree=$_isPlatformFeeFree, gstRate=$_gstRate');

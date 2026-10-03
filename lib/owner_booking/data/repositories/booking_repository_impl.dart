@@ -437,6 +437,142 @@ String bookingId, {String reason = 'declined_by_owner'}) async {
           print('[deleteOrExpireBooking] Notification error: $e');
         }
       }
+
+      // Record in cancellation_history for audit trail
+      try {
+        final groundName = (bookingData['grounds'] is Map && bookingData['grounds']['name'] != null)
+            ? bookingData['grounds']['name'].toString()
+            : (bookingData['ground_name']?.toString() ?? 'Venue');
+        final nowUtc = DateTime.now().toUtc();
+        await _supabase.from('cancellation_history').insert({
+          'booking_id': bookingId,
+          'user_id': bookingData['user_id']?.toString(),
+          'ground_id': bookingData['ground_id'],
+          'ground_name': groundName,
+          'sport_name': bookingData['sport_name'] ?? bookingData['sport'],
+          'slot_time': bookingData['slot_time'],
+          'cancelled_by': reason.contains('owner') ? 'owner' : (reason.contains('timeout') ? 'timeout' : 'user'),
+          'cancellation_reason': reason,
+          'refund_percent': 0.0,
+          'coins_issued': 0.0,
+          'owner_compensation': 0.0,
+          'total_booking_amount': (bookingData['amount'] as num?)?.toDouble() ?? 0.0,
+          'cancelled_at': nowUtc.toIso8601String(),
+        });
+      } catch (histErr) {
+        print('[deleteOrExpireBooking] cancellation_history insert error: $histErr');
+      }
     }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getOwnerCancellations(String ownerId) async {
+    try {
+      // 1. Get owner's ground IDs
+      final grounds = await getOwnerGrounds(ownerId);
+      final groundIds = grounds.map((g) => g['id'].toString()).toList();
+      if (groundIds.isEmpty) return [];
+
+      // 2. Query cancellation_history for these grounds
+      try {
+        final hist = await _supabase
+            .from('cancellation_history')
+            .select('*')
+            .inFilter('ground_id', groundIds)
+            .order('cancelled_at', ascending: false);
+
+        if (hist.isNotEmpty) {
+          final userIds = hist
+              .map((h) => h['user_id']?.toString())
+              .where((u) => u != null && u.isNotEmpty)
+              .cast<String>()
+              .toSet()
+              .toList();
+
+          Map<String, Map<String, dynamic>> userMap = {};
+          if (userIds.isNotEmpty) {
+            try {
+              final users = await fetchUsers(userIds);
+              for (final u in users) {
+                if (u['id'] != null) userMap[u['id'].toString()] = u;
+              }
+            } catch (_) {}
+          }
+
+          return List<Map<String, dynamic>>.from(hist.map((h) {
+            final m = Map<String, dynamic>.from(h as Map);
+            final uid = m['user_id']?.toString();
+            if (uid != null && userMap.containsKey(uid)) {
+              m['player_name'] = userMap[uid]!['name'] ?? userMap[uid]!['displayName'] ?? 'Player';
+              m['player_phone'] = userMap[uid]!['phone'] ?? userMap[uid]!['phoneNumber'] ?? '';
+            }
+            return m;
+          }));
+        }
+      } catch (e) {
+        print('[getOwnerCancellations] cancellation_history query error: $e');
+      }
+
+      // 3. Fallback: Query bookings table for cancelled / declined bookings
+      final bRes = await _supabase
+          .from('bookings')
+          .select('*, grounds(name, sport_category)')
+          .inFilter('ground_id', groundIds)
+          .inFilter('status', ['cancelled', 'declined', 'expired'])
+          .order('created_at', ascending: false);
+
+      if (bRes.isNotEmpty) {
+        final userIds = bRes
+            .map((b) => b['user_id']?.toString())
+            .where((u) => u != null && u.isNotEmpty)
+            .cast<String>()
+            .toSet()
+            .toList();
+
+        Map<String, Map<String, dynamic>> userMap = {};
+        if (userIds.isNotEmpty) {
+          try {
+            final users = await fetchUsers(userIds);
+            for (final u in users) {
+              if (u['id'] != null) userMap[u['id'].toString()] = u;
+            }
+          } catch (_) {}
+        }
+
+        return List<Map<String, dynamic>>.from(bRes.map((b) {
+          final m = Map<String, dynamic>.from(b as Map);
+          final uid = m['user_id']?.toString();
+          String playerName = 'Player';
+          String playerPhone = '';
+          if (uid != null && userMap.containsKey(uid)) {
+            playerName = userMap[uid]!['name'] ?? userMap[uid]!['displayName'] ?? 'Player';
+            playerPhone = userMap[uid]!['phone'] ?? userMap[uid]!['phoneNumber'] ?? '';
+          }
+
+          final gName = (m['grounds'] is Map ? m['grounds']['name'] : null) ?? m['ground_name'] ?? 'Court';
+
+          return {
+            'id': m['id']?.toString() ?? '',
+            'booking_id': m['id']?.toString() ?? '',
+            'ground_id': m['ground_id']?.toString() ?? '',
+            'ground_name': gName,
+            'sport_name': m['sport_name'] ?? m['sport'] ?? 'Sport',
+            'player_name': playerName,
+            'player_phone': playerPhone,
+            'slot_time': m['slot_time'],
+            'status': m['status'] ?? 'cancelled',
+            'cancelled_by': m['cancelled_by'] ?? (m['status'] == 'declined' ? 'owner' : 'user'),
+            'cancellation_reason': m['cancellation_reason'] ?? m['notes'] ?? 'Cancelled',
+            'refund_percent': m['refund_percent'] ?? 0,
+            'coins_issued': (m['cancellation_coins_issued'] as num?)?.toDouble() ?? 0.0,
+            'total_booking_amount': (m['amount'] as num?)?.toDouble() ?? 0.0,
+            'cancelled_at': m['cancelled_at'] ?? m['created_at'],
+          };
+        }));
+      }
+    } catch (e) {
+      print('[getOwnerCancellations] Error: $e');
+    }
+    return [];
   }
 }

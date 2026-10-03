@@ -153,6 +153,21 @@ class NotificationService {
       } catch (e) {
         debugPrint('Owner App - Failed to create user_notifications channel: $e');
       }
+
+      try {
+        await androidPlugin.createNotificationChannel(
+          const AndroidNotificationChannel(
+            'booking_confirmed_channel',
+            'Booking Confirmed',
+            description: 'Plays sound when a booking is confirmed or approved',
+            importance: Importance.max,
+            playSound: true,
+            sound: RawResourceAndroidNotificationSound('booking_confirmed'),
+          ),
+        );
+      } catch (e) {
+        debugPrint('Owner App - Failed to create booking_confirmed_channel: $e');
+      }
     }
   }
 

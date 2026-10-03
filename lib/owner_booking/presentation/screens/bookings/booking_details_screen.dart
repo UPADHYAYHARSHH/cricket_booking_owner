@@ -816,6 +816,60 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
               ),
             ),
 
+            if (status.toLowerCase() == 'cancelled')
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSizes.xl,
+                  vertical: AppSizes.md,
+                ),
+                decoration: const BoxDecoration(
+                  color: AppColors.statusCancelledBg,
+                  border: Border(
+                    bottom: BorderSide(color: Color(0xFFEF9A9A), width: 1.5),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppColors.statusCancelled.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.cancel_outlined,
+                        size: 22,
+                        color: AppColors.statusCancelled,
+                      ),
+                    ),
+                    const SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const AppText(
+                            text: "Booking Cancelled",
+                            size: 14,
+                            weight: FontWeight.w700,
+                            color: AppColors.statusCancelled,
+                          ),
+                          const SizedBox(height: 2),
+                          AppText(
+                            text: booking['cancellation_reason'] != null &&
+                                    booking['cancellation_reason'].toString().isNotEmpty
+                                ? "Reason: ${booking['cancellation_reason']} (Cancelled by ${booking['cancelled_by'] ?? 'User'})\nSlot has been released and is available for booking."
+                                : "Cancelled by ${booking['cancelled_by'] ?? 'User'}. Slot has been released and is available for booking.",
+                            size: 12,
+                            color: const Color(0xFFB71C1C),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
             if (status.toLowerCase() == 'requested')
               Container(
                 width: double.infinity,

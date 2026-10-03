@@ -17,6 +17,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings
 import 'package:shimmer/shimmer.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/cancellation/owner_cancellation_history_screen.dart';
 
 import '../../blocs/location/location_cubit.dart';
 import '../../blocs/location/location_state.dart';
@@ -169,23 +170,49 @@ class _BookingsScreenState extends State<BookingsScreen> {
                         final count = state is BookingsLoaded
                             ? state.filteredBookings.length
                             : 0;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(
-                              AppSizes.radiusFull,
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.white.withValues(alpha: 0.2),
+                                borderRadius: BorderRadius.circular(
+                                  AppSizes.radiusFull,
+                                ),
+                              ),
+                              child: AppText(
+                                text: "$count",
+                                size: 14,
+                                weight: FontWeight.w700,
+                                color: AppColors.white,
+                              ),
                             ),
-                          ),
-                          child: AppText(
-                            text: "$count",
-                            size: 14,
-                            weight: FontWeight.w700,
-                            color: AppColors.white,
-                          ),
+                            const SizedBox(width: 8),
+                            GestureDetector(
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const OwnerCancellationHistoryScreen(),
+                                ),
+                              ),
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: AppColors.white.withValues(alpha: 0.18),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.history_toggle_off_rounded,
+                                  color: AppColors.white,
+                                  size: 18,
+                                ),
+                              ),
+                            ),
+                          ],
                         );
                       },
                     ),
@@ -1057,6 +1084,49 @@ class _BookingCardState extends State<_BookingCard> {
                         ),
                       ],
                     ),
+
+                    // ── Cancelled state banner ──
+                    if (status.toLowerCase() == 'cancelled') ...[
+                      const SizedBox(height: AppSizes.sm),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.statusCancelledBg,
+                          borderRadius: BorderRadius.circular(
+                            AppSizes.radiusSm,
+                          ),
+                          border: Border.all(
+                            color: AppColors.statusCancelled.withValues(alpha: 0.25),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(
+                              Icons.cancel_outlined,
+                              size: 15,
+                              color: AppColors.statusCancelled,
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: AppText(
+                                text: booking['cancellation_reason'] != null &&
+                                        booking['cancellation_reason'].toString().isNotEmpty
+                                    ? "Cancelled (${booking['cancelled_by'] ?? 'User'}): ${booking['cancellation_reason']} • Slot Released"
+                                    : "Cancelled • Slot Released",
+                                size: 11,
+                                weight: FontWeight.w600,
+                                color: AppColors.statusCancelled,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
 
                     // ── Requested-state timer + actions ──
                     if (status.toLowerCase() == 'requested') ...[

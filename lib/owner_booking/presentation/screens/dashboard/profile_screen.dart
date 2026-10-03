@@ -24,6 +24,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings
 import 'package:turfpro_owner/owner_booking/presentation/blocs/slot/slot_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/payouts/payouts_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/support/owner_help_support_screen.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/cancellation/owner_cancellation_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -567,6 +568,16 @@ class _ProfileScreenState extends State<ProfileScreen>
                             context,
                             MaterialPageRoute(
                               builder: (_) => const BookingsScreen(),
+                            ),
+                          ),
+                        ),
+                        _SettingsItem(
+                          icon: Icons.history_toggle_off_rounded,
+                          title: "Cancellation History & Policy",
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const OwnerCancellationHistoryScreen(),
                             ),
                           ),
                         ),
