@@ -95,10 +95,18 @@ class LocationFormLayout extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSizes.md),
+              Expanded(
+                child: AppText(
+                  text: isEdit ? 'Edit Location' : 'Add New Location',
+                  size: 15,
+                  color: AppColors.white.withValues(alpha: 0.8),
+                  weight: FontWeight.w500,
+                ),
+              ),
               AppText(
-                text: isEdit ? 'Edit Location' : 'Add New Location',
-                size: 15,
-                color: AppColors.white.withValues(alpha: 0.8),
+                text: 'Step $currentStep of $kLocationFormTotalSteps',
+                size: 13,
+                color: AppColors.white.withValues(alpha: 0.7),
                 weight: FontWeight.w500,
               ),
             ],
@@ -129,26 +137,6 @@ class LocationFormLayout extends StatelessWidget {
                 ),
               );
             }),
-          ),
-          const SizedBox(height: AppSizes.md),
-          AppText(
-            text: 'Step $currentStep of $kLocationFormTotalSteps',
-            size: 13,
-            color: AppColors.white.withValues(alpha: 0.7),
-            weight: FontWeight.w500,
-          ),
-          const SizedBox(height: 2),
-          AppText(
-            text: title,
-            size: 24,
-            color: AppColors.white,
-            weight: FontWeight.w700,
-          ),
-          const SizedBox(height: 2),
-          AppText(
-            text: subtitle,
-            size: 13,
-            color: AppColors.white.withValues(alpha: 0.7),
           ),
         ],
       ),

@@ -7,6 +7,7 @@ class LocationFormData {
   final String city;
   final String description;
   final String privacyPolicy;
+  final String? refundPolicyUrl;
   final String googleMapsLink;
   final double latitude;
   final double longitude;
@@ -27,6 +28,7 @@ class LocationFormData {
     required this.city,
     required this.description,
     required this.privacyPolicy,
+    this.refundPolicyUrl,
     required this.googleMapsLink,
     required this.latitude,
     required this.longitude,
@@ -44,6 +46,7 @@ class LocationFormData {
       city: '',
       description: '',
       privacyPolicy: '',
+      refundPolicyUrl: null,
       googleMapsLink: '',
       latitude: 0.0,
       longitude: 0.0,
@@ -70,6 +73,7 @@ class LocationFormData {
       city: map['city']?.toString() ?? '',
       description: map['description']?.toString() ?? '',
       privacyPolicy: map['privacy_policy']?.toString() ?? '',
+      refundPolicyUrl: map['refund_policy_url']?.toString(),
       googleMapsLink: map['google_maps_link']?.toString() ?? '',
       latitude: (map['latitude'] as num?)?.toDouble() ?? 0.0,
       longitude: (map['longitude'] as num?)?.toDouble() ?? 0.0,
@@ -88,6 +92,7 @@ class LocationFormData {
     String? city,
     String? description,
     String? privacyPolicy,
+    String? refundPolicyUrl,
     String? googleMapsLink,
     double? latitude,
     double? longitude,
@@ -104,6 +109,7 @@ class LocationFormData {
       city: city ?? this.city,
       description: description ?? this.description,
       privacyPolicy: privacyPolicy ?? this.privacyPolicy,
+      refundPolicyUrl: refundPolicyUrl ?? this.refundPolicyUrl,
       googleMapsLink: googleMapsLink ?? this.googleMapsLink,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
@@ -122,6 +128,7 @@ class LocationFormData {
       'city': city,
       'description': description,
       'privacy_policy': privacyPolicy,
+      if (refundPolicyUrl != null && refundPolicyUrl!.startsWith('http')) 'refund_policy_url': refundPolicyUrl,
       'google_maps_link': googleMapsLink,
       'latitude': latitude,
       'longitude': longitude,
