@@ -280,6 +280,460 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
     }
   }
 
+  DateTime? _resolveActualSlotStartTime(Map<String, dynamic> booking) {
+    DateTime? parseSlot(dynamic v) {
+      if (v == null) return null;
+      final s = v.toString().trim();
+      if (s.isEmpty) return null;
+      final candidates = <String>[
+        s,
+        if (!s.endsWith('Z') &&
+            !s.contains('+') &&
+            !RegExp(r'-\d{2}:?\d{2}$').hasMatch(s))
+          '${s}Z',
+        s.replaceFirst(' ', 'T'),
+      ];
+      for (final c in candidates) {
+        final d = DateTime.tryParse(c);
+        if (d != null) return d.toLocal();
+      }
+      return null;
+    }
+
+    final baseDate = parseSlot(booking['slot_time'] ?? booking['booking_date'] ?? booking['date']);
+    if (baseDate == null) return null;
+
+    final period = booking['period']?.toString();
+    if (period != null && period.contains('|')) {
+      final parts = period.split('|');
+      if (parts.length > 1) {
+        final times = parts[1].split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+        if (times.isNotEmpty) {
+          String firstTime = times.first;
+          if (firstTime.contains('-')) {
+            firstTime = firstTime.split('-').first.trim();
+          }
+          final timeParts = firstTime.split(':');
+          if (timeParts.length >= 2) {
+            int h = int.tryParse(timeParts[0]) ?? 0;
+            final mPart = timeParts[1].trim().split(' ');
+            final m = int.tryParse(mPart[0]) ?? 0;
+            final amPm = mPart.length > 1 ? mPart[1].toUpperCase() : '';
+            if (amPm == 'PM' && h != 12) h += 12;
+            if (amPm == 'AM' && h == 12) h = 0;
+            return DateTime(baseDate.year, baseDate.month, baseDate.day, h, m);
+          }
+        }
+      }
+    }
+    return baseDate;
+  }
+
+  bool _isPastBooking(Map<String, dynamic> booking) {
+    final status = (booking['status'] ?? '').toString().toLowerCase();
+    if (status == 'completed' || status == 'cancelled' || status == 'expired') {
+      return true;
+    }
+    final startTime = _resolveActualSlotStartTime(booking);
+    if (startTime != null && startTime.isBefore(DateTime.now())) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _showCancelBookingDialog() async {
+    final booking = _booking;
+    if (_isPastBooking(booking)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot cancel past or completed bookings.'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+      return;
+    }
+    final bookingId = booking['id']?.toString() ?? '';
+    final displayId = BookingIdUtil.formatBookingId(
+      booking['display_id'],
+      booking['id'],
+    );
+    final playerName = booking['player_name']?.toString() ?? 'Player';
+    final groundName = booking['ground_name']?.toString() ?? 'Court';
+
+    final rawAmount = (booking['amount'] as num?)?.toDouble() ??
+        (booking['total_amount'] as num?)?.toDouble() ??
+        (booking['base_amount'] as num?)?.toDouble() ??
+        0.0;
+
+    String selectedReason = '🌧️ Bad Weather / Rain';
+    final reasons = [
+      '🌧️ Bad Weather / Rain',
+      '🛠️ Turf Maintenance',
+      '⚡ Emergency / Power Outage',
+      '⚠️ Venue Overbooking',
+      '📝 Other Reason',
+    ];
+    final customReasonController = TextEditingController();
+    bool reopenSlot = true;
+    bool isSubmitting = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 44,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.error.withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.cancel_outlined,
+                              color: AppColors.error,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const AppText(
+                                  text: "Cancel Confirmed Booking",
+                                  size: 18,
+                                  weight: FontWeight.bold,
+                                  color: AppColors.textPrimaryLight,
+                                ),
+                                const SizedBox(height: 2),
+                                AppText(
+                                  text: "Booking #CB$displayId • $groundName",
+                                  size: 13,
+                                  color: AppColors.textSecondaryLight,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF2F2),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFFFCA5A5)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.info_outline_rounded,
+                                  size: 18,
+                                  color: Color(0xFFDC2626),
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  "100% Customer Refund Policy",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF991B1B),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              "When you cancel a confirmed booking, $playerName will receive a 100% refund of ₹${rawAmount.toStringAsFixed(0)} as Playora Coins directly in their wallet.",
+                              style: const TextStyle(
+                                fontSize: 12,
+                                height: 1.4,
+                                color: Color(0xFF7F1D1D),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      const AppText(
+                        text: "SELECT REASON FOR CANCELLATION",
+                        size: 12,
+                        weight: FontWeight.w700,
+                        color: AppColors.textSecondaryLight,
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: reasons.map((r) {
+                          final isSelected = selectedReason == r;
+                          return ChoiceChip(
+                            label: Text(
+                              r,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isSelected
+                                    ? Colors.white
+                                    : AppColors.textPrimaryLight,
+                              ),
+                            ),
+                            selected: isSelected,
+                            selectedColor: AppColors.error,
+                            backgroundColor: Colors.grey.shade100,
+                            checkmarkColor: Colors.white,
+                            onSelected: (val) {
+                              if (val) {
+                                setModalState(() => selectedReason = r);
+                              }
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: customReasonController,
+                        decoration: InputDecoration(
+                          hintText: selectedReason.contains('Other')
+                              ? 'Please explain the reason for player…'
+                              : 'Additional note for player (optional)',
+                          hintStyle: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey.shade400,
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey.shade50,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide(color: Colors.grey.shade200),
+                          ),
+                        ),
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade200),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              reopenSlot
+                                  ? Icons.lock_open_rounded
+                                  : Icons.lock_outline_rounded,
+                              size: 20,
+                              color: reopenSlot
+                                  ? AppColors.primaryDarkGreen
+                                  : Colors.grey,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Re-open slot for other bookings",
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  Text(
+                                    reopenSlot
+                                        ? "Slot will be available online immediately"
+                                        : "Slot will stay blocked / unavailable",
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch.adaptive(
+                              value: reopenSlot,
+                              activeTrackColor: AppColors.primaryDarkGreen,
+                              onChanged: (v) {
+                                setModalState(() => reopenSlot = v);
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: isSubmitting
+                                  ? null
+                                  : () => Navigator.pop(sheetCtx),
+                              child: const Text(
+                                "Keep Booking",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textSecondaryLight,
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            flex: 2,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.error,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: isSubmitting
+                                  ? null
+                                  : () async {
+                                      setModalState(() => isSubmitting = true);
+                                      final finalReason =
+                                          customReasonController.text.trim().isNotEmpty
+                                              ? customReasonController.text.trim()
+                                              : selectedReason;
+
+                                      try {
+                                        await getIt<BookingRepository>()
+                                            .cancelBookingByOwner(
+                                          bookingId: bookingId,
+                                          reason: finalReason,
+                                          reopenSlot: reopenSlot,
+                                        );
+
+                                        if (mounted) {
+                                          Navigator.pop(sheetCtx);
+                                          toastification.show(
+                                            context: context,
+                                            type: ToastificationType.success,
+                                            style: ToastificationStyle.fillColored,
+                                            title: const Text("Booking Cancelled"),
+                                            description: Text(
+                                              "₹${rawAmount.toStringAsFixed(0)} Playora Coins refunded to $playerName.",
+                                            ),
+                                            autoCloseDuration:
+                                                const Duration(seconds: 4),
+                                          );
+                                          setState(() {
+                                            _booking['status'] = 'cancelled';
+                                            _booking['cancelled_by'] = 'owner';
+                                            _booking['cancellation_reason'] =
+                                                finalReason;
+                                            _booking['cancellation_coins_issued'] =
+                                                rawAmount;
+                                          });
+                                          Navigator.pop(context, true);
+                                        }
+                                      } catch (e) {
+                                        setModalState(() => isSubmitting = false);
+                                        if (mounted) {
+                                          toastification.show(
+                                            context: context,
+                                            type: ToastificationType.error,
+                                            title: const Text("Cancellation Failed"),
+                                            description: Text(e.toString()),
+                                          );
+                                        }
+                                      }
+                                    },
+                              child: isSubmitting
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.white,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      "Confirm & Cancel",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Color _statusColor(String status) {
     return AppColors.bookingStatusColor(status);
   }
@@ -544,6 +998,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
   Widget build(BuildContext context) {
     final booking = _booking;
     final status = (booking['status'] ?? 'pending').toString();
+    final bool isPastBooking = _isPastBooking(booking);
 
     final playerName = booking['player_name']?.toString() ?? 'Player';
     final groundName = booking['ground_name']?.toString() ?? 'Court';
@@ -741,6 +1196,21 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
           color: AppColors.white,
         ),
         titleSpacing: 0,
+        actions: [
+          if (!isOwnerBooking &&
+              (status.toLowerCase() == 'confirmed' ||
+                  status.toLowerCase() == 'paid') &&
+              !isPastBooking)
+            IconButton(
+              icon: const Icon(
+                Icons.cancel_outlined,
+                color: AppColors.white,
+                size: 22,
+              ),
+              tooltip: 'Cancel Booking',
+              onPressed: _isActionLoading ? null : _showCancelBookingDialog,
+            ),
+        ],
       ),
       extendBodyBehindAppBar: false,
       body: SingleChildScrollView(
@@ -1414,6 +1884,41 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                               weight: FontWeight.w700,
                             ),
                           ],
+                        ),
+                      ),
+                    ),
+                  ],
+
+                  if (!isOwnerBooking &&
+                      (status.toLowerCase() == 'confirmed' ||
+                          status.toLowerCase() == 'paid') &&
+                      !isPastBooking) ...[
+                    const SizedBox(height: AppSizes.xxxxl),
+                    SizedBox(
+                      width: double.infinity,
+                      height: AppSizes.buttonHeightLg,
+                      child: OutlinedButton.icon(
+                        onPressed: _isActionLoading
+                            ? null
+                            : _showCancelBookingDialog,
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.error,
+                          side: const BorderSide(
+                            color: AppColors.error,
+                            width: 1.5,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSizes.radiusMd,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Icons.cancel_outlined, size: 20),
+                        label: const AppText(
+                          text: "Cancel Booking",
+                          size: 15,
+                          weight: FontWeight.w700,
+                          color: AppColors.error,
                         ),
                       ),
                     ),

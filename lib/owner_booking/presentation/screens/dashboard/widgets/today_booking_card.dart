@@ -8,6 +8,8 @@ import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/utils/booking_financial_util.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/dashboard/dashboard_cubit.dart';
 
 class TodayBookingCard extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -105,6 +107,20 @@ class _TodayBookingCardState extends State<TodayBookingCard>
     }
   }
 
+  Future<void> _openDetails() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookingDetailsScreen(booking: widget.booking),
+      ),
+    );
+    if (result == true && mounted) {
+      try {
+        context.read<DashboardCubit>().fetchDashboardData();
+      } catch (_) {}
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final status = (widget.booking['status'] ?? 'pending').toString();
@@ -152,12 +168,7 @@ class _TodayBookingCardState extends State<TodayBookingCard>
     final isRequested = status == 'requested' || status == 'pending';
 
     return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => BookingDetailsScreen(booking: widget.booking),
-        ),
-      ),
+      onTap: _openDetails,
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) => setState(() => _isPressed = false),
       onTapCancel: () => setState(() => _isPressed = false),
@@ -268,12 +279,7 @@ class _TodayBookingCardState extends State<TodayBookingCard>
                     ),
                     const Spacer(),
                     GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => BookingDetailsScreen(booking: widget.booking),
-                        ),
-                      ),
+                      onTap: _openDetails,
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

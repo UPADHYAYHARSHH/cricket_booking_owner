@@ -9,6 +9,12 @@ class BookingFinancialUtil {
   static double getOwnerEarnings(Map<dynamic, dynamic>? booking) {
     if (booking == null) return 0.0;
 
+    final status = (booking['status'] ?? '').toString().toLowerCase();
+    if (status == 'cancelled') {
+      final comp = (booking['owner_compensation'] as num?)?.toDouble() ?? 0.0;
+      return comp;
+    }
+
     Map<String, dynamic>? parsedNotes;
     final notes = booking['notes'];
     if (notes != null) {

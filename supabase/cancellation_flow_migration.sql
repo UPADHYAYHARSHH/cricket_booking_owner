@@ -8,7 +8,8 @@ ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMP WITH TIME ZONE,
 ADD COLUMN IF NOT EXISTS cancellation_reason TEXT,
 ADD COLUMN IF NOT EXISTS cancelled_by TEXT DEFAULT NULL,
 ADD COLUMN IF NOT EXISTS cancellation_coins_issued NUMERIC DEFAULT 0.0,
-ADD COLUMN IF NOT EXISTS owner_compensation NUMERIC DEFAULT 0.0;
+ADD COLUMN IF NOT EXISTS owner_compensation NUMERIC DEFAULT 0.0,
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
 
 -- 2. Ensure wallets & wallet_transactions tables exist
 CREATE TABLE IF NOT EXISTS public.wallets (
@@ -269,7 +270,7 @@ BEGIN
         cancelled_by = 'user',
         cancellation_coins_issued = v_coins_to_issue,
         owner_compensation = v_owner_comp,
-        updated_at = v_now
+        owner_earnings = v_owner_comp
     WHERE id = v_booking.id;
 
     -- 6. Release slot(s) back to available
@@ -323,6 +324,18 @@ BEGIN
         );
     ELSE
         SELECT balance INTO v_new_wallet_balance FROM public.wallets WHERE user_id = p_user_id;
+    END IF;
+
+    -- 7b. Deduct cancelled earnings from owner's wallet
+    IF v_booking.owner_earnings IS NOT NULL AND v_booking.owner_earnings > v_owner_comp THEN
+        SELECT owner_id INTO v_owner_id FROM public.grounds WHERE id = v_booking.ground_id LIMIT 1;
+        IF v_owner_id IS NOT NULL THEN
+            UPDATE public.owner_wallets SET
+                total_earnings = GREATEST(0.0, total_earnings - (v_booking.owner_earnings - v_owner_comp)),
+                available_balance = GREATEST(0.0, available_balance - (v_booking.owner_earnings - v_owner_comp)),
+                updated_at = v_now
+            WHERE owner_id = v_owner_id;
+        END IF;
     END IF;
 
     -- 8. Fetch ground and owner details for notification
@@ -402,7 +415,184 @@ GRANT EXECUTE ON FUNCTION public.cancel_booking_by_user(TEXT, TEXT, TEXT) TO ano
 GRANT EXECUTE ON FUNCTION public.cancel_booking_by_user(TEXT, TEXT, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.cancel_booking_by_user(TEXT, TEXT, TEXT) TO service_role;
 
--- 11. Allow public read access on app_config
+-- 12. Atomic cancel_booking_by_owner function
+CREATE OR REPLACE FUNCTION public.cancel_booking_by_owner(
+    p_booking_id TEXT,
+    p_owner_id TEXT,
+    p_reason TEXT DEFAULT 'Cancelled by venue owner',
+    p_reopen_slot BOOLEAN DEFAULT TRUE
+)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_booking RECORD;
+    v_ground RECORD;
+    v_now TIMESTAMP WITH TIME ZONE := NOW();
+    v_refund_amount NUMERIC := 0.0;
+    v_slot_date_str TEXT;
+    v_period_str TEXT;
+    v_parts TEXT[];
+    v_start_times TEXT[];
+    v_start_time TEXT;
+    v_slot_price INT;
+    v_new_wallet_balance NUMERIC;
+    v_ground_name TEXT := 'the ground';
+    v_ground_owner_id TEXT;
+BEGIN
+    -- 1. Fetch booking with locking
+    SELECT * INTO v_booking 
+    FROM public.bookings 
+    WHERE id = p_booking_id::uuid 
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RETURN json_build_object('success', false, 'error', 'Booking not found');
+    END IF;
+
+    -- 2. Validate status
+    IF LOWER(v_booking.status) IN ('cancelled', 'declined', 'expired') THEN
+        RETURN json_build_object('success', false, 'error', 'Booking is already cancelled or expired');
+    END IF;
+
+    -- 3. Calculate 100% refund amount for player
+    v_refund_amount := COALESCE(v_booking.total_amount, v_booking.amount, 0.0);
+    IF v_refund_amount <= 0 THEN
+        v_refund_amount := COALESCE(v_booking.base_amount, 0.0);
+    END IF;
+
+    -- 4. Update booking record
+    UPDATE public.bookings SET
+        status = 'cancelled',
+        cancelled_at = v_now,
+        cancellation_reason = p_reason,
+        cancelled_by = 'owner',
+        cancellation_coins_issued = v_refund_amount,
+        owner_compensation = 0.0,
+        owner_earnings = 0.0
+    WHERE id = v_booking.id;
+
+    -- 5. Release slots if requested
+    IF p_reopen_slot THEN
+        v_slot_date_str := to_char(v_booking.slot_time AT TIME ZONE 'UTC', 'YYYY-MM-DD');
+        v_period_str := v_booking.period;
+
+        IF v_period_str IS NOT NULL AND v_period_str LIKE '%|%' THEN
+            v_parts := string_to_array(v_period_str, '|');
+            IF array_length(v_parts, 1) >= 2 THEN
+                v_start_times := string_to_array(v_parts[2], ',');
+                v_slot_price := CASE 
+                    WHEN array_length(v_start_times, 1) > 0 
+                    THEN (COALESCE(v_booking.base_amount, v_refund_amount) / array_length(v_start_times, 1))::int 
+                    ELSE COALESCE(v_booking.base_amount, v_refund_amount)::int 
+                END;
+
+                FOREACH v_start_time IN ARRAY v_start_times LOOP
+                    v_start_time := trim(v_start_time);
+                    IF v_start_time <> '' THEN
+                        PERFORM public.upsert_slot(
+                            v_booking.ground_id::text,
+                            v_slot_date_str,
+                            v_start_time,
+                            'available',
+                            v_slot_price
+                        );
+                    END IF;
+                END LOOP;
+            END IF;
+        END IF;
+    END IF;
+
+    -- 6. Credit 100% refund to user's wallet
+    IF v_refund_amount > 0 AND v_booking.user_id IS NOT NULL AND v_booking.user_id <> '' THEN
+        INSERT INTO public.wallets (user_id, balance, updated_at)
+        VALUES (v_booking.user_id, v_refund_amount, v_now)
+        ON CONFLICT (user_id) DO UPDATE SET
+            balance = public.wallets.balance + EXCLUDED.balance,
+            updated_at = v_now
+        RETURNING balance INTO v_new_wallet_balance;
+
+        INSERT INTO public.wallet_transactions (
+            user_id, amount, type, description, reference_id, created_at
+        ) VALUES (
+            v_booking.user_id,
+            v_refund_amount,
+            'cancellation_credit',
+            'Booking cancelled by venue owner: 100% refund for ' || to_char(v_booking.slot_time, 'DD Mon YYYY'),
+            v_booking.id::text,
+            v_now
+        );
+    END IF;
+
+    -- 6b. Deduct previous owner_earnings from owner's wallet
+    IF v_booking.owner_earnings IS NOT NULL AND v_booking.owner_earnings > 0 THEN
+        SELECT owner_id INTO v_ground_owner_id FROM public.grounds WHERE id = v_booking.ground_id LIMIT 1;
+        IF v_ground_owner_id IS NOT NULL THEN
+            UPDATE public.owner_wallets SET
+                total_earnings = GREATEST(0.0, total_earnings - v_booking.owner_earnings),
+                available_balance = GREATEST(0.0, available_balance - v_booking.owner_earnings),
+                updated_at = v_now
+            WHERE owner_id = v_ground_owner_id;
+        END IF;
+    END IF;
+
+    -- 7. Fetch ground details
+    SELECT name INTO v_ground FROM public.grounds WHERE id = v_booking.ground_id;
+    IF v_ground.name IS NOT NULL THEN
+        v_ground_name := v_ground.name;
+    END IF;
+
+    -- 8. Notification to user
+    IF v_booking.user_id IS NOT NULL AND v_booking.user_id <> '' THEN
+        INSERT INTO public.notifications (
+            user_id, title, message, type, data, is_read, created_at
+        ) VALUES (
+            v_booking.user_id,
+            'Booking Cancelled by Venue',
+            'Your booking for ' || v_ground_name || ' was cancelled by the venue owner (' || p_reason || '). A 100% refund of ₹' || v_refund_amount::text || ' Playora Coins has been credited to your wallet.',
+            'cancellation_coins_credited',
+            json_build_object(
+                'booking_id', v_booking.id::text,
+                'ground_name', v_ground_name,
+                'coins_issued', v_refund_amount,
+                'refund_percent', 100.0,
+                'cancelled_by', 'owner',
+                'reason', p_reason
+            ),
+            false,
+            v_now
+        );
+    END IF;
+
+    -- 9. Insert into cancellation_history
+    INSERT INTO public.cancellation_history (
+        booking_id, user_id, ground_id, ground_name, sport_name,
+        slot_time, cancelled_by, cancellation_reason, refund_percent,
+        coins_issued, owner_compensation, total_booking_amount, cancelled_at
+    ) VALUES (
+        v_booking.id::text, v_booking.user_id, v_booking.ground_id, v_ground_name, v_booking.sport_name,
+        v_booking.slot_time, 'owner', p_reason, 100.0,
+        v_refund_amount, 0.0, v_refund_amount, v_now
+    );
+
+    RETURN json_build_object(
+        'success', true,
+        'booking_id', v_booking.id,
+        'status', 'cancelled',
+        'refund_percent', 100.0,
+        'coins_issued', v_refund_amount,
+        'owner_compensation', 0.0,
+        'reason', p_reason
+    );
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.cancel_booking_by_owner(TEXT, TEXT, TEXT, BOOLEAN) TO anon;
+GRANT EXECUTE ON FUNCTION public.cancel_booking_by_owner(TEXT, TEXT, TEXT, BOOLEAN) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.cancel_booking_by_owner(TEXT, TEXT, TEXT, BOOLEAN) TO service_role;
+
+-- 13. Allow public read access on app_config
 GRANT SELECT ON public.app_config TO anon;
 GRANT SELECT ON public.app_config TO authenticated;
 DO $$
@@ -414,4 +604,54 @@ BEGIN
         FOR SELECT USING (true);
     END IF;
 END $$;
+
+-- 14. Keep owner_wallets in sync on payment AND cancellation
+CREATE OR REPLACE FUNCTION update_owner_wallet_on_payment()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_owner_id TEXT;
+    v_deduct NUMERIC := 0.0;
+BEGIN
+    -- 1. Credit wallet when status changes to 'paid' or 'confirmed'
+    IF (NEW.status IN ('paid', 'confirmed') AND (OLD.status NOT IN ('paid', 'confirmed') OR OLD.status IS NULL)) THEN
+        SELECT owner_id INTO v_owner_id FROM public.grounds WHERE id = NEW.ground_id LIMIT 1;
+        
+        IF v_owner_id IS NOT NULL AND NEW.owner_earnings > 0 THEN
+            INSERT INTO public.owner_wallets (owner_id, total_earnings, available_balance, updated_at)
+            VALUES (v_owner_id, NEW.owner_earnings, NEW.owner_earnings, NOW())
+            ON CONFLICT (owner_id) DO UPDATE SET
+                total_earnings = owner_wallets.total_earnings + NEW.owner_earnings,
+                available_balance = owner_wallets.available_balance + NEW.owner_earnings,
+                updated_at = NOW();
+        END IF;
+    END IF;
+
+    -- 2. Deduct from wallet when status changes to 'cancelled'
+    IF (NEW.status = 'cancelled' AND (OLD.status IN ('paid', 'confirmed') OR OLD.status IS NULL)) THEN
+        SELECT owner_id INTO v_owner_id FROM public.grounds WHERE id = NEW.ground_id LIMIT 1;
+        
+        IF v_owner_id IS NOT NULL THEN
+            v_deduct := GREATEST(0.0, COALESCE(OLD.owner_earnings, NEW.owner_earnings, 0.0) - COALESCE(NEW.owner_compensation, 0.0));
+            IF v_deduct > 0 THEN
+                UPDATE public.owner_wallets SET
+                    total_earnings = GREATEST(0.0, total_earnings - v_deduct),
+                    available_balance = GREATEST(0.0, available_balance - v_deduct),
+                    updated_at = NOW()
+                WHERE owner_id = v_owner_id;
+            END IF;
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_update_owner_wallet ON public.bookings;
+CREATE TRIGGER trigger_update_owner_wallet
+AFTER INSERT OR UPDATE ON public.bookings
+FOR EACH ROW
+EXECUTE FUNCTION update_owner_wallet_on_payment();
+
+
+
 

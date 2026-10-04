@@ -1,4 +1,7 @@
+import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:turfpro_owner/common/utils/booking_financial_util.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
 
 class BookingRepositoryImpl implements BookingRepository {
@@ -328,7 +331,7 @@ String bookingId, {String reason = 'declined_by_owner'}) async {
     }
 
     try {
-      final res = await _supabase.rpc('delete_or_expire_booking', params: {
+      await _supabase.rpc('delete_or_expire_booking', params: {
         'p_booking_id': bookingId,
         'p_reason': reason,
       });
@@ -574,5 +577,324 @@ String bookingId, {String reason = 'declined_by_owner'}) async {
       print('[getOwnerCancellations] Error: $e');
     }
     return [];
+  }
+
+  @override
+  Future<Map<String, dynamic>> cancelBookingByOwner({
+    required String bookingId,
+    required String reason,
+    bool reopenSlot = true,
+  }) async {
+    final user = FirebaseAuth.instance.currentUser;
+    final ownerId = user?.uid ?? '';
+
+    // 1. Try invoking the dedicated Postgres RPC cancel_booking_by_owner
+    try {
+      final res = await _supabase.rpc('cancel_booking_by_owner', params: {
+        'p_booking_id': bookingId,
+        'p_owner_id': ownerId,
+        'p_reason': reason,
+        'p_reopen_slot': reopenSlot,
+      });
+
+      if (res != null) {
+        final Map<String, dynamic> resultMap = res is String
+            ? jsonDecode(res)
+            : Map<String, dynamic>.from(res as Map);
+        if (resultMap['success'] == true) {
+          // Zero out owner_earnings on the cancelled booking in DB
+          try {
+            await _supabase.from('bookings').update({
+              'owner_earnings': 0.0,
+              'owner_compensation': 0.0,
+            }).eq('id', bookingId);
+          } catch (_) {}
+
+          // Deduct from owner_wallets in case DB trigger/RPC didn't
+          try {
+            final fetched = await _supabase
+                .from('bookings')
+                .select('amount, total_amount, base_amount, notes, ground_id, grounds(owner_id)')
+                .eq('id', bookingId)
+                .maybeSingle();
+            final gOwnerId = (fetched?['grounds'] is Map && fetched?['grounds']['owner_id'] != null)
+                ? fetched!['grounds']['owner_id'].toString()
+                : ownerId;
+            final double deductAmount = (resultMap['coins_issued'] as num?)?.toDouble() ??
+                (fetched?['amount'] as num?)?.toDouble() ??
+                0.0;
+            if (gOwnerId.isNotEmpty && deductAmount > 0) {
+              final ow = await _supabase
+                  .from('owner_wallets')
+                  .select()
+                  .eq('owner_id', gOwnerId)
+                  .maybeSingle();
+              if (ow != null) {
+                final curTot = (ow['total_earnings'] as num?)?.toDouble() ?? 0.0;
+                final curAvail = (ow['available_balance'] as num?)?.toDouble() ?? 0.0;
+                await _supabase.from('owner_wallets').update({
+                  'total_earnings': (curTot - deductAmount).clamp(0.0, double.infinity),
+                  'available_balance': (curAvail - deductAmount).clamp(0.0, double.infinity),
+                  'updated_at': DateTime.now().toUtc().toIso8601String(),
+                }).eq('owner_id', gOwnerId);
+              }
+            }
+          } catch (_) {}
+
+          // Trigger push notification if available
+          try {
+            final notif = await _supabase
+                .from('notifications')
+                .select('id')
+                .eq('type', 'cancellation_coins_credited')
+                .contains('data', {'booking_id': bookingId})
+                .order('created_at', ascending: false)
+                .limit(1)
+                .maybeSingle();
+            if (notif != null && notif['id'] != null) {
+              await _invokePushNotification(notif['id'].toString());
+            }
+          } catch (_) {}
+          return resultMap;
+        } else if (resultMap['error'] != null) {
+          print('[cancelBookingByOwner] RPC error: ${resultMap['error']}, falling back to direct operations');
+        }
+      }
+    } catch (e) {
+      print('[cancelBookingByOwner] RPC failed: $e, falling back to direct operations');
+    }
+
+    // 2. Direct Fallback: Client-side atomic orchestration
+    Map<String, dynamic>? bookingData;
+    try {
+      final fetched = await _supabase
+          .from('bookings')
+          .select('*, grounds(name, owner_id)')
+          .eq('id', bookingId)
+          .maybeSingle();
+      if (fetched != null) {
+        bookingData = Map<String, dynamic>.from(fetched);
+      }
+    } catch (e) {
+      print('[cancelBookingByOwner] Error fetching booking: $e');
+    }
+
+    if (bookingData == null) {
+      throw Exception('Booking not found');
+    }
+
+    final nowUtc = DateTime.now().toUtc();
+    final double rawAmount = (bookingData['amount'] as num?)?.toDouble() ??
+        (bookingData['total_amount'] as num?)?.toDouble() ??
+        (bookingData['base_amount'] as num?)?.toDouble() ??
+        0.0;
+    final refundCoins = rawAmount;
+    final double previousOwnerEarnings = (bookingData['owner_earnings'] as num?)?.toDouble() ??
+        BookingFinancialUtil.getOwnerEarnings(bookingData);
+
+    // A. Update booking status to cancelled
+    try {
+      await _supabase.from('bookings').update({
+        'status': 'cancelled',
+        'cancelled_at': nowUtc.toIso8601String(),
+        'cancelled_by': 'owner',
+        'cancellation_reason': reason,
+        'cancellation_coins_issued': refundCoins,
+        'owner_compensation': 0.0,
+        'owner_earnings': 0.0,
+      }).eq('id', bookingId);
+    } catch (updateErr) {
+      print('[cancelBookingByOwner] Detailed update failed, trying minimal update: $updateErr');
+      await _supabase.from('bookings').update({
+        'status': 'cancelled',
+        'owner_earnings': 0.0,
+        'notes': 'Cancelled by owner: $reason',
+      }).eq('id', bookingId);
+    }
+
+    // B. Reopen slots if requested
+    if (reopenSlot) {
+      final groundId = bookingData['ground_id'];
+      final slotTimeStr = bookingData['slot_time']?.toString();
+      final periodStr = bookingData['period']?.toString();
+
+      if (slotTimeStr != null && groundId != null) {
+        final slotDate = DateTime.tryParse(slotTimeStr)?.toLocal();
+        if (slotDate != null) {
+          final dateStr =
+              "${slotDate.year}-${slotDate.month.toString().padLeft(2, '0')}-${slotDate.day.toString().padLeft(2, '0')}";
+          if (periodStr != null && periodStr.contains('|')) {
+            final parts = periodStr.split('|');
+            if (parts.length > 1) {
+              final startTimes = parts[1]
+                  .split(',')
+                  .map((s) => s.trim())
+                  .where((s) => s.isNotEmpty)
+                  .toList();
+              final slotPrice = startTimes.isNotEmpty
+                  ? (refundCoins / startTimes.length).toInt()
+                  : refundCoins.toInt();
+
+              for (final startTime in startTimes) {
+                try {
+                  await _supabase.rpc('upsert_slot', params: {
+                    'p_ground_id': groundId,
+                    'p_date': dateStr,
+                    'p_start_time': startTime,
+                    'p_status': 'available',
+                    'p_price': slotPrice,
+                  });
+                } catch (e) {
+                  print('[cancelBookingByOwner] Error upserting slot: $e');
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    // C. Credit user's wallet with 100% refund in Playora Coins
+    final userId = bookingData['user_id']?.toString();
+    String groundName = 'the venue';
+    if (bookingData['grounds'] is Map && bookingData['grounds']['name'] != null) {
+      groundName = bookingData['grounds']['name'].toString();
+    } else if (bookingData['ground_name'] != null) {
+      groundName = bookingData['ground_name'].toString();
+    }
+
+    if (userId != null && userId.isNotEmpty && refundCoins > 0) {
+      try {
+        final existingWallet = await _supabase
+            .from('wallets')
+            .select('balance')
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        final currentBal =
+            (existingWallet?['balance'] as num?)?.toDouble() ?? 0.0;
+        final newBal = currentBal + refundCoins;
+
+        try {
+          await _supabase.from('wallets').upsert({
+            'user_id': userId,
+            'balance': newBal,
+            'updated_at': nowUtc.toIso8601String(),
+          }, onConflict: 'user_id');
+        } catch (_) {
+          await _supabase.from('wallets').upsert({
+            'user_id': userId,
+            'balance': newBal,
+          }, onConflict: 'user_id');
+        }
+
+        await _supabase.from('wallet_transactions').insert({
+          'user_id': userId,
+          'amount': refundCoins,
+          'type': 'cancellation_credit',
+          'description':
+              'Booking cancelled by venue owner: 100% refund for $groundName',
+          'reference_id': bookingId,
+          'created_at': nowUtc.toIso8601String(),
+        });
+      } catch (wErr) {
+        print('[cancelBookingByOwner] Wallet update error: $wErr');
+      }
+    }
+
+    // C2. Deduct previous earnings from owner_wallets
+    String? groundOwnerId;
+    if (bookingData['grounds'] is Map && bookingData['grounds']['owner_id'] != null) {
+      groundOwnerId = bookingData['grounds']['owner_id'].toString();
+    } else {
+      groundOwnerId = ownerId;
+    }
+
+    if (groundOwnerId.isNotEmpty && previousOwnerEarnings > 0) {
+      try {
+        final existingOwnerWallet = await _supabase
+            .from('owner_wallets')
+            .select()
+            .eq('owner_id', groundOwnerId)
+            .maybeSingle();
+
+        if (existingOwnerWallet != null) {
+          final double curTotal = (existingOwnerWallet['total_earnings'] as num?)?.toDouble() ?? 0.0;
+          final double curAvail = (existingOwnerWallet['available_balance'] as num?)?.toDouble() ?? 0.0;
+
+          final double newTotal = (curTotal - previousOwnerEarnings).clamp(0.0, double.infinity);
+          final double newAvail = (curAvail - previousOwnerEarnings).clamp(0.0, double.infinity);
+
+          await _supabase.from('owner_wallets').update({
+            'total_earnings': newTotal,
+            'available_balance': newAvail,
+            'updated_at': nowUtc.toIso8601String(),
+          }).eq('owner_id', groundOwnerId);
+        }
+      } catch (owErr) {
+        print('[cancelBookingByOwner] Error deducting from owner_wallets: $owErr');
+      }
+    }
+
+    // D. Notification to player & Push
+    if (userId != null && userId.isNotEmpty) {
+      try {
+        final notifInsert = await _supabase.from('notifications').insert({
+          'user_id': userId,
+          'title': 'Booking Cancelled by Venue',
+          'message':
+              'Your booking for $groundName was cancelled by the venue owner (Reason: $reason). ₹${refundCoins.toStringAsFixed(0)} Playora Coins have been refunded to your wallet.',
+          'type': 'cancellation_coins_credited',
+          'data': {
+            'booking_id': bookingId,
+            'ground_name': groundName,
+            'coins_issued': refundCoins,
+            'refund_percent': 100.0,
+            'cancelled_by': 'owner',
+            'reason': reason,
+          },
+          'is_read': false,
+          'created_at': nowUtc.toIso8601String(),
+        }).select('id').maybeSingle();
+
+        final notifId = notifInsert?['id']?.toString();
+        if (notifId != null) {
+          await _invokePushNotification(notifId);
+        }
+      } catch (nErr) {
+        print('[cancelBookingByOwner] Notification error: $nErr');
+      }
+    }
+
+    // E. Record in cancellation_history
+    try {
+      await _supabase.from('cancellation_history').insert({
+        'booking_id': bookingId,
+        'user_id': userId,
+        'ground_id': bookingData['ground_id'],
+        'ground_name': groundName,
+        'sport_name': bookingData['sport_name'] ?? bookingData['sport'],
+        'slot_time': bookingData['slot_time'],
+        'cancelled_by': 'owner',
+        'cancellation_reason': reason,
+        'refund_percent': 100.0,
+        'coins_issued': refundCoins,
+        'owner_compensation': 0.0,
+        'total_booking_amount': refundCoins,
+        'cancelled_at': nowUtc.toIso8601String(),
+      });
+    } catch (hErr) {
+      print('[cancelBookingByOwner] cancellation_history error: $hErr');
+    }
+
+    return {
+      'success': true,
+      'booking_id': bookingId,
+      'status': 'cancelled',
+      'refund_percent': 100.0,
+      'coins_issued': refundCoins,
+      'owner_compensation': 0.0,
+      'reason': reason,
+    };
   }
 }

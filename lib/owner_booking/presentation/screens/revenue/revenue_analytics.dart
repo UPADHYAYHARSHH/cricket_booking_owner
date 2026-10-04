@@ -8,7 +8,7 @@ class RevenuePoint {
   const RevenuePoint(this.label, this.amount);
 }
 
-const _countedStatuses = {'confirmed', 'completed', 'paid', 'cancelled'};
+const _countedStatuses = {'confirmed', 'completed', 'paid'};
 
 /// Owner's net earn for a booking = gross minus platform fee minus commission.
 double _amountOf(Map<String, dynamic> booking) {
@@ -28,6 +28,9 @@ DateTime? _dateOf(Map<String, dynamic> booking) {
 bool _countsTowardsRevenue(Map<String, dynamic> booking) {
   if (booking['user_id'] == null) return false;
   final status = booking['status']?.toString().toLowerCase() ?? '';
+  if (status == 'cancelled') {
+    return BookingFinancialUtil.getOwnerEarnings(booking) > 0;
+  }
   return _countedStatuses.contains(status);
 }
 
