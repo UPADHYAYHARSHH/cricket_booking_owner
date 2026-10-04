@@ -90,7 +90,7 @@ class BookingRepositoryImpl implements BookingRepository {
   Future<void> checkInBooking(String bookingId) async {
     await _supabase.from('bookings').update({
       'checked_in': true,
-      'checked_in_at': DateTime.now().toIso8601String(),
+      'checked_in_at': DateTime.now().toUtc().toIso8601String(),
     }).eq('id', bookingId);
   }
 
