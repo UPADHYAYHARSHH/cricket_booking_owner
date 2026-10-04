@@ -13,6 +13,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/bookings/bookings
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/utils/booking_id_util.dart';
+import 'package:turfpro_owner/common/utils/booking_financial_util.dart';
 
 class PayoutsScreen extends StatefulWidget {
   const PayoutsScreen({super.key});
@@ -70,30 +71,30 @@ class _PayoutsScreenState extends State<PayoutsScreen>
         return;
       }
 
-      Map<String, dynamic>? wallet;
+      // 1. Fetch withdrawals first
+      List<dynamic> withdrawalsList = [];
       try {
-        final walletResponse = await _supabase
-            .rpc('get_owner_wallet', params: {'p_owner_id': ownerId});
-        if (walletResponse is Map<String, dynamic> && walletResponse.isNotEmpty) {
-          wallet = walletResponse;
-        }
-      } catch (e) {
-        debugPrint('RPC get_owner_wallet error: $e');
-      }
-
-      if (wallet == null || wallet.isEmpty) {
-        final directWallet = await _supabase
-            .from('owner_wallets')
+        final withdrawalsResponse = await _supabase
+            .from('withdrawals')
             .select()
             .eq('owner_id', ownerId)
-            .maybeSingle();
-        if (directWallet != null) {
-          wallet = Map<String, dynamic>.from(directWallet);
-        }
+            .order('created_at', ascending: false);
+        withdrawalsList = (withdrawalsResponse as List<dynamic>?) ?? [];
+      } catch (e) {
+        debugPrint('Error fetching withdrawals: $e');
       }
 
-      // If still null, initialize wallet record from grounds and bookings
-      if (wallet == null) {
+      // Successful withdrawals count as withdrawn; pending also holds the funds
+      final double totalWithdrawn = withdrawalsList
+          .where((w) =>
+              w['status']?.toString().toLowerCase() == 'success' ||
+              w['status']?.toString().toLowerCase() == 'pending')
+          .fold<double>(0.0, (sum, w) => sum + (((w['amount'] ?? 0) as num).toDouble()));
+
+      // 2. Compute accurate total earnings from bookings (cancelled bookings without compensation are excluded)
+      double totalEarnings = 0.0;
+      bool calculationSucceeded = false;
+      try {
         final grounds = await _supabase
             .from('grounds')
             .select('id')
@@ -103,42 +104,68 @@ class _PayoutsScreenState extends State<PayoutsScreen>
             .whereType<String>()
             .toList();
 
-        num totalEarnings = 0;
         if (groundIds.isNotEmpty) {
           final bookings = await _supabase
               .from('bookings')
-              .select('owner_earnings, status')
+              .select('owner_earnings, owner_compensation, status, notes, amount, total_amount, base_amount, platform_fee, commission_rate, commission_is_percentage')
               .inFilter('ground_id', groundIds);
+
           for (var b in bookings as List) {
             final st = b['status']?.toString().toLowerCase();
             if (st == 'paid' || st == 'confirmed' || st == 'completed') {
-              totalEarnings += (b['owner_earnings'] as num?) ?? 0;
+              totalEarnings += BookingFinancialUtil.getOwnerEarnings(b);
+            } else if (st == 'cancelled') {
+              totalEarnings += (b['owner_compensation'] as num?)?.toDouble() ?? 0.0;
             }
           }
+          calculationSucceeded = true;
         }
-
-        final initialWallet = {
-          'owner_id': ownerId,
-          'total_earnings': totalEarnings,
-          'available_balance': totalEarnings,
-          'withdrawn_amount': 0.0,
-        };
-        try {
-          await _supabase.from('owner_wallets').upsert(initialWallet);
-        } catch (_) {}
-        wallet = initialWallet;
+      } catch (e) {
+        debugPrint('Error computing earnings from bookings: $e');
       }
 
-      final withdrawalsResponse = await _supabase
-          .from('withdrawals')
-          .select()
-          .eq('owner_id', ownerId)
-          .order('created_at', ascending: false);
+      // Fallback to owner_wallets table if calculation from bookings was not possible
+      if (!calculationSucceeded) {
+        try {
+          final directWallet = await _supabase
+              .from('owner_wallets')
+              .select()
+              .eq('owner_id', ownerId)
+              .maybeSingle();
+          if (directWallet != null) {
+            totalEarnings = ((directWallet['total_earnings'] ?? 0) as num).toDouble();
+          }
+        } catch (e) {
+          debugPrint('Error fetching direct owner_wallets: $e');
+        }
+      }
+
+      final double availableBalance = (totalEarnings - totalWithdrawn).clamp(0.0, double.infinity);
+
+      final wallet = {
+        'owner_id': ownerId,
+        'total_earnings': totalEarnings,
+        'available_balance': availableBalance,
+        'withdrawn_amount': totalWithdrawn,
+      };
+
+      // 3. Sync verified balance to owner_wallets in database
+      try {
+        await _supabase.from('owner_wallets').upsert({
+          'owner_id': ownerId,
+          'total_earnings': totalEarnings,
+          'available_balance': availableBalance,
+          'withdrawn_amount': totalWithdrawn,
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
+        });
+      } catch (e) {
+        debugPrint('Error syncing owner_wallets: $e');
+      }
 
       if (mounted) {
         setState(() {
           _walletData = wallet;
-          _withdrawals = withdrawalsResponse as List<dynamic>;
+          _withdrawals = withdrawalsList;
           _isLoadingWallet = false;
         });
       }
@@ -1889,6 +1916,7 @@ class _PayoutsScreenState extends State<PayoutsScreen>
             );
             if (result == true && mounted) {
               context.read<BookingsCubit>().fetchBookings();
+              _fetchWalletAndHistory();
             }
           },
           child: Padding(

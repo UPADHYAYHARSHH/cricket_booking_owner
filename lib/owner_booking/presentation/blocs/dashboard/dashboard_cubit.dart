@@ -101,13 +101,22 @@ class DashboardCubit extends Cubit<DashboardState> {
           if (bookingDateStr != null) {
             try {
               final bDate = DateTime.parse(bookingDateStr).toLocal();
-              final isRevenueCounted = b['user_id'] != null && (status == 'confirmed' || status == 'completed' || status == 'paid' || status == 'cancelled');
+              final isRevenueCounted = b['user_id'] != null &&
+                  (status == 'confirmed' ||
+                      status == 'completed' ||
+                      status == 'paid' ||
+                      (status == 'cancelled' &&
+                          ((b['owner_compensation'] as num?) ?? 0) > 0));
               final amount = BookingFinancialUtil.getOwnerEarnings(b);
 
               if (bDate.year == now.year &&
                   bDate.month == now.month &&
                   bDate.day == now.day) {
-                todayBookingsCount++;
+                if (status == 'confirmed' ||
+                    status == 'completed' ||
+                    status == 'paid') {
+                  todayBookingsCount++;
+                }
                 if (isRevenueCounted) {
                   todayRevenue += amount;
                 }

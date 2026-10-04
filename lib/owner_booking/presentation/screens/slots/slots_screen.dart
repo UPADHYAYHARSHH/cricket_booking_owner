@@ -778,7 +778,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
     );
   }
 
-  void _handleSlotTap(BuildContext context, VirtualSlot slot, {Map<String, dynamic>? selectedGround}) {
+  Future<void> _handleSlotTap(BuildContext context, VirtualSlot slot, {Map<String, dynamic>? selectedGround}) async {
     // If the slot has booking details (e.g. booked by user or blocked by owner),
     // always allow viewing details regardless of whether the slot time has passed.
     if (slot.bookingDetails != null) {
@@ -788,12 +788,15 @@ class _SlotsScreenState extends State<SlotsScreen> {
         updatedDetails['venue_name'] ??= selectedGround['locations']?['name'];
         updatedDetails['sport_name'] ??= selectedGround['category'];
       }
-      Navigator.push(
+      final res = await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => BookingDetailsScreen(booking: updatedDetails),
         ),
       );
+      if (res == true && mounted) {
+        context.read<SlotCubit>().fetchInitialData();
+      }
       return;
     }
 
@@ -810,12 +813,15 @@ class _SlotsScreenState extends State<SlotsScreen> {
         if (selectedGround != null) 'venue_name': selectedGround['locations']?['name'],
         if (selectedGround != null) 'sport_name': selectedGround['category'],
       };
-      Navigator.push(
+      final res = await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => BookingDetailsScreen(booking: bookingMap),
         ),
       );
+      if (res == true && mounted) {
+        context.read<SlotCubit>().fetchInitialData();
+      }
       return;
     }
 
@@ -844,13 +850,16 @@ class _SlotsScreenState extends State<SlotsScreen> {
             updatedDetails['venue_name'] ??= selectedGround['locations']?['name'];
             updatedDetails['sport_name'] ??= selectedGround['category'];
           }
-          Navigator.push(
+          final res = await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) =>
                   BookingDetailsScreen(booking: updatedDetails),
             ),
           );
+          if (res == true && mounted) {
+            context.read<SlotCubit>().fetchInitialData();
+          }
         }
         break;
       case SlotStatus.open:
