@@ -547,6 +547,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
     final playerName = booking['player_name']?.toString() ?? 'Player';
     final groundName = booking['ground_name']?.toString() ?? 'Court';
+    final venueName = booking['venue_name']?.toString() ?? booking['grounds']?['locations']?['name']?.toString();
 
     final rawSport =
         booking['sport_name']?.toString() ?? booking['sport']?.toString() ?? '';
@@ -1066,6 +1067,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                           value: groundName,
                           iconData: Icons.sports_tennis_rounded,
                         ),
+                        if (venueName != null && venueName.isNotEmpty) ...[
+                          const _RowDivider(),
+                          _DetailRow(
+                            label: "Venue",
+                            value: venueName,
+                            iconData: Icons.location_on_rounded,
+                          ),
+                        ],
                         const _RowDivider(),
                         _DetailRow(
                           label: "Sport",

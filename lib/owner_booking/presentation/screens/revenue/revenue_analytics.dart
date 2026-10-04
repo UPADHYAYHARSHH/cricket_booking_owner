@@ -8,7 +8,7 @@ class RevenuePoint {
   const RevenuePoint(this.label, this.amount);
 }
 
-const _countedStatuses = {'confirmed', 'completed', 'paid'};
+const _countedStatuses = {'confirmed', 'completed', 'paid', 'cancelled'};
 
 /// Owner's net earn for a booking = gross minus platform fee minus commission.
 double _amountOf(Map<String, dynamic> booking) {

@@ -263,7 +263,9 @@ class _OwnerCancellationHistoryScreenState
     final cancelledBy = (item['cancelled_by']?.toString() ?? 'user').toLowerCase();
     final isCustomerCancelled = cancelledBy == 'user';
     final bookingId = item['booking_id']?.toString() ?? item['id']?.toString() ?? '';
-    final amount = (item['total_booking_amount'] as num?)?.toDouble() ?? 0.0;
+    final amount = isCustomerCancelled 
+        ? ((item['owner_compensation'] as num?)?.toDouble() ?? 0.0)
+        : 0.0;
 
     DateTime? cancelledAt;
     if (item['cancelled_at'] != null) {

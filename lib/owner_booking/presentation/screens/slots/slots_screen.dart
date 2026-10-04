@@ -12,6 +12,7 @@ import 'package:turfpro_owner/owner_booking/presentation/blocs/location/location
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/bookings/booking_details_screen.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_flow.dart';
+import 'package:turfpro_owner/common/utils/sport_icon.dart';
 
 import '../../blocs/location/location_state.dart';
 
@@ -250,10 +251,6 @@ class _SlotsScreenState extends State<SlotsScreen> {
           final ground = state.grounds[index];
           final isSelected = ground['id'] == state.selectedGroundId;
           final category = (ground['category'] as String? ?? '').toLowerCase();
-          final isFootball = category == 'football';
-          final icon = isFootball
-              ? HugeIcons.strokeRoundedFootball
-              : HugeIcons.strokeRoundedCricketBat;
 
           return GestureDetector(
             onTap: () => context.read<SlotCubit>().selectGround(ground['id']),
@@ -285,8 +282,8 @@ class _SlotsScreenState extends State<SlotsScreen> {
               ),
               child: Row(
                 children: [
-                  HugeIcon(
-                    icon: icon,
+                  SportIcon(
+                    sport: ground['category'],
                     color: isSelected
                         ? AppColors.white
                         : AppColors.accentOrange,
@@ -294,7 +291,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
                   ),
                   const SizedBox(width: AppSizes.sm),
                   AppText(
-                    text: "${ground['name']}",
+                    text: ground['locations']?['name'] != null ? "${ground['name']} • ${ground['locations']['name']}" : "${ground['name']}",
                     color: isSelected
                         ? AppColors.white
                         : AppColors.textPrimaryLight,
@@ -769,7 +766,7 @@ class _SlotsScreenState extends State<SlotsScreen> {
                   final slot = periodSlots[index];
                   return _SlotCard(
                     slot: slot,
-                    onTap: () => _handleSlotTap(context, slot),
+                    onTap: () => _handleSlotTap(context, slot, selectedGround: selectedGround),
                   );
                 },
               ),
@@ -781,14 +778,20 @@ class _SlotsScreenState extends State<SlotsScreen> {
     );
   }
 
-  void _handleSlotTap(BuildContext context, VirtualSlot slot) {
+  void _handleSlotTap(BuildContext context, VirtualSlot slot, {Map<String, dynamic>? selectedGround}) {
     // If the slot has booking details (e.g. booked by user or blocked by owner),
     // always allow viewing details regardless of whether the slot time has passed.
     if (slot.bookingDetails != null) {
+      final updatedDetails = Map<String, dynamic>.from(slot.bookingDetails!);
+      if (selectedGround != null) {
+        updatedDetails['ground_name'] ??= selectedGround['name'];
+        updatedDetails['venue_name'] ??= selectedGround['locations']?['name'];
+        updatedDetails['sport_name'] ??= selectedGround['category'];
+      }
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => BookingDetailsScreen(booking: slot.bookingDetails!),
+          builder: (_) => BookingDetailsScreen(booking: updatedDetails),
         ),
       );
       return;
@@ -803,6 +806,9 @@ class _SlotsScreenState extends State<SlotsScreen> {
         'start_time': DateFormat('h:mm a').format(slot.startTime),
         'end_time': DateFormat('h:mm a').format(slot.endTime),
         'status': 'confirmed',
+        if (selectedGround != null) 'ground_name': selectedGround['name'],
+        if (selectedGround != null) 'venue_name': selectedGround['locations']?['name'],
+        if (selectedGround != null) 'sport_name': selectedGround['category'],
       };
       Navigator.push(
         context,
@@ -832,11 +838,17 @@ class _SlotsScreenState extends State<SlotsScreen> {
       case SlotStatus.blocked:
       case SlotStatus.maintenance:
         if (slot.bookingDetails != null) {
+          final updatedDetails = Map<String, dynamic>.from(slot.bookingDetails!);
+          if (selectedGround != null) {
+            updatedDetails['ground_name'] ??= selectedGround['name'];
+            updatedDetails['venue_name'] ??= selectedGround['locations']?['name'];
+            updatedDetails['sport_name'] ??= selectedGround['category'];
+          }
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) =>
-                  BookingDetailsScreen(booking: slot.bookingDetails!),
+                  BookingDetailsScreen(booking: updatedDetails),
             ),
           );
         }

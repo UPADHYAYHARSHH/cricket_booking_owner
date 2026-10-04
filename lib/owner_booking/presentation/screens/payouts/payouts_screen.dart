@@ -1203,102 +1203,9 @@ class _PayoutsScreenState extends State<PayoutsScreen>
               ),
             ),
 
-            // Persistent Pill Tabs Header
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _SliverTabHeaderDelegate(
-                child: Container(
-                  color: const Color(0xFFF7F9FA),
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: TabBar(
-                      controller: _tabController,
-                      indicator: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.06),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      indicatorSize: TabBarIndicatorSize.tab,
-                      dividerColor: Colors.transparent,
-                      labelColor: AppColors.primaryDarkGreen,
-                      unselectedLabelColor: AppColors.textSecondaryLight,
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                      unselectedLabelStyle: const TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                      tabs: [
-                        Tab(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.outbox_rounded, size: 16),
-                              const SizedBox(width: 6),
-                              const Text('Withdrawals'),
-                              if (_withdrawals.isNotEmpty) ...[
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: _tabController.index == 0
-                                        ? AppColors.primaryDarkGreen.withValues(alpha: 0.12)
-                                        : Colors.grey[300],
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    '${_withdrawals.length}',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
-                                      color: _tabController.index == 0
-                                          ? AppColors.primaryDarkGreen
-                                          : Colors.grey[700],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        Tab(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.payments_rounded, size: 16),
-                              const SizedBox(width: 6),
-                              const Text('Revenue Stream'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
           ];
         },
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildWithdrawalsTab(),
-            _buildBookingsRevenueTab(),
-          ],
-        ),
+        body: _buildWithdrawalsTab(),
       ),
       bottomNavigationBar: _buildBottomWithdrawBar(availableBalance),
     );
@@ -1770,7 +1677,8 @@ class _PayoutsScreenState extends State<PayoutsScreen>
             final status = b['status']?.toString().toLowerCase();
             return status == 'paid' ||
                 status == 'confirmed' ||
-                status == 'completed';
+                status == 'completed' ||
+                status == 'cancelled';
           }).toList();
 
           if (revenueBookings.isEmpty) {

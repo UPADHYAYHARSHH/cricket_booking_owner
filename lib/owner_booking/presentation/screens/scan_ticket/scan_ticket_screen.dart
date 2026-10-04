@@ -154,7 +154,7 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
         _booking = {
           ..._booking!,
           'checked_in': true,
-          'checked_in_at': DateTime.now().toIso8601String(),
+          'checked_in_at': DateTime.now().toUtc().toIso8601String(),
         };
         _isCheckingIn = false;
       });
