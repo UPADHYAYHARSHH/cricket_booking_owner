@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:turfpro_owner/owner_booking/domain/models/virtual_slot.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/slot_repository.dart';
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
 import 'package:turfpro_owner/common/utils/booking_financial_util.dart';
@@ -24,6 +22,14 @@ class SlotCubit extends Cubit<SlotState> {
   DateTime _slotEnd = DateTime.now();
   int _defaultPrice = 800;
   int _weekendPrice = 800;
+  int? _morningPrice;
+  int? _afternoonPrice;
+  int? _eveningPrice;
+  int? _nightPrice;
+  int? _weekendMorningPrice;
+  int? _weekendAfternoonPrice;
+  int? _weekendEveningPrice;
+  int? _weekendNightPrice;
   int _slotDurationMins = 60;
 
   SlotCubit(this._slotRepository) : super(SlotInitial());
@@ -124,6 +130,14 @@ class SlotCubit extends Cubit<SlotState> {
           (ground['price_per_hour'] as num?)?.toInt() ?? 800;
       final int weekendPrice =
           (ground['weekend_price'] as num?)?.toInt() ?? defaultPrice;
+      final int? morningPrice = (ground['morning_price'] as num?)?.toInt();
+      final int? afternoonPrice = (ground['afternoon_price'] as num?)?.toInt();
+      final int? eveningPrice = (ground['evening_price'] as num?)?.toInt();
+      final int? nightPrice = (ground['night_price'] as num?)?.toInt();
+      final int? weekendMorningPrice = (ground['weekend_morning_price'] as num?)?.toInt();
+      final int? weekendAfternoonPrice = (ground['weekend_afternoon_price'] as num?)?.toInt();
+      final int? weekendEveningPrice = (ground['weekend_evening_price'] as num?)?.toInt();
+      final int? weekendNightPrice = (ground['weekend_night_price'] as num?)?.toInt();
 
       final openParts = openingTimeStr.split(':');
       final closeParts = closingTimeStr.split(':');
@@ -154,6 +168,14 @@ class SlotCubit extends Cubit<SlotState> {
       _slotEnd = slotEnd;
       _defaultPrice = defaultPrice;
       _weekendPrice = weekendPrice;
+      _morningPrice = morningPrice;
+      _afternoonPrice = afternoonPrice;
+      _eveningPrice = eveningPrice;
+      _nightPrice = nightPrice;
+      _weekendMorningPrice = weekendMorningPrice;
+      _weekendAfternoonPrice = weekendAfternoonPrice;
+      _weekendEveningPrice = weekendEveningPrice;
+      _weekendNightPrice = weekendNightPrice;
       _slotDurationMins = slotDurationMins;
       _latestBookings = [];
 
@@ -231,12 +253,36 @@ class SlotCubit extends Cubit<SlotState> {
       );
       if (nextSlotTime.isAfter(_slotEnd)) break;
 
+      final hour = currentSlotTime.hour;
+      int slotPrice = basePrice;
+      if (isWeekend) {
+        if (hour >= 6 && hour < 12) {
+          if (_weekendMorningPrice != null && _weekendMorningPrice! > 0) slotPrice = _weekendMorningPrice!;
+        } else if (hour >= 12 && hour < 16) {
+          if (_weekendAfternoonPrice != null && _weekendAfternoonPrice! > 0) slotPrice = _weekendAfternoonPrice!;
+        } else if (hour >= 16 && hour < 20) {
+          if (_weekendEveningPrice != null && _weekendEveningPrice! > 0) slotPrice = _weekendEveningPrice!;
+        } else {
+          if (_weekendNightPrice != null && _weekendNightPrice! > 0) slotPrice = _weekendNightPrice!;
+        }
+      } else {
+        if (hour >= 6 && hour < 12) {
+          if (_morningPrice != null && _morningPrice! > 0) slotPrice = _morningPrice!;
+        } else if (hour >= 12 && hour < 16) {
+          if (_afternoonPrice != null && _afternoonPrice! > 0) slotPrice = _afternoonPrice!;
+        } else if (hour >= 16 && hour < 20) {
+          if (_eveningPrice != null && _eveningPrice! > 0) slotPrice = _eveningPrice!;
+        } else {
+          if (_nightPrice != null && _nightPrice! > 0) slotPrice = _nightPrice!;
+        }
+      }
+
       virtualSlots.add(
         VirtualSlot(
           startTime: currentSlotTime,
           endTime: nextSlotTime,
           status: SlotStatus.open,
-          price: basePrice,
+          price: slotPrice,
         ),
       );
       currentSlotTime = nextSlotTime;

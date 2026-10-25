@@ -32,15 +32,34 @@ class GroundFormData {
     operatingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     slotDuration: '1 Hour',
     advanceBookingLimit: '7 days',
-    pricingConfig: {'weekday': 600, 'weekend': 800},
+    pricingConfig: {
+      'weekday': 600,
+      'weekend': 800,
+      'morning': 0,
+      'afternoon': 0,
+      'evening': 0,
+      'night': 0,
+      'weekend_morning': 0,
+      'weekend_afternoon': 0,
+      'weekend_evening': 0,
+      'weekend_night': 0,
+    },
     isVerified: false,
   );
 
   factory GroundFormData.fromMap(Map<String, dynamic> map) {
-    // Read weekday and weekend prices from DB columns.
+    // Read weekday, weekend, and period prices from DB columns.
     final Map<String, int> pricingConfig = {
       'weekday': (map['price_per_hour'] as num?)?.toInt() ?? 600,
       'weekend': (map['weekend_price'] as num?)?.toInt() ?? 800,
+      'morning': (map['morning_price'] as num?)?.toInt() ?? 0,
+      'afternoon': (map['afternoon_price'] as num?)?.toInt() ?? 0,
+      'evening': (map['evening_price'] as num?)?.toInt() ?? 0,
+      'night': (map['night_price'] as num?)?.toInt() ?? 0,
+      'weekend_morning': (map['weekend_morning_price'] as num?)?.toInt() ?? 0,
+      'weekend_afternoon': (map['weekend_afternoon_price'] as num?)?.toInt() ?? 0,
+      'weekend_evening': (map['weekend_evening_price'] as num?)?.toInt() ?? 0,
+      'weekend_night': (map['weekend_night_price'] as num?)?.toInt() ?? 0,
     };
 
     return GroundFormData(
@@ -72,6 +91,14 @@ class GroundFormData {
       'slot_duration': slotDuration,
       'price_per_hour': basePrice,
       'weekend_price': pricingConfig['weekend'] ?? 800,
+      'morning_price': (pricingConfig['morning'] ?? 0) > 0 ? pricingConfig['morning'] : null,
+      'afternoon_price': (pricingConfig['afternoon'] ?? 0) > 0 ? pricingConfig['afternoon'] : null,
+      'evening_price': (pricingConfig['evening'] ?? 0) > 0 ? pricingConfig['evening'] : null,
+      'night_price': (pricingConfig['night'] ?? 0) > 0 ? pricingConfig['night'] : null,
+      'weekend_morning_price': (pricingConfig['weekend_morning'] ?? 0) > 0 ? pricingConfig['weekend_morning'] : null,
+      'weekend_afternoon_price': (pricingConfig['weekend_afternoon'] ?? 0) > 0 ? pricingConfig['weekend_afternoon'] : null,
+      'weekend_evening_price': (pricingConfig['weekend_evening'] ?? 0) > 0 ? pricingConfig['weekend_evening'] : null,
+      'weekend_night_price': (pricingConfig['weekend_night'] ?? 0) > 0 ? pricingConfig['weekend_night'] : null,
     };
   }
 
@@ -84,6 +111,14 @@ class GroundFormData {
       'slot_duration': slotDuration,
       'price_per_hour': basePrice,
       'weekend_price': pricingConfig['weekend'] ?? 800,
+      'morning_price': (pricingConfig['morning'] ?? 0) > 0 ? pricingConfig['morning'] : null,
+      'afternoon_price': (pricingConfig['afternoon'] ?? 0) > 0 ? pricingConfig['afternoon'] : null,
+      'evening_price': (pricingConfig['evening'] ?? 0) > 0 ? pricingConfig['evening'] : null,
+      'night_price': (pricingConfig['night'] ?? 0) > 0 ? pricingConfig['night'] : null,
+      'weekend_morning_price': (pricingConfig['weekend_morning'] ?? 0) > 0 ? pricingConfig['weekend_morning'] : null,
+      'weekend_afternoon_price': (pricingConfig['weekend_afternoon'] ?? 0) > 0 ? pricingConfig['weekend_afternoon'] : null,
+      'weekend_evening_price': (pricingConfig['weekend_evening'] ?? 0) > 0 ? pricingConfig['weekend_evening'] : null,
+      'weekend_night_price': (pricingConfig['weekend_night'] ?? 0) > 0 ? pricingConfig['weekend_night'] : null,
     };
   }
 

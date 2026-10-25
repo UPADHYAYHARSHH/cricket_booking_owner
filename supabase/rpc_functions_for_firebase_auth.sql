@@ -290,7 +290,15 @@ CREATE OR REPLACE FUNCTION public.register_ground(
     p_opening_time TEXT,
     p_closing_time TEXT,
     p_operating_days TEXT[] DEFAULT ARRAY['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
-    p_slot_duration TEXT DEFAULT '1 Hour'
+    p_slot_duration TEXT DEFAULT '1 Hour',
+    p_morning_price INT DEFAULT NULL,
+    p_afternoon_price INT DEFAULT NULL,
+    p_evening_price INT DEFAULT NULL,
+    p_night_price INT DEFAULT NULL,
+    p_weekend_morning_price INT DEFAULT NULL,
+    p_weekend_afternoon_price INT DEFAULT NULL,
+    p_weekend_evening_price INT DEFAULT NULL,
+    p_weekend_night_price INT DEFAULT NULL
 )
 RETURNS JSON
 LANGUAGE plpgsql
@@ -312,21 +320,27 @@ BEGIN
 
     INSERT INTO public.grounds (
         owner_id, location_id, name, category,
-        price_per_hour, weekend_price, opening_time, closing_time,
-        operating_days, slot_duration
+        price_per_hour, weekend_price,
+        morning_price, afternoon_price, evening_price, night_price,
+        weekend_morning_price, weekend_afternoon_price, weekend_evening_price, weekend_night_price,
+        opening_time, closing_time,
+        operating_days, slot_duration, is_available
     )
     VALUES (
         p_owner_id, p_location_id::uuid, v_display_name, p_category,
-        p_price_per_hour, p_weekend_price, p_opening_time::time, p_closing_time::time,
-        p_operating_days, p_slot_duration
+        p_price_per_hour, p_weekend_price,
+        p_morning_price, p_afternoon_price, p_evening_price, p_night_price,
+        p_weekend_morning_price, p_weekend_afternoon_price, p_weekend_evening_price, p_weekend_night_price,
+        p_opening_time::time, p_closing_time::time,
+        p_operating_days, p_slot_duration, true
     )
     RETURNING to_json(grounds.*) INTO result;
     RETURN result;
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT) TO anon;
-GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, INT, INT, INT, INT, INT, INT, INT, INT) TO anon;
+GRANT EXECUTE ON FUNCTION public.register_ground(TEXT, TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, INT, INT, INT, INT, INT, INT, INT, INT) TO authenticated;
 
 -- ============================================================
 -- 9. Ground Images: Insert images (bypasses RLS for Firebase Auth)
@@ -381,7 +395,15 @@ CREATE OR REPLACE FUNCTION public.update_ground(
     p_closing_time TEXT,
     p_operating_days TEXT[] DEFAULT ARRAY['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
     p_slot_duration TEXT DEFAULT '1 Hour',
-    p_is_available BOOLEAN DEFAULT TRUE
+    p_is_available BOOLEAN DEFAULT TRUE,
+    p_morning_price INT DEFAULT NULL,
+    p_afternoon_price INT DEFAULT NULL,
+    p_evening_price INT DEFAULT NULL,
+    p_night_price INT DEFAULT NULL,
+    p_weekend_morning_price INT DEFAULT NULL,
+    p_weekend_afternoon_price INT DEFAULT NULL,
+    p_weekend_evening_price INT DEFAULT NULL,
+    p_weekend_night_price INT DEFAULT NULL
 )
 RETURNS void
 LANGUAGE plpgsql
@@ -412,6 +434,14 @@ BEGIN
         category = p_category,
         price_per_hour = p_price_per_hour,
         weekend_price = p_weekend_price,
+        morning_price = p_morning_price,
+        afternoon_price = p_afternoon_price,
+        evening_price = p_evening_price,
+        night_price = p_night_price,
+        weekend_morning_price = p_weekend_morning_price,
+        weekend_afternoon_price = p_weekend_afternoon_price,
+        weekend_evening_price = p_weekend_evening_price,
+        weekend_night_price = p_weekend_night_price,
         opening_time = p_opening_time::time,
         closing_time = p_closing_time::time,
         operating_days = p_operating_days,
@@ -421,8 +451,8 @@ BEGIN
 END;
 $$;
 
-GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, BOOLEAN) TO anon;
-GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, BOOLEAN) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, BOOLEAN, INT, INT, INT, INT, INT, INT, INT, INT) TO anon;
+GRANT EXECUTE ON FUNCTION public.update_ground(TEXT, TEXT, INT, INT, TEXT, TEXT, TEXT[], TEXT, BOOLEAN, INT, INT, INT, INT, INT, INT, INT, INT) TO authenticated;
 
 -- ============================================================
 -- 12. Slots: Generate slots for a ground (bypasses RLS for Firebase Auth)

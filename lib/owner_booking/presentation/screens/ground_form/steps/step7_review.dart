@@ -111,20 +111,50 @@ class Step7Review extends StatelessWidget {
                     if ((data.pricingConfig['morning'] ?? 0) > 0)
                       _row(
                         Icons.wb_sunny_outlined,
-                        'Morning peak',
+                        'Weekday Morning (06:00 – 12:00)',
                         '\u20B9${data.pricingConfig['morning']}/hr',
+                      ),
+                    if ((data.pricingConfig['afternoon'] ?? 0) > 0)
+                      _row(
+                        Icons.wb_cloudy_outlined,
+                        'Weekday Afternoon (12:00 – 16:00)',
+                        '\u20B9${data.pricingConfig['afternoon']}/hr',
                       ),
                     if ((data.pricingConfig['evening'] ?? 0) > 0)
                       _row(
                         Icons.wb_twilight_outlined,
-                        'Evening peak',
+                        'Weekday Evening (16:00 – 20:00)',
                         '\u20B9${data.pricingConfig['evening']}/hr',
                       ),
                     if ((data.pricingConfig['night'] ?? 0) > 0)
                       _row(
                         Icons.nightlight_outlined,
-                        'Night',
+                        'Weekday Night (20:00 – 06:00)',
                         '\u20B9${data.pricingConfig['night']}/hr',
+                      ),
+                    if ((data.pricingConfig['weekend_morning'] ?? 0) > 0)
+                      _row(
+                        Icons.wb_sunny_outlined,
+                        'Weekend Morning (06:00 – 12:00)',
+                        '\u20B9${data.pricingConfig['weekend_morning']}/hr',
+                      ),
+                    if ((data.pricingConfig['weekend_afternoon'] ?? 0) > 0)
+                      _row(
+                        Icons.wb_cloudy_outlined,
+                        'Weekend Afternoon (12:00 – 16:00)',
+                        '\u20B9${data.pricingConfig['weekend_afternoon']}/hr',
+                      ),
+                    if ((data.pricingConfig['weekend_evening'] ?? 0) > 0)
+                      _row(
+                        Icons.wb_twilight_outlined,
+                        'Weekend Evening (16:00 – 20:00)',
+                        '\u20B9${data.pricingConfig['weekend_evening']}/hr',
+                      ),
+                    if ((data.pricingConfig['weekend_night'] ?? 0) > 0)
+                      _row(
+                        Icons.nightlight_outlined,
+                        'Weekend Night (20:00 – 06:00)',
+                        '\u20B9${data.pricingConfig['weekend_night']}/hr',
                       ),
                   ],
                 ),

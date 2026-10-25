@@ -131,6 +131,14 @@ class GroundRepositoryImpl implements GroundRepository {
         'p_category': category,
         'p_price_per_hour': pricingOverrides?['weekday'] ?? 600,
         'p_weekend_price': pricingOverrides?['weekend'] ?? 800,
+        'p_morning_price': (pricingOverrides?['morning'] ?? 0) > 0 ? pricingOverrides!['morning'] : null,
+        'p_afternoon_price': (pricingOverrides?['afternoon'] ?? 0) > 0 ? pricingOverrides!['afternoon'] : null,
+        'p_evening_price': (pricingOverrides?['evening'] ?? 0) > 0 ? pricingOverrides!['evening'] : null,
+        'p_night_price': (pricingOverrides?['night'] ?? 0) > 0 ? pricingOverrides!['night'] : null,
+        'p_weekend_morning_price': (pricingOverrides?['weekend_morning'] ?? 0) > 0 ? pricingOverrides!['weekend_morning'] : null,
+        'p_weekend_afternoon_price': (pricingOverrides?['weekend_afternoon'] ?? 0) > 0 ? pricingOverrides!['weekend_afternoon'] : null,
+        'p_weekend_evening_price': (pricingOverrides?['weekend_evening'] ?? 0) > 0 ? pricingOverrides!['weekend_evening'] : null,
+        'p_weekend_night_price': (pricingOverrides?['weekend_night'] ?? 0) > 0 ? pricingOverrides!['weekend_night'] : null,
         'p_opening_time': openingTime,
         'p_closing_time': closingTime,
         'p_operating_days': operatingDays,
@@ -147,20 +155,58 @@ class GroundRepositoryImpl implements GroundRepository {
     required String groundId,
     required Map<String, dynamic> data,
   }) async {
-    await _supabase.rpc(
-      'update_ground',
-      params: {
-        'p_ground_id': groundId,
-        'p_category': data['category'] ?? '',
-        'p_price_per_hour': data['price_per_hour'] ?? 600,
-        'p_weekend_price': data['weekend_price'] ?? 800,
-        'p_opening_time': data['opening_time'] ?? '06:00',
-        'p_closing_time': data['closing_time'] ?? '23:00',
-        'p_operating_days': data['operating_days'] ?? <String>[],
-        'p_slot_duration': data['slot_duration'] ?? '1 Hour',
-        'p_is_available': data['is_available'] ?? true,
-      },
-    );
+    try {
+      await _supabase.rpc(
+        'update_ground',
+        params: {
+          'p_ground_id': groundId,
+          'p_category': data['category'] ?? '',
+          'p_price_per_hour': data['price_per_hour'] ?? 600,
+          'p_weekend_price': data['weekend_price'] ?? 800,
+          'p_opening_time': data['opening_time'] ?? '06:00',
+          'p_closing_time': data['closing_time'] ?? '23:00',
+          'p_operating_days': data['operating_days'] ?? <String>[],
+          'p_slot_duration': data['slot_duration'] ?? '1 Hour',
+          'p_is_available': data['is_available'] ?? true,
+          'p_morning_price': data['morning_price'],
+          'p_afternoon_price': data['afternoon_price'],
+          'p_evening_price': data['evening_price'],
+          'p_night_price': data['night_price'],
+          'p_weekend_morning_price': data['weekend_morning_price'],
+          'p_weekend_afternoon_price': data['weekend_afternoon_price'],
+          'p_weekend_evening_price': data['weekend_evening_price'],
+          'p_weekend_night_price': data['weekend_night_price'],
+        },
+      );
+    } catch (_) {
+      // Fallback in case RPC hasn't been migrated with new parameters yet
+      await _supabase.rpc(
+        'update_ground',
+        params: {
+          'p_ground_id': groundId,
+          'p_category': data['category'] ?? '',
+          'p_price_per_hour': data['price_per_hour'] ?? 600,
+          'p_weekend_price': data['weekend_price'] ?? 800,
+          'p_opening_time': data['opening_time'] ?? '06:00',
+          'p_closing_time': data['closing_time'] ?? '23:00',
+          'p_operating_days': data['operating_days'] ?? <String>[],
+          'p_slot_duration': data['slot_duration'] ?? '1 Hour',
+          'p_is_available': data['is_available'] ?? true,
+        },
+      );
+      try {
+        await _supabase.from('grounds').update({
+          'morning_price': data['morning_price'],
+          'afternoon_price': data['afternoon_price'],
+          'evening_price': data['evening_price'],
+          'night_price': data['night_price'],
+          'weekend_morning_price': data['weekend_morning_price'],
+          'weekend_afternoon_price': data['weekend_afternoon_price'],
+          'weekend_evening_price': data['weekend_evening_price'],
+          'weekend_night_price': data['weekend_night_price'],
+        }).eq('id', groundId);
+      } catch (_) {}
+    }
   }
 
   @override

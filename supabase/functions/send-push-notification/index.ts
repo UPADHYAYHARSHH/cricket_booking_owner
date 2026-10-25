@@ -93,10 +93,10 @@ serve(async (req) => {
     let soundName: string | undefined = undefined;
 
     if (type === "booking_request" || type === "new_booking" || type === "booking_confirmed" || type === "booking") {
-      channelId = "new_booking_channel";
+      channelId = "new_booking_channel_v3";
       soundName = "booking_confirmed";
     } else if (type === "booking_approved") {
-      channelId = "booking_confirmed_channel";
+      channelId = "booking_confirmed_channel_v3";
       soundName = "booking_confirmed";
     } else if (type.includes("owner")) {
       channelId = "owner_notifications";

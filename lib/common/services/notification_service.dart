@@ -110,33 +110,24 @@ class NotificationService {
       }
 
       try {
-        await androidPlugin.createNotificationChannel(
-          const AndroidNotificationChannel(
-            'new_booking_channel',
-            'New Booking Alert',
-            description: 'Plays a cricket sound when a new booking arrives',
-            importance: Importance.max,
-            playSound: true,
-            sound: RawResourceAndroidNotificationSound('booking_confirmed'),
-          ),
-        );
-      } catch (e) {
-        debugPrint('Owner App - Failed to create new_booking_channel: $e');
-      }
+        // Delete old channels so Android OS purges the cached old sound
+        await androidPlugin.deleteNotificationChannel('new_booking_channel');
+        await androidPlugin.deleteNotificationChannel('new_booking_channel_v2');
+      } catch (_) {}
 
       try {
         await androidPlugin.createNotificationChannel(
           const AndroidNotificationChannel(
-            'new_booking_channel_v2',
+            'new_booking_channel_v3',
             'New Booking Alert',
-            description: 'Plays a cricket sound when a new booking arrives',
+            description: 'Plays confirmation sound when a new booking arrives',
             importance: Importance.max,
             playSound: true,
             sound: RawResourceAndroidNotificationSound('booking_confirmed'),
           ),
         );
       } catch (e) {
-        debugPrint('Owner App - Failed to create new_booking_channel_v2: $e');
+        debugPrint('Owner App - Failed to create new_booking_channel_v3: $e');
       }
 
       try {
@@ -157,7 +148,7 @@ class NotificationService {
       try {
         await androidPlugin.createNotificationChannel(
           const AndroidNotificationChannel(
-            'booking_confirmed_channel',
+            'booking_confirmed_channel_v3',
             'Booking Confirmed',
             description: 'Plays sound when a booking is confirmed or approved',
             importance: Importance.max,
@@ -166,7 +157,7 @@ class NotificationService {
           ),
         );
       } catch (e) {
-        debugPrint('Owner App - Failed to create booking_confirmed_channel: $e');
+        debugPrint('Owner App - Failed to create booking_confirmed_channel_v3: $e');
       }
     }
   }
@@ -245,9 +236,9 @@ class NotificationService {
     // Other notifications → default channel
     final AndroidNotificationDetails androidDetails = isBookingSound
         ? AndroidNotificationDetails(
-            'new_booking_channel_v2',
+            'new_booking_channel_v3',
             'New Booking Alert',
-            channelDescription: 'Plays a cricket sound when a new booking arrives',
+            channelDescription: 'Plays confirmation sound when a new booking arrives',
             importance: Importance.max,
             priority: Priority.high,
             sound: const RawResourceAndroidNotificationSound('booking_confirmed'),
