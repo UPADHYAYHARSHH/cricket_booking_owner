@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:turfpro_owner/common/services/notification_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:toastification/toastification.dart';
@@ -31,6 +32,9 @@ class _Step1PersonalInfoScreenState extends State<Step1PersonalInfoScreen> {
   void initState() {
     super.initState();
     _prefillExistingData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.requestPermissions();
+    });
   }
 
   @override

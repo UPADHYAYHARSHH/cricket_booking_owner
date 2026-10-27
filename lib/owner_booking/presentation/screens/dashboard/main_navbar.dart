@@ -26,6 +26,9 @@ class _MainNavbarState extends State<MainNavbar> {
   void initState() {
     super.initState();
     NotificationService.updateFcmToken();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.requestPermissions();
+    });
     
     // If the app was hot restarted or deep-linked directly to /dashboard,
     // AuthCubit won't be initialized. Redirect to splash to enforce onboarding checks.

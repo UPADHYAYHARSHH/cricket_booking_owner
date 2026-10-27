@@ -65,6 +65,8 @@ dependencies:
   cached_network_image: ^3.4.1
   syncfusion_flutter_pdfviewer: ^33.2.13
   encrypt: ^5.0.3
+  video_player: ^2.9.2
+  audioplayers: ^6.1.0
 
 dev_dependencies:
   flutter_test:
@@ -100,6 +102,9 @@ flutter:
     - assets/icon.png
     - assets/app_logo.png
     - assets/editor.html
+    - assets/videos/
+    - assets/splash/
+    - assets/sfx/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

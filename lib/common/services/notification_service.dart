@@ -18,14 +18,16 @@ class NotificationService {
   /// Global navigator key so foreground notifications can trigger in-app refreshes
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-  static Future<void> initialize() async {
+  static Future<void> initialize({bool requestPermission = false}) async {
     if (_isInitialized) {
       await updateFcmToken();
       return;
     }
     _isInitialized = true;
     // 1. Request permissions
-    await _requestPermissions();
+    if (requestPermission) {
+      await requestPermissions();
+    }
 
     // 2. Initialize local notifications
     await _initializeLocalNotifications();
@@ -60,12 +62,27 @@ class NotificationService {
     }
   }
 
-  static Future<void> _requestPermissions() async {
+  static Future<void> requestPermissions() async {
     NotificationSettings settings = await FirebaseMessaging.instance
         .requestPermission(alert: true, badge: true, sound: true);
     debugPrint(
       'Owner App - User granted permission: ${settings.authorizationStatus}',
     );
+
+    if (!kIsWeb) {
+      final androidPlugin = _localNotifications.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      await androidPlugin?.requestNotificationsPermission();
+
+      final iosPlugin = _localNotifications.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      await iosPlugin?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
+    await updateFcmToken();
   }
 
   static Future<void> _initializeLocalNotifications() async {
