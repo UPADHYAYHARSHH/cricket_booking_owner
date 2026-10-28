@@ -168,13 +168,13 @@ class _SlottixSplashState extends State<SlottixSplash>
       await player.setAudioContext(AudioContext(
         iOS: AudioContextIOS(category: AVAudioSessionCategory.ambient),
         android: const AudioContextAndroid(
-          contentType: AndroidContentType.sonification,
-          usageType: AndroidUsageType.assistanceSonification,
+          contentType: AndroidContentType.music,
+          usageType: AndroidUsageType.media,
           audioFocus: AndroidAudioFocus.none,
         ),
       ));
       await player.setReleaseMode(ReleaseMode.stop);
-      await player.play(AssetSource(asset), volume: 0.8);
+      await player.play(AssetSource(asset));
     } catch (_) {}
   }
 
