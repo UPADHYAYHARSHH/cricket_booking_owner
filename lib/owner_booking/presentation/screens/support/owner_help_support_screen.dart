@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/app_constants.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/support/owner_support_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/support/owner_support_state.dart';
 import 'owner_support_chat_screen.dart';
@@ -67,7 +68,7 @@ class OwnerHelpSupportScreen extends StatelessWidget {
                   ),
                   tooltip: 'WhatsApp Partner Support',
                   onPressed: () => _launchUrl(
-                    'https://wa.me/919876543210?text=Hi%20TurfPro%20Partner%20Support,%20I%20need%20assistance',
+                    'https://wa.me/919876543210?text=Hi%20${Uri.encodeComponent(AppConstants.supportName)},%20I%20need%20assistance',
                   ),
                 ),
               ],
@@ -234,7 +235,7 @@ class OwnerHelpSupportScreen extends StatelessWidget {
                       iconColor: const Color(0xFF25D366),
                       title: 'WhatsApp Partner Helpline',
                       subtitle: '+91 98765 43210 (Mon-Sun, 9 AM - 11 PM)',
-                      onTap: () => _launchUrl('https://wa.me/919876543210?text=Hi%20TurfPro%20Partner%20Desk'),
+                      onTap: () => _launchUrl('https://wa.me/919876543210?text=Hi%20${Uri.encodeComponent(AppConstants.supportDesk)}'),
                       isDark: isDark,
                     ),
                     const SizedBox(height: 8),
@@ -251,8 +252,8 @@ class OwnerHelpSupportScreen extends StatelessWidget {
                       icon: Icons.email_outlined,
                       iconColor: Colors.blueAccent,
                       title: 'Partner Relations Email',
-                      subtitle: 'partners@turfpro.in (Response within 12h)',
-                      onTap: () => _launchUrl('mailto:partners@turfpro.in?subject=Partner%20Support%20Request'),
+                      subtitle: '${AppConstants.supportEmail} (Response within 12h)',
+                      onTap: () => _launchUrl('mailto:${AppConstants.supportEmail}?subject=Partner%20Support%20Request'),
                       isDark: isDark,
                     ),
 
@@ -336,9 +337,9 @@ class OwnerHelpSupportScreen extends StatelessWidget {
                 child: const Icon(Icons.auto_awesome, color: Colors.amberAccent, size: 20),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'TurfPro Partner AI',
+                  AppConstants.supportAssistantName,
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 16,

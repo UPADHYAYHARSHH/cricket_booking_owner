@@ -6,6 +6,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/app_constants.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/utils/sport_icon.dart';
 import 'package:turfpro_owner/common/utils/booking_id_util.dart';
@@ -481,7 +482,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              "When you cancel a confirmed booking, $playerName will receive a 100% refund of ₹${rawAmount.toStringAsFixed(0)} as Playora Coins directly in their wallet.",
+                              "When you cancel a confirmed booking, $playerName will receive a 100% refund of ₹${rawAmount.toStringAsFixed(0)} as ${AppConstants.coinName} directly in their wallet.",
                               style: const TextStyle(
                                 fontSize: 12,
                                 height: 1.4,
@@ -676,7 +677,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
                                             style: ToastificationStyle.fillColored,
                                             title: const Text("Booking Cancelled"),
                                             description: Text(
-                                              "₹${rawAmount.toStringAsFixed(0)} Playora Coins refunded to $playerName.",
+                                              "₹${rawAmount.toStringAsFixed(0)} ${AppConstants.coinName} refunded to $playerName.",
                                             ),
                                             autoCloseDuration:
                                                 const Duration(seconds: 4),

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turfpro_owner/common/utils/booking_financial_util.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/booking_repository.dart';
+import 'package:turfpro_owner/common/constants/app_constants.dart';
 
 class BookingRepositoryImpl implements BookingRepository {
   final SupabaseClient _supabase;
@@ -754,7 +755,7 @@ String bookingId, {String reason = 'declined_by_owner'}) async {
       }
     }
 
-    // C. Credit user's wallet with 100% refund in Playora Coins
+    // C. Credit user's wallet with 100% refund in Slottix Coins
     final userId = bookingData['user_id']?.toString();
     String groundName = 'the venue';
     if (bookingData['grounds'] is Map && bookingData['grounds']['name'] != null) {
@@ -843,7 +844,7 @@ String bookingId, {String reason = 'declined_by_owner'}) async {
           'user_id': userId,
           'title': 'Booking Cancelled by Venue',
           'message':
-              'Your booking for $groundName was cancelled by the venue owner (Reason: $reason). ₹${refundCoins.toStringAsFixed(0)} Playora Coins have been refunded to your wallet.',
+              'Your booking for $groundName was cancelled by the venue owner (Reason: $reason). ₹${refundCoins.toStringAsFixed(0)} ${AppConstants.coinName} have been refunded to your wallet.',
           'type': 'cancellation_coins_credited',
           'data': {
             'booking_id': bookingId,

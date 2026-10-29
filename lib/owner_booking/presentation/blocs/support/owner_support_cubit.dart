@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:turfpro_owner/common/constants/app_constants.dart';
 import 'package:turfpro_owner/owner_booking/data/models/owner_support_message_model.dart';
 import 'package:turfpro_owner/owner_booking/data/repositories/owner_support_repository.dart';
 import 'owner_support_state.dart';
@@ -20,7 +21,7 @@ class OwnerSupportCubit extends Cubit<OwnerSupportState> {
     final totalGrounds = ownerContext?['totalGrounds'] ?? 0;
 
     String initialGreeting =
-        'Welcome to TurfPro Partner Support, ' + ownerName + '! 👋 How can we help you manage your turf venues and payouts today?';
+        'Welcome to ${AppConstants.supportName}, ' + ownerName + '! 👋 How can we help you manage your turf venues and payouts today?';
 
     List<String> initialQuickReplies = [
       'Payout Settlement Cycle',
@@ -42,7 +43,7 @@ class OwnerSupportCubit extends Cubit<OwnerSupportState> {
         OwnerSupportAction(
           type: 'whatsapp_support',
           label: 'Direct WhatsApp Line',
-          url: 'https://wa.me/919876543210?text=Hi%20TurfPro%20Partner%20Support',
+          url: 'https://wa.me/919876543210?text=Hi%20${Uri.encodeComponent(AppConstants.supportName)}',
         )
       ],
     );

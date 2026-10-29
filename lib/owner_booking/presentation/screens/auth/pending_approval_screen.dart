@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/app_constants.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
@@ -21,7 +22,7 @@ class PendingApprovalScreen extends StatelessWidget {
             context: context,
             type: ToastificationType.success,
             title: const Text('Account Approved!'),
-            description: const Text('Welcome to TurfPro Owner'),
+            description: Text('Welcome to ${AppConstants.appName}'),
             autoCloseDuration: const Duration(seconds: 3),
           );
           Navigator.pushNamedAndRemoveUntil(context, '/dashboard', (route) => false);

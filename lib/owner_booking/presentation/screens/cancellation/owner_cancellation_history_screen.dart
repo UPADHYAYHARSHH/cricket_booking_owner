@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/app_constants.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/services/app_config_service.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -517,7 +518,7 @@ class _OwnerCancellationHistoryScreenState
                 ),
                 SizedBox(height: 8),
                 AppText(
-                  text: "How Playora's dynamic cancellation and instant slot recovery ensure maximum court utilization and zero payment settlement hassles for venue partners.",
+                  text: "How ${AppConstants.platformName}'s dynamic cancellation and instant slot recovery ensure maximum court utilization and zero payment settlement hassles for venue partners.",
                   size: 12.5,
                   color: Colors.white70,
                 ),
@@ -537,7 +538,7 @@ class _OwnerCancellationHistoryScreenState
 
           _buildOwnerTierCard(
             tier: "Tier 1: > ${t1h.toStringAsFixed(0)}h before slot",
-            refundPercent: "${t1p.toStringAsFixed(0)}% (Playora Coins)",
+            refundPercent: "${t1p.toStringAsFixed(0)}% (${AppConstants.coinName})",
             ownerImpact: "Full slot liberation. Placed back on the market immediately.",
             color: Colors.green.shade700,
             bgColor: Colors.green.shade50,
@@ -546,7 +547,7 @@ class _OwnerCancellationHistoryScreenState
 
           _buildOwnerTierCard(
             tier: "Tier 2: ${t2h.toStringAsFixed(0)}h – ${t1h.toStringAsFixed(0)}h before slot",
-            refundPercent: "${t2p.toStringAsFixed(0)}% (Playora Coins)",
+            refundPercent: "${t2p.toStringAsFixed(0)}% (${AppConstants.coinName})",
             ownerImpact: "Slot freed for re-booking with high recovery likelihood.",
             color: Colors.teal.shade700,
             bgColor: Colors.teal.shade50,
@@ -555,7 +556,7 @@ class _OwnerCancellationHistoryScreenState
 
           _buildOwnerTierCard(
             tier: "Tier 3: ${t3h.toStringAsFixed(0)}h – ${t2h.toStringAsFixed(0)}h before slot",
-            refundPercent: "${t3p.toStringAsFixed(0)}% (Playora Coins)",
+            refundPercent: "${t3p.toStringAsFixed(0)}% (${AppConstants.coinName})",
             ownerImpact: "Short notice window. Slot instantly freed for walk-in or app players.",
             color: Colors.amber.shade800,
             bgColor: Colors.amber.shade50,
@@ -564,7 +565,7 @@ class _OwnerCancellationHistoryScreenState
 
           _buildOwnerTierCard(
             tier: "Tier 4: < ${t3h.toStringAsFixed(0)}h before slot",
-            refundPercent: "${t4p.toStringAsFixed(0)}% (Playora Coins)",
+            refundPercent: "${t4p.toStringAsFixed(0)}% (${AppConstants.coinName})",
             ownerImpact: "Last-minute window. Venue slot immediately unlocked.",
             color: Colors.deepOrange.shade700,
             bgColor: Colors.deepOrange.shade50,
@@ -588,7 +589,7 @@ class _OwnerCancellationHistoryScreenState
           _buildBenefitItem(
             icon: Icons.account_balance_wallet_outlined,
             title: "Closed-Loop Coin Refunds",
-            content: "Customer refunds are credited in Playora Coins, not cash. Your venue settlement ledger remains predictable and free from bank chargebacks.",
+            content: "Customer refunds are credited in ${AppConstants.coinName}, not cash. Your venue settlement ledger remains predictable and free from bank chargebacks.",
           ),
           _buildBenefitItem(
             icon: Icons.approval_rounded,

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/app_constants.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/support/owner_support_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/support/owner_support_state.dart';
 import 'package:turfpro_owner/owner_booking/data/models/owner_support_message_model.dart';
@@ -119,7 +120,7 @@ class _OwnerSupportChatScreenState extends State<OwnerSupportChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'TurfPro Partner AI',
+                  AppConstants.supportAssistantName,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -159,7 +160,7 @@ class _OwnerSupportChatScreenState extends State<OwnerSupportChatScreen> {
             ),
             tooltip: 'WhatsApp Partner Support',
             onPressed: () => _launchUrl(
-              'https://wa.me/919876543210?text=Hi%20TurfPro%20Partner%20Desk',
+              'https://wa.me/919876543210?text=Hi%20${Uri.encodeComponent(AppConstants.supportDesk)}',
             ),
           ),
         ],

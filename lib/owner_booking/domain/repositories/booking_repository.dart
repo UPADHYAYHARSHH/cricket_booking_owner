@@ -37,7 +37,7 @@ abstract class BookingRepository {
   Future<List<Map<String, dynamic>>> getOwnerCancellations(String ownerId);
 
   /// Cancels a confirmed or paid booking by the owner.
-  /// Issues 100% refund in Playora Coins to the user's wallet,
+  /// Issues 100% refund in Slottix Coins to the user's wallet,
   /// records in cancellation_history, sends notification, and frees slot if requested.
   Future<Map<String, dynamic>> cancelBookingByOwner({
     required String bookingId,

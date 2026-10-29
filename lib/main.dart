@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/app_constants.dart';
 import 'package:turfpro_owner/firebase_options.dart';
 import 'package:turfpro_owner/common/services/app_config_service.dart';
 import 'package:turfpro_owner/common/services/shared_prefs_service.dart';
@@ -96,7 +97,7 @@ class MyApp extends StatelessWidget {
       child: ToastificationWrapper(
         child: MaterialApp(
           navigatorKey: navigatorKey,
-          title: 'TurfPro Owner',
+          title: AppConstants.appName,
           debugShowCheckedModeBanner: false,
           theme: AppColors.getLightTheme(),
           darkTheme: AppColors.getDarkTheme(),

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:turfpro_owner/common/constants/app_constants.dart';
 import '../models/owner_support_message_model.dart';
 
 class OwnerSupportRepository {
@@ -117,7 +118,7 @@ class OwnerSupportRepository {
         OwnerSupportAction(
           type: "whatsapp_support",
           label: "WhatsApp Partner Support",
-          url: "https://wa.me/919876543210?text=Hi%20TurfPro%20Partner%20Support",
+          url: "https://wa.me/919876543210?text=Hi%20${Uri.encodeComponent(AppConstants.supportName)}",
         )
       ],
     );

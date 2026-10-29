@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
+import 'package:turfpro_owner/common/constants/app_constants.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/location_form_cubit.dart';
@@ -285,7 +286,7 @@ class Step1BasicInfoState extends State<Step1BasicInfo> {
           _label('LOCATION NAME *'),
           _field(
             nameCtrl,
-            hint: 'E.g. TurfPro Arena',
+            hint: 'E.g. ${AppConstants.platformName} Arena',
             icon: Icons.store_outlined,
             validator: (v) =>
                 (v == null || v.trim().isEmpty) ? 'Name is required' : null,
