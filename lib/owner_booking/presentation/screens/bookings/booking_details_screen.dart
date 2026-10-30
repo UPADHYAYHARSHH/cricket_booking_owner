@@ -1593,97 +1593,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> {
 
                   if (!isOwnerBooking) ...[
                     const SizedBox(height: AppSizes.xl),
-                    const _SectionLabel(title: "PAYMENT SUMMARY"),
+                    const _SectionLabel(title: "PRICE SUMMARY"),
                     const SizedBox(height: AppSizes.sm),
 
                     _SectionCard(
                       child: Column(
                         children: [
                           _PaymentRow(
-                            label: "Customer Total Paid",
-                            value: "₹${totalAmount.toStringAsFixed(0)}",
-                          ),
-                          const _RowDivider(),
-                          _PaymentRow(
-                            label: "Platform Fee",
-                            customValue: isPlatformFeeFree
-                                ? Row(
-                                    children: [
-                                      Text(
-                                        "₹${platformFee.toStringAsFixed(0)}",
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.textSecondaryLight,
-                                          decoration: TextDecoration.lineThrough,
-                                          decorationColor:
-                                              AppColors.textSecondaryLight,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      const Text(
-                                        "Free (₹0 deducted)",
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.bold,
-                                          color: Color(0xFF22C55E),
-                                        ),
-                                      ),
-                                    ],
-                                  )
-                                : Row(
-                                    children: [
-                                      Text(
-                                        "– ₹${platformFee.toStringAsFixed(0)}",
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                          color: AppColors.error,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      const Text(
-                                        "(Retained by platform)",
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w500,
-                                          color: AppColors.textSecondaryLight,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                           if (gstAmount > 0) ...[
-                            const _RowDivider(),
-                            _PaymentRow(
-                              label: "GST (Taxes)",
-                              customValue: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    "– ₹${gstAmount.toStringAsFixed(0)}",
-                                    style: const TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.error,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  const Text(
-                                    "(Retained for taxes)",
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textSecondaryLight,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                          const _RowDivider(),
-                          _PaymentRow(
-                            label: "Gross Slot Rate",
+                            label: "Price Paid for Slot",
                             value: "₹${slotPrice.toStringAsFixed(0)}",
                           ),
                           if (commissionRate > 0) ...[
