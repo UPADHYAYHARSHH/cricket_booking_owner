@@ -21,6 +21,7 @@ enum _ScanStatus {
   invalidQr,
   timeWarning,
   sportMismatch,
+  cancelled,
 }
 
 /// Lets the owner scan a player's ticket QR (which encodes the booking id),
@@ -127,6 +128,8 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
   }
 
   Future<void> _approve() async {
+    final bookingStatus = (_booking?['status'] as String? ?? '').toLowerCase();
+    if (bookingStatus == 'cancelled') return;
     final bookingId = _booking?['id'] as String?;
     final userId = _booking?['user_id'] as String?;
     final groundName = _booking?['ground_name'] as String? ?? 'Unknown Ground';
@@ -270,6 +273,9 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
 
       final timeWarning = _checkTimeWindow(booking);
 
+      final bookingStatus = (booking['status'] as String? ?? '').toLowerCase();
+      final isCancelled = bookingStatus == 'cancelled';
+
       setState(() {
         _booking = {
           ...booking,
@@ -279,8 +285,11 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
           'player_name': user?['full_name'] ?? user?['name'] ?? 'Player',
           'time_warning': timeWarning,
           'sport_warning': sportWarning,
+          'is_cancelled': isCancelled,
         };
-        if (sportWarning != null) {
+        if (isCancelled) {
+          _status = _ScanStatus.cancelled;
+        } else if (sportWarning != null) {
           _status = _ScanStatus.sportMismatch;
         } else {
           _status = timeWarning != null
@@ -425,6 +434,8 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
           title: 'Something went wrong',
           subtitle: _errorMessage ?? 'Please try again.',
         );
+      case _ScanStatus.cancelled:
+        return _bookingCard(context);
       case _ScanStatus.found:
         return _bookingCard(context);
       case _ScanStatus.scanning:
@@ -462,7 +473,9 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
 
   Widget _bookingCard(BuildContext context) {
     final booking = _booking!;
-    final isCheckedIn = booking['checked_in'] == true;
+    final isCancelled = (booking['status'] as String? ?? '').toLowerCase() == 'cancelled' ||
+        booking['is_cancelled'] == true;
+    final isCheckedIn = booking['checked_in'] == true && !isCancelled;
     final timeWarning = booking['time_warning'] as String?;
     final sportWarning = booking['sport_warning'] as String?;
     DateTime? slotTime;
@@ -513,9 +526,11 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
                 height: 200,
                 padding: const EdgeInsets.symmetric(vertical: 20),
                 decoration: BoxDecoration(
-                  color: isCheckedIn
-                      ? const Color(0xFFF0F9F4)
-                      : const Color(0xFFFFF8EC),
+                  color: isCancelled
+                      ? const Color(0xFFFFEBEE)
+                      : (isCheckedIn
+                          ? const Color(0xFFF0F9F4)
+                          : const Color(0xFFFFF8EC)),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(24),
                   ),
@@ -525,28 +540,51 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: isCheckedIn
-                            ? AppColors.primaryDarkGreen.withOpacity(0.1)
-                            : AppColors.accentOrange.withOpacity(0.1),
+                        color: isCancelled
+                            ? Colors.red.withValues(alpha: 0.12)
+                            : (isCheckedIn
+                                ? AppColors.primaryDarkGreen.withOpacity(0.1)
+                                : AppColors.accentOrange.withOpacity(0.1)),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        isCheckedIn
-                            ? Icons.check_circle_rounded
-                            : Icons.confirmation_number_rounded,
+                        isCancelled
+                            ? Icons.cancel_rounded
+                            : (isCheckedIn
+                                ? Icons.check_circle_rounded
+                                : Icons.confirmation_number_rounded),
                         size: 40,
-                        color: isCheckedIn
-                            ? AppColors.primaryDarkGreen
-                            : AppColors.accentOrange,
+                        color: isCancelled
+                            ? Colors.red.shade700
+                            : (isCheckedIn
+                                ? AppColors.primaryDarkGreen
+                                : AppColors.accentOrange),
                       ),
                     ),
                     const AppSizedBox(height: 12),
-                    AppText(
-                      text: booking['player_name'] as String,
-                      size: 22,
-                      weight: FontWeight.w900,
-                      align: TextAlign.center,
-                    ),
+                    if (isCancelled) ...[
+                      const AppText(
+                        text: 'BOOKING CANCELLED',
+                        size: 18,
+                        weight: FontWeight.w900,
+                        color: Colors.red,
+                        align: TextAlign.center,
+                      ),
+                      const AppSizedBox(height: 4),
+                      AppText(
+                        text: booking['player_name'] as String,
+                        size: 16,
+                        weight: FontWeight.w700,
+                        align: TextAlign.center,
+                      ),
+                    ] else ...[
+                      AppText(
+                        text: booking['player_name'] as String,
+                        size: 22,
+                        weight: FontWeight.w900,
+                        align: TextAlign.center,
+                      ),
+                    ],
                     const AppSizedBox(height: 4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -592,6 +630,61 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
                 padding: const EdgeInsets.all(24),
                 child: Column(
                   children: [
+                    if (isCancelled) ...[
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFEBEE),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: Colors.red.shade300,
+                            width: 1.5,
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.error_outline_rounded,
+                              color: Colors.red.shade700,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Entry Denied - Booking Cancelled',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.red.shade800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    booking['cancellation_reason'] != null &&
+                                            booking['cancellation_reason']
+                                                .toString()
+                                                .isNotEmpty
+                                        ? "Reason: ${booking['cancellation_reason']}\nCancelled by: ${booking['cancelled_by'] ?? 'User'}."
+                                        : "This ticket has been cancelled and cannot be used for venue entry.",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.red.shade900,
+                                      height: 1.3,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const AppSizedBox(height: 20),
+                    ],
                     Row(
                       children: [
                         Expanded(
@@ -624,12 +717,18 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
                         Expanded(
                           child: _detailBlock(
                             'Status',
-                            (booking['status'] as String? ?? 'CONFIRMED')
-                                .toUpperCase(),
-                            icon: Icons.info_outline_rounded,
-                            valueColor: isCheckedIn
-                                ? AppColors.primaryDarkGreen
-                                : null,
+                            isCancelled
+                                ? 'CANCELLED'
+                                : (booking['status'] as String? ?? 'CONFIRMED')
+                                    .toUpperCase(),
+                            icon: isCancelled
+                                ? Icons.cancel_outlined
+                                : Icons.info_outline_rounded,
+                            valueColor: isCancelled
+                                ? Colors.red.shade700
+                                : (isCheckedIn
+                                    ? AppColors.primaryDarkGreen
+                                    : null),
                           ),
                         ),
                       ],
@@ -660,7 +759,36 @@ class _ScanTicketScreenState extends State<ScanTicketScreen> {
                     const AppSizedBox(height: 32),
 
                     // Actions
-                    if (isCheckedIn)
+                    if (isCancelled)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.red.shade300),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.block_rounded,
+                              color: Colors.red.shade700,
+                              size: 20,
+                            ),
+                            const AppSizedBox(width: 8),
+                            Text(
+                              'Entry Denied (Booking Cancelled)',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.red.shade700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (isCheckedIn)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 16),
