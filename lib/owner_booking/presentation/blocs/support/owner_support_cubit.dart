@@ -8,8 +8,8 @@ class OwnerSupportCubit extends Cubit<OwnerSupportState> {
   final OwnerSupportRepository _repository;
 
   OwnerSupportCubit({OwnerSupportRepository? repository})
-      : _repository = repository ?? OwnerSupportRepository(),
-        super(OwnerSupportInitial());
+    : _repository = repository ?? OwnerSupportRepository(),
+      super(OwnerSupportInitial());
 
   Future<void> initSupport() async {
     emit(OwnerSupportLoading());
@@ -21,7 +21,9 @@ class OwnerSupportCubit extends Cubit<OwnerSupportState> {
     final totalGrounds = ownerContext?['totalGrounds'] ?? 0;
 
     String initialGreeting =
-        'Welcome to ${AppConstants.supportName}, ' + ownerName + '! 👋 How can we help you manage your turf venues and payouts today?';
+        'Welcome to ${AppConstants.supportName}, ' +
+        ownerName +
+        '! 👋 How can we help you manage your turf venues and payouts today?';
 
     List<String> initialQuickReplies = [
       'Payout Settlement Cycle',
@@ -33,7 +35,11 @@ class OwnerSupportCubit extends Cubit<OwnerSupportState> {
 
     if (totalGrounds > 0) {
       initialGreeting =
-          'Hello ' + ownerName + '! 👋 You currently have ' + totalGrounds.toString() + ' turf court(s) linked to your account. What can we assist you with regarding bookings, payouts, or court availability?';
+          'Hello ' +
+          ownerName +
+          '! 👋 You currently have ' +
+          totalGrounds.toString() +
+          ' turf court(s) linked to your account. What can we assist you with regarding bookings, payouts, or court availability?';
     }
 
     final welcomeMessage = OwnerSupportMessageModel.bot(
@@ -43,16 +49,19 @@ class OwnerSupportCubit extends Cubit<OwnerSupportState> {
         OwnerSupportAction(
           type: 'whatsapp_support',
           label: 'Direct WhatsApp Line',
-          url: 'https://wa.me/919876543210?text=Hi%20${Uri.encodeComponent(AppConstants.supportName)}',
-        )
+          url:
+              'https://wa.me/919876543210?text=Hi%20${Uri.encodeComponent(AppConstants.supportName)}',
+        ),
       ],
     );
 
-    emit(OwnerSupportLoaded(
-      messages: [welcomeMessage],
-      ownerContext: ownerContext,
-      currentQuickReplies: initialQuickReplies,
-    ));
+    emit(
+      OwnerSupportLoaded(
+        messages: [welcomeMessage],
+        ownerContext: ownerContext,
+        currentQuickReplies: initialQuickReplies,
+      ),
+    );
   }
 
   Future<void> sendMessage(String text, {String? bookingId}) async {
@@ -61,14 +70,17 @@ class OwnerSupportCubit extends Cubit<OwnerSupportState> {
     if (text.trim().isEmpty) return;
 
     final userMessage = OwnerSupportMessageModel.user(text: text.trim());
-    final updatedMessages = List<OwnerSupportMessageModel>.from(currentState.messages)
-      ..add(userMessage);
+    final updatedMessages = List<OwnerSupportMessageModel>.from(
+      currentState.messages,
+    )..add(userMessage);
 
-    emit(currentState.copyWith(
-      messages: updatedMessages,
-      isSending: true,
-      currentQuickReplies: [],
-    ));
+    emit(
+      currentState.copyWith(
+        messages: updatedMessages,
+        isSending: true,
+        currentQuickReplies: [],
+      ),
+    );
 
     final botReply = await _repository.sendChatMessage(
       message: text.trim(),
@@ -79,10 +91,12 @@ class OwnerSupportCubit extends Cubit<OwnerSupportState> {
     final finalMessages = List<OwnerSupportMessageModel>.from(updatedMessages)
       ..add(botReply);
 
-    emit(currentState.copyWith(
-      messages: finalMessages,
-      isSending: false,
-      currentQuickReplies: botReply.quickReplies,
-    ));
+    emit(
+      currentState.copyWith(
+        messages: finalMessages,
+        isSending: false,
+        currentQuickReplies: botReply.quickReplies,
+      ),
+    );
   }
 }
