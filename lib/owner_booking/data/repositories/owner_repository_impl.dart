@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/owner_repository.dart';
 
@@ -531,5 +533,48 @@ class OwnerRepositoryImpl implements OwnerRepository {
       'require_booking_approval': required,
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('id', userId);
+  }
+
+  @override
+  Future<void> deleteOwnerAccount() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception("User not logged in");
+    }
+
+    final uid = user.uid;
+
+    try {
+      // 1. Delete associated data from Supabase atomically via RPC if available
+      try {
+        await _supabase.rpc('delete_user_and_data', params: {'user_id_text': uid});
+      } catch (e) {
+        debugPrint('Supabase RPC delete error (falling back to direct delete): $e');
+      }
+
+      // Also ensure owner tables are cleaned up directly
+      try {
+        await _supabase.from('grounds').delete().eq('owner_id', uid);
+        await _supabase.from('locations').delete().eq('owner_id', uid);
+        await _supabase.from('owner_details').delete().eq('id', uid);
+      } catch (e) {
+        debugPrint('Direct owner tables delete error: $e');
+      }
+
+      // 2. Delete from Firebase Auth
+      await user.delete();
+
+      // 3. Ensure sign out
+      await FirebaseAuth.instance.signOut();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        throw Exception(
+            'For security reasons, please log out and log back in before deleting your account.');
+      }
+      throw Exception('Failed to delete account: ${e.message}');
+    } catch (e) {
+      debugPrint('Error deleting owner: $e');
+      rethrow;
+    }
   }
 }

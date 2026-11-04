@@ -2,10 +2,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:toastification/toastification.dart';
 import 'package:intl/intl.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
@@ -94,6 +95,48 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: const Text(
               "Log Out",
               style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Delete Account"),
+        content: const Text(
+            "Are you sure you want to permanently delete your account and all associated data? This action cannot be undone."),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (_) => const PopScope(
+                  canPop: false,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.error,
+                    ),
+                  ),
+                ),
+              );
+              try {
+                await context.read<AuthCubit>().deleteAccount();
+              } catch (_) {}
+            },
+            child: const Text(
+              "Delete",
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -328,7 +371,23 @@ class _ProfileScreenState extends State<ProfileScreen>
         : 'No sports configured';
 
 
-    return Scaffold(
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is AuthUnauthenticated) {
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        } else if (state is AuthError) {
+          Navigator.of(context, rootNavigator: true).maybePop();
+          toastification.show(
+            context: context,
+            type: ToastificationType.error,
+            style: ToastificationStyle.fillColored,
+            title: const Text("Error"),
+            description: Text(state.message),
+            autoCloseDuration: const Duration(seconds: 5),
+          );
+        }
+      },
+      child: Scaffold(
       backgroundColor: AppColors.bgLight,
       body: SingleChildScrollView(
         child: Column(
@@ -481,6 +540,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       // Venue Card
                       _buildVenueCard(venueName, sportsStr, _totalCourtsCount),
                       const SizedBox(height: AppSizes.lg),
+
 
                       // Stats Row
                       Row(
@@ -636,6 +696,41 @@ class _ProfileScreenState extends State<ProfileScreen>
                           ),
                         ),
                       ),
+
+
+                      const SizedBox(height: AppSizes.md),
+
+                      // Delete Account
+                      SizedBox(
+                        width: double.infinity,
+                        height: AppSizes.buttonHeightLg,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _showDeleteDialog(context),
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              size: 20, color: AppColors.error),
+                          label: const AppText(
+                            text: "Delete Account",
+                            color: AppColors.error,
+                            size: 16,
+                            weight: FontWeight.w600,
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor:
+                                AppColors.error.withValues(alpha: 0.06),
+                            side: BorderSide(
+                              color: AppColors.error.withValues(alpha: 0.5),
+                              width: 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppSizes.radiusMd,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+
                       const SizedBox(height: AppSizes.lg),
 
                       // Version
@@ -669,7 +764,7 @@ class _ProfileScreenState extends State<ProfileScreen>
           ],
         ),
       ),
-    );
+    ));
   }
 
   // ── Venue Card ──

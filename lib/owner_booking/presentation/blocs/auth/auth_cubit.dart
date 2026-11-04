@@ -223,6 +223,25 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthUnauthenticated());
   }
 
+  Future<void> deleteAccount() async {
+    emit(AuthLoading());
+    try {
+      await NotificationService.clearFcmToken();
+      await _ownerRepository.deleteOwnerAccount();
+      emit(AuthUnauthenticated());
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'requires-recent-login') {
+        emit(AuthError(
+            'For security reasons, please log out and log back in before deleting your account.'));
+      } else {
+        emit(AuthError(e.message ?? 'Failed to delete account'));
+      }
+    } catch (e) {
+      final msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+      emit(AuthError(msg));
+    }
+  }
+
   void emitLoading() => emit(AuthLoading());
   void emitError(String message) => emit(AuthError(message));
 

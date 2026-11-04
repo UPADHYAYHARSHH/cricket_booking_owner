@@ -1,5 +1,6 @@
-package com.boxcricket.turfpro_owner
+package com.slottix.owner
 
 import io.flutter.embedding.android.FlutterActivity
 
 class MainActivity : FlutterActivity()
+

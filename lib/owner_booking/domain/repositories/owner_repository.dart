@@ -137,4 +137,7 @@ abstract class OwnerRepository {
 
   /// Update whether owner requires booking approval for all grounds
   Future<void> updateBookingApprovalSetting(String userId, bool required);
+
+  /// Delete owner account and all associated data permanently
+  Future<void> deleteOwnerAccount();
 }
