@@ -496,7 +496,9 @@ class OwnerHelpSupportScreen extends StatelessWidget {
           color: isDark ? AppColors.borderDark : AppColors.borderLight,
         ),
       ),
-      child: ListTile(
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
         leading: Container(
           padding: const EdgeInsets.all(8),
@@ -528,7 +530,8 @@ class OwnerHelpSupportScreen extends StatelessWidget {
         ),
         onTap: () => _openChat(context, query: query),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildContactTile({
@@ -547,7 +550,9 @@ class OwnerHelpSupportScreen extends StatelessWidget {
           color: isDark ? AppColors.borderDark : AppColors.borderLight,
         ),
       ),
-      child: ListTile(
+      child: Material(
+        color: Colors.transparent,
+        child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
         leading: Container(
           padding: const EdgeInsets.all(8),
@@ -579,6 +584,7 @@ class OwnerHelpSupportScreen extends StatelessWidget {
         ),
         onTap: onTap,
       ),
-    );
+    ),
+  );
   }
 }

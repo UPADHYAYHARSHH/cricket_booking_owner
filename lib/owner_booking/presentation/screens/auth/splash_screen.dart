@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:turfpro_owner/splash/slottix_splash.dart';
+import 'package:turfpro_owner/splash/owner_minimal_splash.dart';
+import 'package:turfpro_owner/splash/slottix_splash.dart' show SplashSound;
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_state.dart';
 import 'package:toastification/toastification.dart';
-import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_flow.dart';
 import 'package:turfpro_owner/common/services/app_config_service.dart';
+import 'package:turfpro_owner/utils/auth_navigation_helper.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -55,41 +56,17 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void _performNavigation(AuthState state) {
-    void clearAndGo(String route) {
-      Navigator.pushNamedAndRemoveUntil(context, route, (r) => false);
-    }
-
-    if (state is AuthInitial || state is AuthUnauthenticated) {
-      clearAndGo('/');
-    } else if (state is AuthSuccess) {
-      clearAndGo('/dashboard');
-    } else if (state is AuthLocationRequired) {
-      clearAndGo('/add-location');
-    } else if (state is AuthStep1Required) {
-      clearAndGo('/onboarding/step1');
-    } else if (state is AuthStep2Required) {
-      clearAndGo('/onboarding/step2');
-    } else if (state is AuthStep3Required) {
-      clearAndGo('/onboarding/step3');
-    } else if (state is AuthGroundRequired) {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => GroundFormFlow(locationId: state.locationId),
-        ),
-        (r) => false,
-      );
-    } else if (state is AuthPendingApproval) {
-      clearAndGo('/pending-approval');
-    } else if (state is AuthError) {
+    if (state is AuthError) {
       toastification.show(
         context: context,
         type: ToastificationType.error,
         title: Text(state.message),
         autoCloseDuration: const Duration(seconds: 5),
       );
-      clearAndGo('/');
+      Navigator.pushNamedAndRemoveUntil(context, '/', (r) => false);
+      return;
     }
+    AuthNavigationHelper.navigateForAuthState(context, state);
   }
 
   @override
@@ -98,9 +75,8 @@ class _SplashScreenState extends State<SplashScreen> {
       listener: (context, state) {
         _pendingState = state;
       },
-      child: SlottixSplash(
-        variant: SplashVariant.user, // Using 1st variant for both apps
-        sound: SplashSound.classicCourt,
+      child: OwnerMinimalSplash(
+        sound: SplashSound.classicCourt, // same sound as before
         onReady: _onReady,
         onDone: _onDone,
       ),

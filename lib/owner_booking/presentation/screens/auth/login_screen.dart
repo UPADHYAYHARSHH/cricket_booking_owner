@@ -8,6 +8,7 @@ import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:toastification/toastification.dart';
+import 'package:turfpro_owner/utils/auth_navigation_helper.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -91,12 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
             state is AuthStep1Required ||
             state is AuthStep2Required ||
             state is AuthStep3Required) {
-          // Let splash route to the correct step
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/splash',
-            (route) => false,
-          );
+          AuthNavigationHelper.navigateForAuthState(context, state);
         }
 
         if (state is AuthError) {

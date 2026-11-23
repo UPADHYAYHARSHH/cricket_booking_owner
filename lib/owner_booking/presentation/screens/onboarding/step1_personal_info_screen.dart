@@ -3,6 +3,7 @@ import 'package:turfpro_owner/common/services/notification_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthState;
 import 'package:toastification/toastification.dart';
+import 'package:turfpro_owner/utils/auth_navigation_helper.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/constants/size_constants.dart';
 import 'package:turfpro_owner/common/widgets/app_button.dart';
@@ -94,11 +95,7 @@ class _Step1PersonalInfoScreenState extends State<Step1PersonalInfoScreen> {
             (r) => false,
           );
         } else if (state is AuthLocationRequired || state is AuthGroundRequired) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/splash',
-            (r) => false,
-          );
+          AuthNavigationHelper.navigateForAuthState(context, state);
         } else if (state is AuthError) {
           toastification.show(
             context: context,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
@@ -7,10 +8,47 @@ import 'package:turfpro_owner/common/widgets/app_button.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:turfpro_owner/core/text_theme.dart';
+import 'package:turfpro_owner/utils/auth_navigation_helper.dart';
 import 'package:toastification/toastification.dart';
 
-class EmailVerificationScreen extends StatelessWidget {
+class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({super.key});
+
+  @override
+  State<EmailVerificationScreen> createState() =>
+      _EmailVerificationScreenState();
+}
+
+class _EmailVerificationScreenState extends State<EmailVerificationScreen>
+    with WidgetsBindingObserver {
+  Timer? _pollingTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Periodically check email verification silently every 4 seconds while screen is open
+    _pollingTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (mounted) {
+        context.read<AuthCubit>().checkEmailVerification(silent: true);
+      }
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // When user returns to app after clicking email verification link in email app/browser
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<AuthCubit>().checkEmailVerification(silent: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _pollingTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +57,7 @@ class EmailVerificationScreen extends StatelessWidget {
           ModalRoute.of(context)?.isCurrent == true,
       listener: (context, state) {
         if (state is AuthSuccess) {
+          _pollingTimer?.cancel();
           toastification.show(
             context: context,
             type: ToastificationType.success,
@@ -27,18 +66,16 @@ class EmailVerificationScreen extends StatelessWidget {
             description: const Text("Welcome! Let's get your turf set up."),
             autoCloseDuration: const Duration(seconds: 4),
           );
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/dashboard',
-            (route) => false,
-          );
+          AuthNavigationHelper.navigateForAuthState(context, state);
         }
 
-        if (state is AuthLocationRequired || state is AuthGroundRequired ||
+        if (state is AuthLocationRequired ||
+            state is AuthGroundRequired ||
             state is AuthPendingApproval ||
             state is AuthStep1Required ||
             state is AuthStep2Required ||
             state is AuthStep3Required) {
+          _pollingTimer?.cancel();
           toastification.show(
             context: context,
             type: ToastificationType.success,
@@ -47,14 +84,11 @@ class EmailVerificationScreen extends StatelessWidget {
             description: const Text("Let's complete your onboarding profile."),
             autoCloseDuration: const Duration(seconds: 4),
           );
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/splash',
-            (route) => false,
-          );
+          AuthNavigationHelper.navigateForAuthState(context, state);
         }
 
         if (state is AuthUnauthenticated) {
+          _pollingTimer?.cancel();
           Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
         }
 
@@ -191,6 +225,7 @@ class EmailVerificationScreen extends StatelessWidget {
                                         await context
                                             .read<AuthCubit>()
                                             .resendVerificationEmail();
+                                        if (!context.mounted) return;
                                         toastification.show(
                                           context: context,
                                           type: ToastificationType.success,

@@ -72,6 +72,8 @@
 		<string>This app needs access to your camera to take photos of KYC documents and scan player tickets.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>This app needs access to your location to set your turf address on the map.</string>
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>This app needs access to your location to set your turf address on the map.</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>

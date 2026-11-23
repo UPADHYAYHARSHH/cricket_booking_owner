@@ -10,6 +10,7 @@ import 'package:turfpro_owner/owner_booking/presentation/screens/locations/steps
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/steps/step2_amenities.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/steps/step3_media.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/locations/steps/step4_summary.dart';
+import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_flow.dart';
 
 class LocationFormScreen extends StatefulWidget {
   final Map<String, dynamic>? locationData;
@@ -84,11 +85,14 @@ class _LocationFormScreenState extends State<LocationFormScreen> {
             );
             context.read<LocationCubit>().fetchOwnerLocations();
             if (Navigator.canPop(context)) {
-              print('DEBUG [LocationFormScreen]: canPop is true, popping back.');
               Navigator.pop(context, state.locationId);
             } else {
-              print('DEBUG [LocationFormScreen]: canPop is false, routing to /splash to re-evaluate onboarding step.');
-              Navigator.pushReplacementNamed(context, '/splash');
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => GroundFormFlow(locationId: state.locationId),
+                ),
+              );
             }
           } else if (state is LocationFormError) {
             toastification.show(

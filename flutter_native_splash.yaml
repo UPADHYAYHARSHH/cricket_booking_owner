@@ -1,10 +1,14 @@
-# Slottix splash (1st variant for both apps)
+# Owner app splash: plain white, no icon (matches OwnerMinimalSplash.background).
+# The Flutter splash then pops the logo tile in. Same in light and dark mode.
 flutter_native_splash:
-  color: "#042B19"
-  image: assets/splash/splash_mark.png
+  color: "#FFFFFF"
+  color_dark: "#FFFFFF"
   android: true
   ios: true
   web: false
   android_12:
-    color: "#042B19"
-    image: assets/splash/splash_mark.png
+    color: "#FFFFFF"
+    color_dark: "#FFFFFF"
+    # Android 12+ always shows an icon; a transparent one keeps it plain white.
+    image: assets/splash/blank.png
+    image_dark: assets/splash/blank.png

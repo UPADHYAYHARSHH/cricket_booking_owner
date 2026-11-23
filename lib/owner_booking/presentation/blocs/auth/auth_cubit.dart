@@ -27,11 +27,18 @@ class AuthCubit extends Cubit<AuthState> {
     final user = await _authRepository.authStateChanges.first;
     if (user == null) {
       emit(AuthUnauthenticated());
-    } else if (!user.emailVerified) {
-      emit(AuthEmailUnverified(user.email ?? ''));
     } else {
-      await NotificationService.updateFcmToken();
-      await _emitOnboardingStep(user.uid);
+      // Reload user to get fresh emailVerified status in case user verified via email link
+      try {
+        await _authRepository.reloadUser();
+      } catch (_) {}
+      final freshUser = _authRepository.currentUser ?? user;
+      if (!freshUser.emailVerified) {
+        emit(AuthEmailUnverified(freshUser.email ?? ''));
+      } else {
+        await NotificationService.updateFcmToken();
+        await _emitOnboardingStep(freshUser.uid);
+      }
     }
   }
 
@@ -146,8 +153,8 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
-  Future<void> checkEmailVerification() async {
-    emit(AuthLoading());
+  Future<void> checkEmailVerification({bool silent = false}) async {
+    if (!silent) emit(AuthLoading());
     try {
       await _authRepository.reloadUser();
       final user = _authRepository.currentUser;
@@ -156,10 +163,14 @@ class AuthCubit extends Cubit<AuthState> {
         await _emitOnboardingStep(user.uid);
       } else {
         emit(AuthEmailUnverified(user?.email ?? ''));
-        emit(AuthError('Email not verified yet. Please check your inbox.'));
+        if (!silent) {
+          emit(AuthError('Email not verified yet. Please check your inbox.'));
+        }
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      if (!silent) {
+        emit(AuthError(e.toString()));
+      }
     }
   }
 
@@ -356,8 +367,6 @@ class AuthCubit extends Cubit<AuthState> {
       final d = await _ownerRepository.getOwnerDetails(userId);
       print('DEBUG [AuthCubit]: Owner details status: ${d?['status']} for user: $userId');
 
-      final status = d?['status']?.toString().toLowerCase();
-
       // Check name and phone first
       final name = _asTrimmedString(d?['owner_name']);
       final phone = _asTrimmedString(d?['phone']);
@@ -367,7 +376,7 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      // Bypass personal info, KYC, and venue steps. Directly check for locations and grounds.
+      // 1. Check locations: must have at least one location
       final locations = await _locationRepository.getOwnerLocations(userId);
       print('DEBUG [AuthCubit._emitOnboardingStep]: Found ${locations.length} locations for user: $userId');
       if (locations.isEmpty) {
@@ -375,19 +384,8 @@ class AuthCubit extends Cubit<AuthState> {
         emit(AuthLocationRequired());
         return;
       }
-      
-      if (status == 'pending' || status == 'submitted') {
-        print('DEBUG [AuthCubit._emitOnboardingStep]: User status is pending -> emitting AuthPendingApproval');
-        emit(AuthPendingApproval());
-        return;
-      }
 
-      if (status == 'rejected') {
-        print('DEBUG [AuthCubit._emitOnboardingStep]: User status is rejected -> emitting AuthRejected');
-        emit(AuthRejected(d?['rejection_reason'] as String? ?? 'Your application was rejected.'));
-        return;
-      }
-      
+      // 2. Check grounds: must have at least one ground
       final grounds = await _groundRepository.getOwnerGrounds(userId);
       print('DEBUG [AuthCubit._emitOnboardingStep]: Found ${grounds.length} grounds for user: $userId');
       if (grounds.isEmpty) {
@@ -396,9 +394,81 @@ class AuthCubit extends Cubit<AuthState> {
         return;
       }
 
-      print('DEBUG [AuthCubit._emitOnboardingStep]: Both locations and grounds exist -> emitting AuthSuccess (Dashboard)');
-      await NotificationService.initialize();
-      emit(AuthSuccess());
+      // Extract User Verification details
+      final userStatus = d?['status']?.toString().toLowerCase() ?? 'pending';
+      final isUserVerified = (userStatus == 'approved' || d?['is_verified'] == true);
+      final userRejectionReason = d?['rejection_reason'] as String?;
+      final isUserRejected = userStatus == 'rejected' ||
+          (userRejectionReason != null && userRejectionReason.trim().isNotEmpty && !isUserVerified);
+
+      // Extract Location Verification details (primary location)
+      final firstLoc = locations.first;
+      final isLocationVerified = firstLoc['documents_verified'] == true;
+      final locationRejectionReason = firstLoc['rejection_reason'] as String?;
+      final isLocationRejected = locationRejectionReason != null &&
+          locationRejectionReason.trim().isNotEmpty &&
+          !isLocationVerified;
+      final locationStatus = isLocationVerified
+          ? 'approved'
+          : (isLocationRejected ? 'rejected' : 'pending');
+
+      final locationName = (firstLoc['name'] as String?)?.isNotEmpty == true
+          ? firstLoc['name'] as String
+          : (firstLoc['address'] as String? ?? 'Venue Location');
+      final locationAddress = firstLoc['address'] as String?;
+      final locationId = firstLoc['id']?.toString();
+
+      // 3. Admin Approved BOTH User AND Location -> Access to Dashboard
+      if (isUserVerified && isLocationVerified) {
+        print('DEBUG [AuthCubit._emitOnboardingStep]: Both User and Location are approved -> emitting AuthSuccess (Dashboard)');
+        await NotificationService.initialize();
+        emit(AuthSuccess());
+        return;
+      }
+
+      // 4. Ensure application is marked submitted if not already
+      if (userStatus != 'submitted' && userStatus != 'pending' && userStatus != 'approved' && userStatus != 'rejected') {
+        await _ownerRepository.submitApplication(userId);
+      }
+
+      // 5. Admin Rejected either User or Location
+      if (isUserRejected || isLocationRejected) {
+        final primaryReason = isUserRejected
+            ? (userRejectionReason ?? 'User verification rejected.')
+            : (locationRejectionReason ?? 'Location verification rejected.');
+        print('DEBUG [AuthCubit._emitOnboardingStep]: Verification rejected (User: $isUserRejected, Loc: $isLocationRejected) -> emitting AuthRejected');
+        emit(AuthRejected(
+          primaryReason,
+          isUserVerified: isUserVerified,
+          userStatus: isUserRejected ? 'rejected' : (isUserVerified ? 'approved' : userStatus),
+          userRejectionReason: userRejectionReason,
+          isLocationVerified: isLocationVerified,
+          locationStatus: locationStatus,
+          locationRejectionReason: locationRejectionReason,
+          locationId: locationId,
+          locationName: locationName,
+          locationAddress: locationAddress,
+          locationData: firstLoc,
+          allLocations: locations,
+        ));
+        return;
+      }
+
+      // 6. Awaiting Admin verification for one or both
+      print('DEBUG [AuthCubit._emitOnboardingStep]: Awaiting verification (User: $userStatus, Location: $locationStatus) -> emitting AuthPendingApproval');
+      emit(AuthPendingApproval(
+        isUserVerified: isUserVerified,
+        userStatus: isUserVerified ? 'approved' : userStatus,
+        userRejectionReason: userRejectionReason,
+        isLocationVerified: isLocationVerified,
+        locationStatus: locationStatus,
+        locationRejectionReason: locationRejectionReason,
+        locationId: locationId,
+        locationName: locationName,
+        locationAddress: locationAddress,
+        locationData: firstLoc,
+        allLocations: locations,
+      ));
       return;
 
       /*

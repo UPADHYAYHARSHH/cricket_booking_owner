@@ -1,9 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:toastification/toastification.dart';
 import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/owner_booking/di/get_it/get_it.dart';
 import 'package:turfpro_owner/owner_booking/domain/repositories/ground_repository.dart';
+import 'package:turfpro_owner/owner_booking/domain/repositories/owner_repository.dart';
+import 'package:turfpro_owner/owner_booking/presentation/blocs/auth/auth_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/blocs/ground/ground_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_cubit.dart';
 import 'package:turfpro_owner/owner_booking/presentation/screens/ground_form/ground_form_state.dart';
@@ -183,7 +186,7 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
     return BlocProvider.value(
       value: _cubit,
       child: BlocListener<GroundFormCubit, GroundFormState>(
-        listener: (context, state) {
+        listener: (context, state) async {
           if (state is GroundFormReady) {
             _animateTo(state.currentStep);
           }
@@ -203,7 +206,16 @@ class _GroundFormFlowState extends State<GroundFormFlow> {
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
             } else {
-              Navigator.pushReplacementNamed(context, '/splash');
+              final user = FirebaseAuth.instance.currentUser;
+              if (user != null) {
+                await getIt<OwnerRepository>().submitApplication(user.uid);
+                if (context.mounted) {
+                  context.read<AuthCubit>().init();
+                }
+              }
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(context, '/pending-approval', (r) => false);
+              }
             }
           }
         },

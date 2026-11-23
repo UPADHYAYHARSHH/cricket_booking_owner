@@ -39,6 +39,7 @@ class LocationFormLayout extends StatelessWidget {
           _buildHeader(context),
           Expanded(
             child: SingleChildScrollView(
+              key: ValueKey('location_step_$currentStep'),
               padding: const EdgeInsets.all(AppSizes.xl),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -263,7 +263,9 @@ class CitySearchFieldState extends State<CitySearchField> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppSizes.radiusMd),
-              child: ListView.separated(
+              child: Material(
+                color: Colors.transparent,
+                child: ListView.separated(
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 itemCount: _suggestions.length,
@@ -310,7 +312,8 @@ class CitySearchFieldState extends State<CitySearchField> {
               ),
             ),
           ),
-        ] else if (_searchCtrl.text.trim().length >= 3 &&
+        ),
+      ] else if (_searchCtrl.text.trim().length >= 3 &&
             !_isSearching &&
             _cityValue.isEmpty) ...[
           const AppSizedBox(height: AppSizes.xs),

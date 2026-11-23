@@ -311,7 +311,7 @@ class OwnerRepositoryImpl implements OwnerRepository {
       final slotConfig =
           ownerData['slot_config'] as Map<String, dynamic>? ?? {};
 
-      if (groundConfig == null) return;
+      if (groundConfig == null || groundConfig.isEmpty) return;
 
       await _supabase.from('grounds').delete().eq('owner_id', userId);
       await _supabase.from('locations').delete().eq('owner_id', userId);

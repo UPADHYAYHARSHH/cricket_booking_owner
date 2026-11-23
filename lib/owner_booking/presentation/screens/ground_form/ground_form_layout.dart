@@ -36,6 +36,7 @@ class GroundFormLayout extends StatelessWidget {
       children: [
         Expanded(
           child: SingleChildScrollView(
+            key: ValueKey('ground_step_$currentStep'),
             padding: const EdgeInsets.all(AppSizes.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

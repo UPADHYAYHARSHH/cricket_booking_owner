@@ -9,6 +9,7 @@ import 'package:turfpro_owner/common/constants/colors.dart';
 import 'package:turfpro_owner/common/widgets/app_sized_box.dart';
 import 'package:turfpro_owner/common/widgets/app_text.dart';
 import 'package:toastification/toastification.dart';
+import 'package:turfpro_owner/utils/auth_navigation_helper.dart';
 
 class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key});
@@ -92,12 +93,13 @@ class _OtpScreenState extends State<OtpScreen> {
       listenWhen: (previous, current) => ModalRoute.of(context)?.isCurrent == true,
       listener: (context, state) {
         debugPrint("DEBUG: OtpScreen received state: $state");
-        if (state is AuthLocationRequired || state is AuthGroundRequired || state is AuthPendingApproval) {
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            '/splash',
-            (route) => false,
-          );
+        if (state is AuthLocationRequired ||
+            state is AuthGroundRequired ||
+            state is AuthPendingApproval ||
+            state is AuthStep1Required ||
+            state is AuthStep2Required ||
+            state is AuthStep3Required) {
+          AuthNavigationHelper.navigateForAuthState(context, state);
         }
 
         if (state is AuthSuccess) {

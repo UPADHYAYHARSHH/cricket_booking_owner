@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:http/http.dart' as http;
 import 'package:turfpro_owner/common/constants/colors.dart';
 
 class MapPickerScreen extends StatefulWidget {
@@ -28,6 +30,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   String _address = 'Move the pin to select your venue location';
   bool _isLoadingAddress = false;
   bool _isLoadingLocation = false;
+  bool _skipNextIdleReverseGeocode = false;
   
   // Search state
   bool _isSearching = false;
@@ -37,15 +40,16 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
   @override
   void initState() {
     super.initState();
+    // Default to Ahmedabad, Gujarat if no coordinates are passed
     _pickedLocation = LatLng(
-      widget.initialLatitude != 0.0 ? widget.initialLatitude : 20.5937,
-      widget.initialLongitude != 0.0 ? widget.initialLongitude : 78.9629,
+      widget.initialLatitude != 0.0 ? widget.initialLatitude : 23.0225,
+      widget.initialLongitude != 0.0 ? widget.initialLongitude : 72.5714,
     );
     
     _searchFocusNode.addListener(() {
       setState(() {}); // Re-build to show/hide dropdown
       if (_searchFocusNode.hasFocus) {
-        // Optionally select all text when focused
+        // Select all text when focused so user can easily search
         _searchController.selection = TextSelection(
           baseOffset: 0,
           extentOffset: _searchController.text.length,
@@ -59,6 +63,11 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
 
     if (widget.initialLatitude != 0.0) {
       _reverseGeocode(_pickedLocation);
+    } else {
+      // Auto-locate to device location on new venue creation
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _goToCurrentLocation();
+      });
     }
   }
 
@@ -81,47 +90,152 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       return;
     }
 
-    _debounce = Timer(const Duration(milliseconds: 600), () async {
+    _debounce = Timer(const Duration(milliseconds: 350), () async {
       setState(() => _isSearching = true);
-      try {
-        final locations = await locationFromAddress(query);
-        List<Map<String, dynamic>> results = [];
-        
-        // Process top 5 locations to get their addresses
-        for (var loc in locations.take(5)) {
-           try {
-             final placemarks = await placemarkFromCoordinates(loc.latitude, loc.longitude);
-             if (placemarks.isNotEmpty) {
-               final p = placemarks.first;
-               final parts = [
-                 p.name,
-                 p.street,
-                 p.subLocality,
-                 p.locality,
-                 p.administrativeArea,
-               ].where((e) => e != null && e.isNotEmpty).toSet().join(', ');
-               
-               results.add({
-                 'address': parts.isNotEmpty ? parts : 'Unknown Location',
-                 'location': LatLng(loc.latitude, loc.longitude)
-               });
-             }
-           } catch (e) {
-             // Ignore individual reverse geocode failures
-           }
-        }
-        
-        if (mounted) {
-          setState(() => _searchResults = results);
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() => _searchResults = []);
-        }
-      } finally {
-        if (mounted) setState(() => _isSearching = false);
+      final results = await _searchPlaces(query);
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+        });
       }
     });
+  }
+
+  /// Robust multi-source place search (handles landmarks, cross roads, spelling variations)
+  Future<List<Map<String, dynamic>>> _searchPlaces(String query) async {
+    final cleanQuery = query.trim();
+    if (cleanQuery.isEmpty) return [];
+
+    double lat = _pickedLocation.latitude;
+    double lon = _pickedLocation.longitude;
+    // If coordinates are outside India (e.g. iOS Simulator default Cupertino), default bias to Ahmedabad
+    if (lat < 6.0 || lat > 38.0 || lon < 68.0 || lon > 98.0) {
+      lat = 23.0225;
+      lon = 72.5714;
+    }
+
+    // 1. Try Photon (OpenStreetMap Elasticsearch with fuzzy search & proximity bias)
+    try {
+      final photonUri = Uri.parse(
+        'https://photon.komoot.io/api/?q=${Uri.encodeComponent(cleanQuery)}&lat=$lat&lon=$lon&limit=6&lang=en',
+      );
+      final res = await http.get(
+        photonUri,
+        headers: {'User-Agent': 'SlottixPartner/1.0 (contact@slottix.com)'},
+      ).timeout(const Duration(seconds: 4));
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final features = data['features'] as List?;
+        if (features != null && features.isNotEmpty) {
+          final List<Map<String, dynamic>> results = [];
+          for (final f in features) {
+            final p = f['properties'] as Map<String, dynamic>? ?? {};
+            final coords = f['geometry']?['coordinates'] as List?;
+            if (coords == null || coords.length < 2) continue;
+            final lng = (coords[0] as num).toDouble();
+            final lat = (coords[1] as num).toDouble();
+
+            final name = p['name'] as String?;
+            final street = p['street'] as String?;
+            final district = p['district'] as String? ?? p['suburb'] as String? ?? p['locality'] as String?;
+            final city = p['city'] as String? ?? p['county'] as String?;
+            final state = p['state'] as String?;
+
+            final parts = <String>[];
+            for (final item in [name, street, district, city, state]) {
+              if (item != null && item.isNotEmpty && !parts.contains(item)) {
+                parts.add(item);
+              }
+            }
+
+            final addr = parts.isNotEmpty ? parts.join(', ') : 'Selected Location';
+            results.add({
+              'address': addr,
+              'location': LatLng(lat, lng),
+            });
+          }
+          if (results.isNotEmpty) return results;
+        }
+      }
+    } catch (e) {
+      debugPrint('Photon search error: $e');
+    }
+
+    // 2. Try OpenStreetMap Nominatim
+    try {
+      final nominatimUri = Uri.parse(
+        'https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent(cleanQuery)}&format=json&addressdetails=1&limit=5&countrycodes=in',
+      );
+      final res = await http.get(
+        nominatimUri,
+        headers: {'User-Agent': 'SlottixPartner/1.0 (contact@slottix.com)'},
+      ).timeout(const Duration(seconds: 4));
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as List?;
+        if (data != null && data.isNotEmpty) {
+          final List<Map<String, dynamic>> results = [];
+          for (final item in data) {
+            final dName = item['display_name'] as String? ?? '';
+            final latStr = item['lat'] as String?;
+            final lonStr = item['lon'] as String?;
+            if (latStr == null || lonStr == null) continue;
+            final lat = double.tryParse(latStr);
+            final lon = double.tryParse(lonStr);
+            if (lat != null && lon != null) {
+              results.add({
+                'address': dName,
+                'location': LatLng(lat, lon),
+              });
+            }
+          }
+          if (results.isNotEmpty) return results;
+        }
+      }
+    } catch (e) {
+      debugPrint('Nominatim search error: $e');
+    }
+
+    // 3. Fallback to native geocoder
+    try {
+      final locations = await locationFromAddress(cleanQuery);
+      if (locations.isNotEmpty) {
+        final List<Map<String, dynamic>> results = [];
+        for (final loc in locations.take(5)) {
+          results.add({
+            'address': cleanQuery,
+            'location': LatLng(loc.latitude, loc.longitude),
+          });
+        }
+        return results;
+      }
+    } catch (e) {
+      debugPrint('Native geocode fallback error: $e');
+    }
+
+    return [];
+  }
+
+  void _selectSearchResult(Map<String, dynamic> result) async {
+    final itemAddress = result['address'] as String;
+    final pos = result['location'] as LatLng;
+
+    _skipNextIdleReverseGeocode = true;
+    _searchFocusNode.unfocus();
+
+    setState(() {
+      _address = itemAddress;
+      _searchController.text = itemAddress;
+      _pickedLocation = pos;
+      _searchResults.clear();
+    });
+
+    final ctrl = await _controller.future;
+    ctrl.animateCamera(CameraUpdate.newCameraPosition(
+      CameraPosition(target: pos, zoom: 17),
+    ));
   }
 
   Future<void> _zoomIn() async {
@@ -141,14 +255,47 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
       if (placemarks.isNotEmpty && mounted) {
         final p = placemarks.first;
         final parts = [
+          p.name,
           p.street,
           p.subLocality,
           p.locality,
           p.administrativeArea,
-        ].where((e) => e != null && e.isNotEmpty).join(', ');
+        ].where((e) => e != null && e.isNotEmpty).toSet().join(', ');
         
         setState(() {
           _address = parts.isNotEmpty ? parts : 'Location selected';
+          if (!_searchFocusNode.hasFocus) {
+            _searchController.text = _address;
+          }
+        });
+        return;
+      }
+
+      // Fallback: Nominatim reverse geocode
+      final url = Uri.parse(
+        'https://nominatim.openstreetmap.org/reverse?lat=${pos.latitude}&lon=${pos.longitude}&format=json&addressdetails=1',
+      );
+      final res = await http.get(
+        url,
+        headers: {'User-Agent': 'SlottixPartner/1.0 (contact@slottix.com)'},
+      ).timeout(const Duration(seconds: 3));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final dName = data['display_name'] as String?;
+        if (dName != null && dName.isNotEmpty && mounted) {
+          setState(() {
+            _address = dName;
+            if (!_searchFocusNode.hasFocus) {
+              _searchController.text = _address;
+            }
+          });
+          return;
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _address = 'Location selected';
           if (!_searchFocusNode.hasFocus) {
             _searchController.text = _address;
           }
@@ -222,7 +369,7 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
           GoogleMap(
             initialCameraPosition: CameraPosition(
               target: _pickedLocation,
-              zoom: widget.initialLatitude != 0.0 ? 16 : 5,
+              zoom: widget.initialLatitude != 0.0 ? 16 : 14,
             ),
             onMapCreated: (ctrl) => _controller.complete(ctrl),
             myLocationEnabled: true,
@@ -243,6 +390,10 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
               _pickedLocation = pos.target;
             },
             onCameraIdle: () {
+              if (_skipNextIdleReverseGeocode) {
+                _skipNextIdleReverseGeocode = false;
+                return;
+              }
               _reverseGeocode(_pickedLocation);
             },
           ),
@@ -295,6 +446,20 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                               controller: _searchController,
                               focusNode: _searchFocusNode,
                               onChanged: _onSearchChanged,
+                              textInputAction: TextInputAction.search,
+                              onSubmitted: (query) async {
+                                if (query.trim().isEmpty) return;
+                                setState(() => _isSearching = true);
+                                final results = await _searchPlaces(query);
+                                if (!mounted) return;
+                                setState(() {
+                                  _searchResults = results;
+                                  _isSearching = false;
+                                });
+                                if (results.isNotEmpty) {
+                                  _selectSearchResult(results.first);
+                                }
+                              },
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -328,63 +493,48 @@ class _MapPickerScreenState extends State<MapPickerScreen> {
                     
                     // Search Results Dropdown
                     if (_searchFocusNode.hasFocus && (_searchResults.isNotEmpty || _isSearching))
-                      Container(
-                        margin: const EdgeInsets.only(top: 8, left: 44),
-                        constraints: const BoxConstraints(maxHeight: 250),
-                        decoration: BoxDecoration(
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8, left: 44),
+                        child: Material(
                           color: Colors.white,
+                          elevation: 4,
+                          shadowColor: Colors.black26,
                           borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: _isSearching
-                            ? const Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Center(
-                                  child: SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  ),
-                                ),
-                              )
-                            : ListView.separated(
-                                shrinkWrap: true,
-                                padding: EdgeInsets.zero,
-                                itemCount: _searchResults.length,
-                                separatorBuilder: (context, index) => const Divider(height: 1),
-                                itemBuilder: (context, index) {
-                                  final result = _searchResults[index];
-                                  return ListTile(
-                                    leading: const Icon(Icons.location_on, color: Colors.grey, size: 20),
-                                    title: Text(
-                                      result['address'],
-                                      style: const TextStyle(fontSize: 13),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
+                          clipBehavior: Clip.antiAlias,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 250),
+                            child: _isSearching
+                                ? const Padding(
+                                    padding: EdgeInsets.all(16),
+                                    child: Center(
+                                      child: SizedBox(
+                                        width: 24,
+                                        height: 24,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
                                     ),
-                                    onTap: () async {
-                                      _searchFocusNode.unfocus();
-                                      final pos = result['location'] as LatLng;
-                                      
-                                      final ctrl = await _controller.future;
-                                      ctrl.animateCamera(CameraUpdate.newCameraPosition(
-                                        CameraPosition(target: pos, zoom: 16),
-                                      ));
-                                      
-                                      setState(() {
-                                        _pickedLocation = pos;
-                                        _searchController.text = result['address'];
-                                      });
+                                  )
+                                : ListView.separated(
+                                    shrinkWrap: true,
+                                    padding: EdgeInsets.zero,
+                                    itemCount: _searchResults.length,
+                                    separatorBuilder: (context, index) => const Divider(height: 1),
+                                    itemBuilder: (context, index) {
+                                      final result = _searchResults[index];
+                                      return ListTile(
+                                        leading: const Icon(Icons.location_on, color: Colors.grey, size: 20),
+                                        title: Text(
+                                          result['address'],
+                                          style: const TextStyle(fontSize: 13),
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        onTap: () => _selectSearchResult(result),
+                                      );
                                     },
-                                  );
-                                },
-                              ),
+                                  ),
+                          ),
+                        ),
                       ),
                   ],
                 ),

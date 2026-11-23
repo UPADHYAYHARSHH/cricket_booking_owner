@@ -8,7 +8,13 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_fonts/google_fonts.dart';
 
 /// Which app the splash is for. One widget, two skins.
-enum SplashVariant { user, owner }
+enum SplashVariant {
+  user,
+  owner,
+
+  /// Owner app on the dark-green (user) skin: OWNER pill + owner tagline.
+  ownerDark,
+}
 
 /// Splash sound effect. Files live in assets/sfx/.
 enum SplashSound {
@@ -35,6 +41,9 @@ class _Skin {
     required this.arc1,
     required this.arc2,
     required this.shadow,
+    required this.pill,
+    required this.pillText,
+    required this.spark,
   });
 
   final Color solid; // must equal flutter_native_splash color
@@ -43,6 +52,7 @@ class _Skin {
   final Color title, subtitle;
   final Color ripple, arc1, arc2;
   final double shadow;
+  final Color pill, pillText, spark; // OWNER stamp + odd sparks
 
   static const user = _Skin(
     solid: Color(0xFF042B19),
@@ -55,6 +65,9 @@ class _Skin {
     arc1: Color(0xFFBEFF78),
     arc2: Color(0xFF22C55E),
     shadow: 0.40,
+    pill: Color(0xFF4ADE80),
+    pillText: Color(0xFF042B19),
+    spark: Colors.white,
   );
 
   static const owner = _Skin(
@@ -68,6 +81,9 @@ class _Skin {
     arc1: Color(0xFF15803D),
     arc2: Color(0xFF4ADE80),
     shadow: 0.18,
+    pill: Color(0xFF15803D),
+    pillText: Colors.white,
+    spark: Color(0xFF15803D),
   );
 }
 
@@ -140,7 +156,9 @@ class _SlottixSplashState extends State<SlottixSplash>
   }
 
   _Skin get _skin =>
-      widget.variant == SplashVariant.user ? _Skin.user : _Skin.owner;
+      widget.variant == SplashVariant.owner ? _Skin.owner : _Skin.user;
+
+  bool get _isOwner => widget.variant != SplashVariant.user;
 
   @override
   void didChangeDependencies() {
@@ -197,7 +215,7 @@ class _SlottixSplashState extends State<SlottixSplash>
   Widget build(BuildContext context) {
     final skin = _skin;
     return Semantics(
-      label: widget.variant == SplashVariant.owner ? 'Slottix Owner' : 'Slottix',
+      label: _isOwner ? 'Slottix Owner' : 'Slottix',
       child: Scaffold(
         backgroundColor: skin.solid,
         body: RepaintBoundary(
@@ -209,7 +227,7 @@ class _SlottixSplashState extends State<SlottixSplash>
                 painter: _SplashPainter(
                   f: _ctrl.value * _total,
                   skin: skin,
-                  owner: widget.variant == SplashVariant.owner,
+                  owner: _isOwner,
                   tile: _tileImage,
                 ),
               );
@@ -370,7 +388,7 @@ class _SplashPainter extends CustomPainter {
         final pos = Offset(cx + math.cos(ang) * dist, groundY + math.sin(ang) * dist);
         final col = i.isEven
             ? const Color(0xFFBEF23C)
-            : (owner ? const Color(0xFF15803D) : Colors.white);
+            : skin.spark;
         canvas.drawCircle(
             pos, math.max(1.0, 4.5 * (1 - sp)), Paint()..color = col.withValues(alpha: 1 - sp));
       }
@@ -433,7 +451,7 @@ class _SplashPainter extends CustomPainter {
             Rect.fromCenter(center: Offset.zero, width: pw, height: ph),
             const Radius.circular(12));
         canvas.drawRRect(
-            pill, Paint()..color = const Color(0xFF15803D).withValues(alpha: _c(p * 3)));
+            pill, Paint()..color = skin.pill.withValues(alpha: _c(p * 3)));
         final tp = TextPainter(
           text: TextSpan(
             text: 'OWNER',
@@ -441,7 +459,7 @@ class _SplashPainter extends CustomPainter {
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 3,
-              color: Colors.white.withValues(alpha: _c(p * 3)),
+              color: skin.pillText.withValues(alpha: _c(p * 3)),
             ),
           ),
           textDirection: TextDirection.ltr,
@@ -449,7 +467,7 @@ class _SplashPainter extends CustomPainter {
         tp.paint(canvas, Offset(-tp.width / 2 + 1.5, -tp.height / 2));
         canvas.restore();
       }
-      _tag(canvas, cx, tagY + ph + 14, 'Run your venue, effortlessly',
+      _tag(canvas, cx, tagY + ph + 14, 'Manage bookings. Grow your turf.',
           _eo(_seg(f, 2.4, 2.9)));
     }
   }
